@@ -4,6 +4,7 @@ Hakee Suomen pientalojen tiedot postinumeroaluetasolla (~3 000 riviä)
 Tilastokeskuksen Paavo- ja StatFin-rajapinnoista, tallentaa Supabaseen ja CSV:hen.
 """
 
+import argparse
 import csv
 import itertools
 import json
@@ -1110,8 +1111,14 @@ def upload_to_supabase(df: pd.DataFrame) -> None:
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Talorekkari data pipeline")
+    parser.add_argument("--dry-run", action="store_true", help="Fetch & process only, skip Supabase upload")
+    args = parser.parse_args()
+
     log.info("=== Spara Energia – Kiinteistörekisteri ===")
     log.info("Käynnistetty: %s", TODAY)
+    if args.dry_run:
+        log.info("HUOM: Dry-run tila – Supabase-lataus ohitetaan")
 
     # 1. Hae Paavo rakennukset
     log.info("--- Vaihe 1/8: Paavo rakennukset ---")
@@ -1168,7 +1175,10 @@ def main():
 
     # Tulostus
     export_csv(out_df)
-    upload_to_supabase(out_df)
+    if not args.dry_run:
+        upload_to_supabase(out_df)
+    else:
+        log.info("Dry-run: Supabase-lataus ohitettu")
 
     # Loppuraportti
     log.info("=== LOPPURAPORTTI ===")
