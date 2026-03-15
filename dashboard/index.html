@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spara Energia – Kiinteistörekisteri</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #1B2A4A;
+      --bg2:      #243558;
+      --bg3:      #2d4068;
+      --accent:   #4CAF50;
+      --accent2:  #66BB6A;
+      --text:     #E8EDF5;
+      --text2:    #9BAAC5;
+      --border:   #354d7a;
+      --korkea:   #ef5350;
+      --kesk:     #FFA726;
+      --matala:   #4CAF50;
+      --radius:   8px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 60px;
+    }
+    .logo {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 16px; color: #fff;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 18px; font-weight: 600; }
+    header h1 span { color: var(--accent); }
+    .refresh-badge {
+      margin-left: auto;
+      font-size: 12px; color: var(--text2);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── Summary cards ── */
+    .summary-bar {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      padding: 16px 24px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+    }
+    .card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      flex: 1; min-width: 150px;
+    }
+    .card-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .card-value { font-size: 22px; font-weight: 700; color: var(--text); }
+    .card-value.accent { color: var(--accent); }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex; gap: 0;
+      padding: 16px 24px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 14px; font-weight: 500;
+      color: var(--text2);
+      border-bottom: 2px solid transparent;
+      transition: color .2s, border-color .2s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── Main content ── */
+    main { padding: 24px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Filters row ── */
+    .filters {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .filters input, .filters select {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .filters input:focus, .filters select:focus { border-color: var(--accent); }
+    .filters input { width: 180px; }
+    .filters select { min-width: 160px; }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead tr {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600; font-size: 12px;
+      color: var(--text2);
+      text-transform: uppercase; letter-spacing: .4px;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    th:hover { color: var(--text); }
+    th .sort-arrow { margin-left: 4px; opacity: .4; }
+    th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg3); }
+
+    /* Transitio badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .4px;
+    }
+    .badge-KORKEA   { background: rgba(239,83,80,.2); color: var(--korkea); }
+    .badge-KESKITASO { background: rgba(255,167,38,.2); color: var(--kesk); }
+    .badge-MATALA   { background: rgba(76,175,80,.2); color: var(--matala); }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 14px; justify-content: flex-end;
+    }
+    .pagination button {
+      background: var(--bg2); border: 1px solid var(--border);
+      color: var(--text); border-radius: var(--radius);
+      padding: 6px 14px; cursor: pointer; font-size: 13px;
+      transition: background .2s, border-color .2s;
+    }
+    .pagination button:hover:not(:disabled) { background: var(--bg3); border-color: var(--accent); }
+    .pagination button:disabled { opacity: .35; cursor: default; }
+    .pagination span { font-size: 13px; color: var(--text2); min-width: 120px; text-align: center; }
+
+    /* ── Loading / empty ── */
+    .loading {
+      text-align: center; padding: 48px;
+      color: var(--text2); font-size: 14px;
+    }
+    .spinner {
+      display: inline-block; width: 24px; height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error ── */
+    .error-box {
+      background: rgba(239,83,80,.12);
+      border: 1px solid rgba(239,83,80,.4);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      color: #ef9a9a; font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">S</div>
+  <h1>Spara Energia – <span>Kiinteistörekisteri</span></h1>
+  <div class="refresh-badge">
+    <div class="dot"></div>
+    Auto-refresh 60s
+    <span id="last-updated" style="margin-left:8px;"></span>
+  </div>
+</header>
+
+<!-- Summary bar -->
+<div class="summary-bar" id="summary-bar">
+  <div class="card"><div class="card-label">Postinumeroalueita</div><div class="card-value accent" id="s-alueet">–</div></div>
+  <div class="card"><div class="card-label">Pientaloja yhteensä</div><div class="card-value" id="s-pientalot">–</div></div>
+  <div class="card"><div class="card-label">Öljylämmitteisiä</div><div class="card-value" id="s-oljy">–</div></div>
+  <div class="card"><div class="card-label">Joustopotentiaali</div><div class="card-value" id="s-jousto">– MW</div></div>
+  <div class="card"><div class="card-label">Viimeisin päivitys</div><div class="card-value" id="s-updated" style="font-size:16px;">–</div></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-tab="alueet">Aluetaulukko</div>
+  <div class="tab" data-tab="kunta">Kuntataso</div>
+  <div class="tab" data-tab="top">Top-alueet</div>
+</div>
+
+<main>
+
+  <!-- Tab 1: Aluetaulukko -->
+  <div class="tab-content active" id="tab-alueet">
+    <div class="filters">
+      <input type="text" id="f-postinumero" placeholder="Postinumero tai nimi…">
+      <input type="text" id="f-kunta" placeholder="Kunta…">
+      <input type="text" id="f-maakunta" placeholder="Maakunta…">
+      <select id="f-transitio">
+        <option value="">Kaikki transitiot</option>
+        <option value="KORKEA">KORKEA</option>
+        <option value="KESKITASO">KESKITASO</option>
+        <option value="MATALA">MATALA</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table id="tbl-alueet">
+        <thead>
+          <tr>
+            <th data-col="postinumero">Postinumero <span class="sort-arrow">↕</span></th>
+            <th data-col="postitoimipaikka">Toimipaikka <span class="sort-arrow">↕</span></th>
+            <th data-col="kunta">Kunta <span class="sort-arrow">↕</span></th>
+            <th data-col="maakunta">Maakunta <span class="sort-arrow">↕</span></th>
+            <th data-col="pientalot_lkm">Pientalot <span class="sort-arrow">↕</span></th>
+            <th data-col="oilheat_lkm">Öljy <span class="sort-arrow">↕</span></th>
+            <th data-col="oljy_osuus_pct">Öljy % <span class="sort-arrow">↕</span></th>
+            <th data-col="sahkolammitys_lkm">Sähkö <span class="sort-arrow">↕</span></th>
+            <th data-col="maalampo_lkm">Maalämpö <span class="sort-arrow">↕</span></th>
+            <th data-col="transitio_potentiaali">Transitio <span class="sort-arrow">↕</span></th>
+            <th data-col="jousto_potentiaali_mw">Jousto MW <span class="sort-arrow">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="tbody-alueet">
+          <tr><td colspan="11" class="loading"><div class="spinner"></div><br>Ladataan…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <button id="btn-prev" onclick="changePage(-1)">← Edellinen</button>
+      <span id="page-info">Sivu 1</span>
+      <button id="btn-next" onclick="changePage(1)">Seuraava →</button>
+    </div>
+  </div>
+
+  <!-- Tab 2: Kuntataso -->
+  <div class="tab-content" id="tab-kunta">
+    <div class="table-wrap">
+      <table id="tbl-kunta">
+        <thead>
+          <tr>
+            <th data-col="kunta">Kunta</th>
+            <th data-col="maakunta">Maakunta</th>
+            <th data-col="postinumeroalueita">Postinumeroalueita</th>
+            <th data-col="pientalot_yht">Pientalot</th>
+            <th data-col="oljylammitys_yht">Öljylämmitys</th>
+            <th data-col="sahkolammitys_yht">Sähkölämmitys</th>
+            <th data-col="maalampo_yht">Maalämpö</th>
+            <th data-col="oljy_osuus_ka">Öljy % ka</th>
+            <th data-col="jousto_yht_mw">Jousto yht. MW</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-kunta">
+          <tr><td colspan="9" class="loading"><div class="spinner"></div><br>Ladataan…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tab 3: Top-alueet -->
+  <div class="tab-content" id="tab-top">
+    <div class="filters">
+      <select id="f-pankki">
+        <option value="">Kaikki pankkiarvo</option>
+        <option value="KORKEA">KORKEA</option>
+        <option value="KESKITASO">KESKITASO</option>
+        <option value="MATALA">MATALA</option>
+      </select>
+      <select id="f-energia">
+        <option value="">Kaikki energiayhtiöarvo</option>
+        <option value="KORKEA">KORKEA</option>
+        <option value="KESKITASO">KESKITASO</option>
+        <option value="MATALA">MATALA</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table id="tbl-top">
+        <thead>
+          <tr>
+            <th>Postinumero</th>
+            <th>Toimipaikka</th>
+            <th>Kunta</th>
+            <th>Maakunta</th>
+            <th>Kokonaismarkkina</th>
+            <th>Öljy</th>
+            <th>Öljy %</th>
+            <th>Transitio</th>
+            <th>Pankki</th>
+            <th>Vakuutus</th>
+            <th>Energia</th>
+            <th>Jousto MW</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-top">
+          <tr><td colspan="12" class="loading"><div class="spinner"></div><br>Ladataan…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─────────────────────────────────────────────
+// Supabase init
+// ─────────────────────────────────────────────
+const SUPABASE_URL  = 'https://yywoyzysgjkhhwveroeb.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5d295enlzZ2praGh3dmVyb2ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1Nzk2MTAsImV4cCI6MjA4OTE1NTYxMH0.Y0U8DkRTADm5b69Bu9PLK7HZ1YLvQiqOnuPshlPAvKM';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+const PAGE_SIZE = 50;
+let currentPage = 0;
+let sortCol = 'pientalot_lkm';
+let sortAsc = false;
+let filterPostinumero = '';
+let filterKunta = '';
+let filterMaakunta = '';
+let filterTransitio = '';
+let totalRows = 0;
+
+// ─────────────────────────────────────────────
+// Tabs
+// ─────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'kunta') loadKunta();
+    if (tab.dataset.tab === 'top') loadTop();
+  });
+});
+
+// ─────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────
+function fmt(n, decimals = 0) {
+  if (n == null) return '–';
+  return Number(n).toLocaleString('fi-FI', { maximumFractionDigits: decimals });
+}
+
+function badge(val) {
+  if (!val) return '–';
+  return `<span class="badge badge-${val}">${val}</span>`;
+}
+
+function showError(tbodyId, cols, msg) {
+  document.getElementById(tbodyId).innerHTML =
+    `<tr><td colspan="${cols}" class="loading"><div class="error-box">${msg}</div></td></tr>`;
+}
+
+// ─────────────────────────────────────────────
+// Summary
+// ─────────────────────────────────────────────
+async function loadSummary() {
+  try {
+    const { data, error } = await db
+      .from('area_profiles')
+      .select('pientalot_lkm, oilheat_lkm, jousto_potentiaali_mw, paivitetty')
+      .limit(10000);
+    if (error) throw error;
+
+    const count = data.length;
+    const pientalot = data.reduce((s, r) => s + (r.pientalot_lkm || 0), 0);
+    const oljy = data.reduce((s, r) => s + (r.oilheat_lkm || 0), 0);
+    const jousto = data.reduce((s, r) => s + (parseFloat(r.jousto_potentiaali_mw) || 0), 0);
+    const updated = data.map(r => r.paivitetty).filter(Boolean).sort().reverse()[0] || '–';
+
+    document.getElementById('s-alueet').textContent = fmt(count);
+    document.getElementById('s-pientalot').textContent = fmt(pientalot);
+    document.getElementById('s-oljy').textContent = fmt(oljy);
+    document.getElementById('s-jousto').textContent = fmt(jousto, 1) + ' MW';
+    document.getElementById('s-updated').textContent = updated;
+    document.getElementById('last-updated').textContent =
+      'Päivitetty: ' + new Date().toLocaleTimeString('fi-FI');
+  } catch (e) {
+    console.error('Summary error:', e);
+  }
+}
+
+// ─────────────────────────────────────────────
+// Tab 1: Aluetaulukko
+// ─────────────────────────────────────────────
+async function loadAlueet() {
+  const tbody = document.getElementById('tbody-alueet');
+  tbody.innerHTML = '<tr><td colspan="11" class="loading"><div class="spinner"></div><br>Ladataan…</td></tr>';
+
+  try {
+    let query = db
+      .from('area_profiles')
+      .select('postinumero,postitoimipaikka,kunta,maakunta,pientalot_lkm,oilheat_lkm,oljy_osuus_pct,sahkolammitys_lkm,maalampo_lkm,transitio_potentiaali,jousto_potentiaali_mw', { count: 'exact' })
+      .order(sortCol, { ascending: sortAsc })
+      .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
+
+    if (filterPostinumero) {
+      const q = filterPostinumero.toLowerCase();
+      // Supabase ilike on postinumero or postitoimipaikka
+      query = query.or(`postinumero.ilike.%${q}%,postitoimipaikka.ilike.%${q}%`);
+    }
+    if (filterKunta)      query = query.ilike('kunta', `%${filterKunta}%`);
+    if (filterMaakunta)   query = query.ilike('maakunta', `%${filterMaakunta}%`);
+    if (filterTransitio)  query = query.eq('transitio_potentiaali', filterTransitio);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    totalRows = count || 0;
+    updatePagination();
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="11" class="loading">Ei tuloksia.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(r => `
+      <tr>
+        <td>${r.postinumero || '–'}</td>
+        <td>${r.postitoimipaikka || '–'}</td>
+        <td>${r.kunta || '–'}</td>
+        <td>${r.maakunta || '–'}</td>
+        <td>${fmt(r.pientalot_lkm)}</td>
+        <td>${fmt(r.oilheat_lkm)}</td>
+        <td>${r.oljy_osuus_pct != null ? fmt(r.oljy_osuus_pct, 1) + ' %' : '–'}</td>
+        <td>${fmt(r.sahkolammitys_lkm)}</td>
+        <td>${fmt(r.maalampo_lkm)}</td>
+        <td>${badge(r.transitio_potentiaali)}</td>
+        <td>${fmt(r.jousto_potentiaali_mw, 2)}</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    showError('tbody-alueet', 11, `Virhe: ${e.message}`);
+  }
+}
+
+function updatePagination() {
+  const total = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
+  document.getElementById('page-info').textContent =
+    `Sivu ${currentPage + 1} / ${total} (${fmt(totalRows)} riviä)`;
+  document.getElementById('btn-prev').disabled = currentPage === 0;
+  document.getElementById('btn-next').disabled = currentPage >= total - 1;
+}
+
+function changePage(delta) {
+  currentPage = Math.max(0, currentPage + delta);
+  loadAlueet();
+}
+
+// Column sort
+document.querySelectorAll('#tbl-alueet th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) { sortAsc = !sortAsc; }
+    else { sortCol = col; sortAsc = false; }
+    currentPage = 0;
+    document.querySelectorAll('#tbl-alueet th').forEach(h => h.classList.remove('sorted'));
+    th.classList.add('sorted');
+    th.querySelector('.sort-arrow').textContent = sortAsc ? '↑' : '↓';
+    loadAlueet();
+  });
+});
+
+// Filters
+let filterTimer;
+['f-postinumero', 'f-kunta', 'f-maakunta'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    clearTimeout(filterTimer);
+    filterTimer = setTimeout(() => {
+      filterPostinumero = document.getElementById('f-postinumero').value.trim();
+      filterKunta       = document.getElementById('f-kunta').value.trim();
+      filterMaakunta    = document.getElementById('f-maakunta').value.trim();
+      currentPage = 0;
+      loadAlueet();
+    }, 400);
+  });
+});
+document.getElementById('f-transitio').addEventListener('change', e => {
+  filterTransitio = e.target.value;
+  currentPage = 0;
+  loadAlueet();
+});
+
+// ─────────────────────────────────────────────
+// Tab 2: Kuntataso
+// ─────────────────────────────────────────────
+async function loadKunta() {
+  const tbody = document.getElementById('tbody-kunta');
+  tbody.innerHTML = '<tr><td colspan="9" class="loading"><div class="spinner"></div><br>Ladataan…</td></tr>';
+  try {
+    const { data, error } = await db
+      .from('v_kunta_summary')
+      .select('*')
+      .order('pientalot_yht', { ascending: false })
+      .limit(500);
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="loading">Ei dataa (näkymä v_kunta_summary tyhjä).</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(r => `
+      <tr>
+        <td>${r.kunta || '–'}</td>
+        <td>${r.maakunta || '–'}</td>
+        <td>${fmt(r.postinumeroalueita)}</td>
+        <td>${fmt(r.pientalot_yht)}</td>
+        <td>${fmt(r.oljylammitys_yht)}</td>
+        <td>${fmt(r.sahkolammitys_yht)}</td>
+        <td>${fmt(r.maalampo_yht)}</td>
+        <td>${r.oljy_osuus_ka != null ? fmt(r.oljy_osuus_ka, 1) + ' %' : '–'}</td>
+        <td>${fmt(r.jousto_yht_mw, 2)}</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    showError('tbody-kunta', 9, `Virhe: ${e.message}`);
+  }
+}
+
+// ─────────────────────────────────────────────
+// Tab 3: Top-alueet
+// ─────────────────────────────────────────────
+async function loadTop() {
+  const tbody = document.getElementById('tbody-top');
+  tbody.innerHTML = '<tr><td colspan="12" class="loading"><div class="spinner"></div><br>Ladataan…</td></tr>';
+  try {
+    let query = db
+      .from('v_top_partner_areas')
+      .select('*')
+      .limit(200);
+
+    const pankkiVal  = document.getElementById('f-pankki').value;
+    const energiaVal = document.getElementById('f-energia').value;
+    if (pankkiVal)  query = query.eq('pankkikumppani_arvo', pankkiVal);
+    if (energiaVal) query = query.eq('energiayhtio_arvo', energiaVal);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="12" class="loading">Ei dataa (näkymä v_top_partner_areas tyhjä).</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(r => `
+      <tr>
+        <td>${r.postinumero || '–'}</td>
+        <td>${r.postitoimipaikka || '–'}</td>
+        <td>${r.kunta || '–'}</td>
+        <td>${r.maakunta || '–'}</td>
+        <td>${fmt(r.kokonaismarkkina)}</td>
+        <td>${fmt(r.oilheat_lkm)}</td>
+        <td>${r.oljy_osuus_pct != null ? fmt(r.oljy_osuus_pct, 1) + ' %' : '–'}</td>
+        <td>${badge(r.transitio_potentiaali)}</td>
+        <td>${badge(r.pankkikumppani_arvo)}</td>
+        <td>${badge(r.vakuutus_arvo || null)}</td>
+        <td>${badge(r.energiayhtio_arvo)}</td>
+        <td>${fmt(r.jousto_potentiaali_mw, 2)}</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    showError('tbody-top', 12, `Virhe: ${e.message}`);
+  }
+}
+
+document.getElementById('f-pankki').addEventListener('change', loadTop);
+document.getElementById('f-energia').addEventListener('change', loadTop);
+
+// ─────────────────────────────────────────────
+// Auto-refresh
+// ─────────────────────────────────────────────
+function refreshAll() {
+  loadSummary();
+  const activeTab = document.querySelector('.tab.active')?.dataset?.tab;
+  if (activeTab === 'alueet') loadAlueet();
+  if (activeTab === 'kunta')  loadKunta();
+  if (activeTab === 'top')    loadTop();
+}
+
+setInterval(refreshAll, 60000);
+
+// ─────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────
+loadSummary();
+loadAlueet();
+</script>
+</body>
+</html>
