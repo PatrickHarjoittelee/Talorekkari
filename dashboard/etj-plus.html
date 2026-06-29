@@ -521,6 +521,7 @@ const DEMO_ALERTS = [
 // ═══════════════════════════════════════════════════════════════════════════
 // State
 // ═══════════════════════════════════════════════════════════════════════════
+let DEMO_MODE = true;
 let companies = [];
 let activeCompanyId = null;
 let activeYear = 2025;
@@ -557,14 +558,26 @@ function complianceStatus(company) {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Data loading (Supabase → fallback demo)
+// Only leaves demo mode when BOTH company rows AND consumption data exist;
+// otherwise stays entirely in demo mode so DEMO_MONTHLY ids always match.
 // ═══════════════════════════════════════════════════════════════════════════
 async function loadData() {
   try {
-    const { data, error } = await db.from('etj_companies').select('*').limit(100);
-    if (error || !data || data.length === 0) throw new Error('no data');
-    companies = data;
+    const { data: cos, error: ce } = await db.from('etj_companies').select('*').limit(100);
+    if (ce || !cos || cos.length === 0) throw new Error('no companies');
+
+    const { data: ac, error: ae } = await db
+      .from('etj_annual_consumption')
+      .select('company_id,year,total_mwh,floor_area_m2,employees')
+      .limit(500);
+    if (ae || !ac || ac.length === 0) throw new Error('no consumption data');
+
+    companies = cos;
+    DEMO_MODE = false;
+    _buildMonthlyFromAnnuals(cos, ac);
   } catch {
     companies = DEMO_COMPANIES;
+    DEMO_MODE = true;
   }
   allActions = DEMO_ACTIONS;
   initCompanySelector();
@@ -574,6 +587,22 @@ async function loadData() {
   renderKpiGrid();
   renderKpiSummary();
   renderMgmtReportMeta();
+}
+
+// Distribute real annual totals into monthly estimates using a seasonal profile.
+// Populates DEMO_MONTHLY (and DEMO_FLOOR/DEMO_EMPLOYEES) so all chart/compliance
+// functions work identically regardless of whether data came from Supabase or demo.
+function _buildMonthlyFromAnnuals(cos, annuals) {
+  const seasonal = [1.20,1.08,1.02,0.92,0.82,0.74,0.75,0.80,0.90,1.02,1.10,1.22];
+  const seasonSum = seasonal.reduce((a,b)=>a+b,0);
+  annuals.forEach(row => {
+    if (!DEMO_MONTHLY[row.company_id]) DEMO_MONTHLY[row.company_id] = {};
+    DEMO_MONTHLY[row.company_id][row.year] = seasonal.map(f =>
+      Math.round(row.total_mwh * f / seasonSum * 10) / 10
+    );
+    if (row.floor_area_m2) DEMO_FLOOR[row.company_id]     = row.floor_area_m2;
+    if (row.employees)     DEMO_EMPLOYEES[row.company_id] = row.employees;
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

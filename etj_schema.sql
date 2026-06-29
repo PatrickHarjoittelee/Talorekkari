@@ -225,7 +225,7 @@ ALTER TABLE etj_actions                ENABLE ROW LEVEL SECURITY;
 ALTER TABLE etj_alerts                 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE etj_energiavirasto_reports ENABLE ROW LEVEL SECURITY;
 
--- Avoin lukuoikeus anon-avaimella (muuta tuotannossa tarpeen mukaan)
+-- Lukuoikeus kaikille anon-avaimella
 CREATE POLICY "anon_read"  ON etj_companies              FOR SELECT USING (true);
 CREATE POLICY "anon_read"  ON etj_energy_readings        FOR SELECT USING (true);
 CREATE POLICY "anon_read"  ON etj_annual_consumption     FOR SELECT USING (true);
@@ -234,3 +234,10 @@ CREATE POLICY "anon_read"  ON etj_targets                FOR SELECT USING (true)
 CREATE POLICY "anon_read"  ON etj_actions                FOR SELECT USING (true);
 CREATE POLICY "anon_read"  ON etj_alerts                 FOR SELECT USING (true);
 CREATE POLICY "anon_read"  ON etj_energiavirasto_reports FOR SELECT USING (true);
+
+-- Kirjoitusoikeus kuukausittaisille kulutustiedoille (dashboard-syöttölomake käyttää anon-avainta).
+-- Tuotannossa rajaa authenticated-rooliin tai reititä service-key-funktion kautta.
+CREATE POLICY "anon_insert" ON etj_energy_readings FOR INSERT WITH CHECK (true);
+CREATE POLICY "anon_update" ON etj_energy_readings FOR UPDATE USING (true);
+CREATE POLICY "anon_insert" ON etj_annual_consumption FOR INSERT WITH CHECK (true);
+CREATE POLICY "anon_update" ON etj_annual_consumption FOR UPDATE USING (true);
