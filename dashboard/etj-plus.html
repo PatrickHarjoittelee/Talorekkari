@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spara ETJ+ Light – Energianhallinta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #1B2A4A;
+      --bg2:      #243558;
+      --bg3:      #2d4068;
+      --bg4:      #364a7a;
+      --accent:   #4CAF50;
+      --accent2:  #66BB6A;
+      --text:     #E8EDF5;
+      --text2:    #9BAAC5;
+      --border:   #354d7a;
+      --red:      #ef5350;
+      --orange:   #FFA726;
+      --green:    #4CAF50;
+      --blue:     #42A5F5;
+      --radius:   8px;
+    }
+    body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+    /* ── Header ── */
+    header {
+      background:var(--bg2); border-bottom:1px solid var(--border);
+      padding:0 24px; display:flex; align-items:center; gap:16px; height:60px; flex-wrap:wrap;
+    }
+    .logo { width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#fff;flex-shrink:0; }
+    header h1 { font-size:17px;font-weight:600; }
+    header h1 span { color:var(--accent); }
+    .back-link { font-size:12px;color:var(--text2);text-decoration:none;display:flex;align-items:center;gap:4px;transition:color .2s; }
+    .back-link:hover { color:var(--accent); }
+    .header-right { margin-left:auto;display:flex;align-items:center;gap:12px; }
+    .company-select { background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:var(--radius);font-size:13px;font-family:inherit;cursor:pointer;outline:none; }
+    .company-select:focus { border-color:var(--accent); }
+    .status-chip { padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase; }
+    .chip-green  { background:rgba(76,175,80,.2);color:#81c784; }
+    .chip-orange { background:rgba(255,167,38,.2);color:#ffb74d; }
+    .chip-red    { background:rgba(239,83,80,.2);color:#e57373; }
+
+    /* ── Compliance banner ── */
+    .banner {
+      padding:12px 24px;font-size:13px;font-weight:500;
+      display:flex;align-items:center;gap:10px;
+    }
+    .banner-orange { background:rgba(255,167,38,.12);border-bottom:1px solid rgba(255,167,38,.3);color:#ffb74d; }
+    .banner-red    { background:rgba(239,83,80,.12);border-bottom:1px solid rgba(239,83,80,.3);color:#e57373; }
+    .banner-green  { background:rgba(76,175,80,.1);border-bottom:1px solid rgba(76,175,80,.2);color:#81c784; }
+    .banner-icon   { font-size:16px; }
+
+    /* ── Summary bar ── */
+    .summary-bar { display:flex;gap:12px;flex-wrap:wrap;padding:16px 24px;background:var(--bg2);border-bottom:1px solid var(--border); }
+    .card { background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;flex:1;min-width:140px; }
+    .card-label { font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px; }
+    .card-value { font-size:22px;font-weight:700; }
+    .card-value.accent { color:var(--accent); }
+    .card-value.orange { color:var(--orange); }
+    .card-value.red    { color:var(--red); }
+
+    /* ── Tabs ── */
+    .tabs { display:flex;padding:16px 24px 0;border-bottom:1px solid var(--border);background:var(--bg2);gap:0;overflow-x:auto; }
+    .tab { padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap; }
+    .tab:hover { color:var(--text); }
+    .tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+
+    /* ── Main ── */
+    main { padding:24px; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    /* ── Section headings ── */
+    .section-title { font-size:15px;font-weight:600;margin-bottom:14px; }
+    .section-row { display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius); }
+    table { width:100%;border-collapse:collapse;font-size:13px; }
+    thead tr { background:var(--bg3);border-bottom:1px solid var(--border); }
+    th { padding:10px 12px;text-align:left;font-weight:600;font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap; }
+    td { padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--bg3); }
+
+    /* ── Badges ── */
+    .badge { display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px; }
+    .badge-compliant    { background:rgba(76,175,80,.2);color:#81c784; }
+    .badge-exempt       { background:rgba(66,165,245,.2);color:#64b5f6; }
+    .badge-pending      { background:rgba(255,167,38,.2);color:#ffb74d; }
+    .badge-non_compliant{ background:rgba(239,83,80,.2);color:#e57373; }
+    .badge-open         { background:rgba(255,167,38,.15);color:#ffb74d; }
+    .badge-in_progress  { background:rgba(66,165,245,.15);color:#64b5f6; }
+    .badge-completed    { background:rgba(76,175,80,.15);color:#81c784; }
+    .badge-high         { background:rgba(239,83,80,.15);color:#e57373; }
+    .badge-medium       { background:rgba(255,167,38,.15);color:#ffb74d; }
+    .badge-low          { background:rgba(76,175,80,.15);color:#81c784; }
+
+    /* ── Charts ── */
+    .chart-wrap { background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:20px;flex:1;min-width:280px; }
+    .chart-wrap h3 { font-size:13px;color:var(--text2);margin-bottom:14px;font-weight:600;text-transform:uppercase;letter-spacing:.5px; }
+    .chart-wrap canvas { width:100%!important; }
+
+    /* ── Threshold meter ── */
+    .threshold-wrap { background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px; }
+    .threshold-title { font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px; }
+    .threshold-item { margin-bottom:14px; }
+    .threshold-label { display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px; }
+    .threshold-label strong { color:var(--text); }
+    .progress-bar { height:10px;background:var(--bg4);border-radius:5px;overflow:hidden; }
+    .progress-fill { height:100%;border-radius:5px;transition:width .6s ease; }
+    .fill-green  { background:linear-gradient(90deg,#4CAF50,#66BB6A); }
+    .fill-orange { background:linear-gradient(90deg,#FFA726,#FFB74D); }
+    .fill-red    { background:linear-gradient(90deg,#ef5350,#e53935); }
+    .threshold-markers { display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-top:4px; }
+
+    /* ── KPI cards ── */
+    .kpi-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:24px; }
+    .kpi-card { background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px; }
+    .kpi-label { font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px; }
+    .kpi-value { font-size:26px;font-weight:700;margin-bottom:4px; }
+    .kpi-sub   { font-size:12px;color:var(--text2); }
+    .kpi-delta { font-size:12px;font-weight:600; }
+    .delta-up   { color:var(--red); }
+    .delta-down { color:var(--green); }
+
+    /* ── Action list filters ── */
+    .filters { display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px; }
+    .filters select, .filters input {
+      background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+      color:var(--text);padding:7px 12px;font-size:13px;font-family:inherit;outline:none;
+    }
+    .filters select:focus, .filters input:focus { border-color:var(--accent); }
+
+    /* ── Report section ── */
+    .report-card { background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px; }
+    .report-card h3 { font-size:15px;font-weight:600;margin-bottom:6px; }
+    .report-card p  { font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px; }
+    .report-meta { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:14px; }
+    .meta-field { background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 14px; }
+    .meta-field label { display:block;font-size:11px;color:var(--text2);text-transform:uppercase;margin-bottom:4px; }
+    .meta-field span  { font-size:14px;font-weight:600; }
+
+    /* ── Buttons ── */
+    .btn { padding:8px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background .2s,opacity .2s; }
+    .btn-primary  { background:var(--accent);color:#fff; }
+    .btn-primary:hover  { background:var(--accent2); }
+    .btn-secondary { background:var(--bg3);color:var(--text);border:1px solid var(--border); }
+    .btn-secondary:hover { background:var(--bg4); }
+    .btn-sm { padding:5px 12px;font-size:12px; }
+
+    /* ── Alert list ── */
+    .alert-list { display:flex;flex-direction:column;gap:8px; }
+    .alert-item { display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:var(--radius);border-left:3px solid; }
+    .alert-item.critical { background:rgba(239,83,80,.08);border-color:var(--red); }
+    .alert-item.warning  { background:rgba(255,167,38,.08);border-color:var(--orange); }
+    .alert-item.info     { background:rgba(66,165,245,.08);border-color:var(--blue); }
+    .alert-icon { font-size:16px;flex-shrink:0;margin-top:1px; }
+    .alert-title { font-size:13px;font-weight:600;margin-bottom:3px; }
+    .alert-msg   { font-size:12px;color:var(--text2); }
+
+    /* ── Loading/empty ── */
+    .empty { text-align:center;padding:40px;color:var(--text2);font-size:14px; }
+    .spinner { display:inline-block;width:22px;height:22px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── Divider ── */
+    .divider { height:1px;background:var(--border);margin:20px 0; }
+
+    /* ── Savings row ── */
+    .savings-summary { display:flex;gap:14px;flex-wrap:wrap;margin-top:16px; }
+    .savings-box { background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;flex:1;min-width:160px; }
+    .savings-box label { font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px; }
+    .savings-box .val  { font-size:20px;font-weight:700; }
+
+    /* ── Year selector ── */
+    .year-btns { display:flex;gap:6px;margin-bottom:16px; }
+    .year-btn { padding:5px 14px;border-radius:var(--radius);font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-family:inherit;transition:all .2s; }
+    .year-btn.active { background:var(--accent);color:#fff;border-color:var(--accent); }
+
+    @media (max-width:600px) {
+      header { height:auto;padding:12px; }
+      .header-right { margin-left:0;flex-wrap:wrap;width:100%; }
+      main { padding:16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">S</div>
+  <h1>Spara <span>ETJ+ Light</span> — Energianhallinta</h1>
+  <div class="header-right">
+    <a class="back-link" href="index.html">← Kiinteistörekisteri</a>
+    <select class="company-select" id="company-selector" onchange="selectCompany(this.value)">
+      <option value="">Kaikki yritykset</option>
+    </select>
+    <span class="status-chip chip-green" id="global-status">ETJ+ Aktiivinen</span>
+  </div>
+</header>
+
+<!-- Compliance banner -->
+<div class="banner banner-orange" id="compliance-banner" style="display:none">
+  <span class="banner-icon">⚠️</span>
+  <span id="banner-text"></span>
+</div>
+
+<!-- Summary bar -->
+<div class="summary-bar">
+  <div class="card"><div class="card-label">Yrityksiä seurannassa</div><div class="card-value accent" id="s-total">–</div></div>
+  <div class="card"><div class="card-label">Velvoitteen piirissä</div><div class="card-value orange" id="s-obligated">–</div></div>
+  <div class="card"><div class="card-label">Aktiiviset hälytykset</div><div class="card-value red" id="s-alerts">–</div></div>
+  <div class="card"><div class="card-label">Todenn. säästöt (MWh)</div><div class="card-value accent" id="s-savings">–</div></div>
+  <div class="card"><div class="card-label">Seuraava eräpäivä</div><div class="card-value" id="s-deadline" style="font-size:15px;color:var(--orange)">–</div></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-tab="yhteenveto">Yhteenveto</div>
+  <div class="tab" data-tab="kulutus">Kulutus</div>
+  <div class="tab" data-tab="tunnusluvut">Tunnusluvut</div>
+  <div class="tab" data-tab="toimenpiteet">Toimenpiteet</div>
+  <div class="tab" data-tab="raportit">Raportit</div>
+</div>
+
+<main>
+
+<!-- ══ Tab 1: Yhteenveto ══ -->
+<div class="tab-content active" id="tab-yhteenveto">
+  <div class="section-row">
+    <div style="flex:2;min-width:300px">
+      <div class="section-title">Vaatimustenmukaisuus 2026</div>
+      <div class="table-wrap">
+        <table id="tbl-compliance">
+          <thead>
+            <tr>
+              <th>Yritys</th>
+              <th>Toimiala</th>
+              <th>3v ka (MWh)</th>
+              <th>Kulutusraja</th>
+              <th>ETJ+ sopimus</th>
+              <th>Status</th>
+              <th>Eräpäivä</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-compliance">
+            <tr><td colspan="7" class="empty"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="flex:1;min-width:260px">
+      <div class="section-title">Aktiiviset hälytykset</div>
+      <div class="alert-list" id="alert-list">
+        <div class="empty">Ladataan…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Velvoitteen yhteenveto</div>
+  <div class="kpi-grid" id="kpi-summary"></div>
+</div>
+
+<!-- ══ Tab 2: Kulutus ══ -->
+<div class="tab-content" id="tab-kulutus">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+    <div class="year-btns" id="year-btns"></div>
+    <button class="btn btn-secondary btn-sm" onclick="openDataEntry()">+ Lisää kulutusdata</button>
+  </div>
+
+  <div class="threshold-wrap" id="threshold-meter">
+    <div class="threshold-title">Kulutusrajan seuranta – 3 vuoden keskiarvo</div>
+    <div class="threshold-item">
+      <div class="threshold-label">
+        <span>Energiakatselmusvelvoite (ETJ+ vapauttaa)</span>
+        <strong id="thr-2700-val">–</strong>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="thr-2700-bar" style="width:0"></div></div>
+      <div class="threshold-markers"><span>0</span><span>2 700 MWh</span></div>
+    </div>
+    <div class="threshold-item">
+      <div class="threshold-label">
+        <span>EHS-järjestelmävelvoite (ISO 50001 / ETJ+ sertifioitu)</span>
+        <strong id="thr-23600-val">–</strong>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="thr-23600-bar" style="width:0"></div></div>
+      <div class="threshold-markers"><span>0</span><span>23 600 MWh</span></div>
+    </div>
+  </div>
+
+  <div class="section-row">
+    <div class="chart-wrap" style="flex:2">
+      <h3>Kuukausittainen kulutus (MWh)</h3>
+      <canvas id="chart-monthly" height="180"></canvas>
+    </div>
+    <div class="chart-wrap" style="flex:1">
+      <h3>Energialähdejakauma</h3>
+      <canvas id="chart-breakdown" height="180"></canvas>
+    </div>
+  </div>
+
+  <div class="section-row">
+    <div class="chart-wrap" style="flex:1">
+      <h3>Vuosittainen kulutus &amp; tavoite</h3>
+      <canvas id="chart-annual" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Tab 3: Tunnusluvut ══ -->
+<div class="tab-content" id="tab-tunnusluvut">
+  <div class="kpi-grid" id="kpi-grid"></div>
+  <div class="section-row">
+    <div class="chart-wrap" style="flex:2">
+      <h3>Energiaintensiteetti (kWh/m²)</h3>
+      <canvas id="chart-intensity" height="200"></canvas>
+    </div>
+    <div class="chart-wrap" style="flex:1">
+      <h3>Tavoite vs. toteutunut</h3>
+      <canvas id="chart-target" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Tab 4: Toimenpiteet ══ -->
+<div class="tab-content" id="tab-toimenpiteet">
+  <div class="filters">
+    <select id="f-action-status" onchange="filterActions()">
+      <option value="">Kaikki statukset</option>
+      <option value="open">Avoin</option>
+      <option value="in_progress">Käynnissä</option>
+      <option value="completed">Valmis</option>
+    </select>
+    <select id="f-action-cat" onchange="filterActions()">
+      <option value="">Kaikki kategoriat</option>
+      <option value="valaistus">Valaistus</option>
+      <option value="lviv">LVI/V</option>
+      <option value="prosessit">Prosessit</option>
+      <option value="kuori">Rakennuskuori</option>
+      <option value="uusiutuva">Uusiutuva energia</option>
+      <option value="kayttaytyminen">Käyttäytyminen</option>
+    </select>
+    <select id="f-action-priority" onchange="filterActions()">
+      <option value="">Kaikki prioriteetit</option>
+      <option value="high">Korkea</option>
+      <option value="medium">Keskitaso</option>
+      <option value="low">Matala</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Toimenpide</th>
+          <th>Kategoria</th>
+          <th>Prioriteetti</th>
+          <th>Arv. säästö (MWh)</th>
+          <th>Arv. säästö (€)</th>
+          <th>Investointi (€)</th>
+          <th>Takaisinmaksu</th>
+          <th>Status</th>
+          <th>Eräpäivä</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-actions"></tbody>
+    </table>
+  </div>
+  <div class="savings-summary" id="savings-summary"></div>
+</div>
+
+<!-- ══ Tab 5: Raportit ══ -->
+<div class="tab-content" id="tab-raportit">
+
+  <div class="report-card">
+    <h3>📋 Energiaviraston vuosi-ilmoitus</h3>
+    <p>Yrityksen on ilmoitettava Energiavirastolle, jos energian loppukulutus ylittää 2 700 tai 23 600 MWh. Ilmoitus vuodelta 2025 on tehtävä viimeistään <strong>31.12.2026</strong>. Vuodesta 2026 eteenpäin ilmoitus tehdään vuosittain <strong>30.4. mennessä</strong>.</p>
+    <div class="report-meta" id="report-meta-fields"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="generateEnergiaviraReport()">Generoi ilmoitus (JSON)</button>
+      <button class="btn btn-secondary" onclick="downloadCsvReport()">Lataa CSV</button>
+    </div>
+  </div>
+
+  <div class="report-card">
+    <h3>🔍 Energiakatselmusraportin pohja</h3>
+    <p>ETJ+-sopimus vapauttaa katselmusvelvoitteesta, mutta katselmusraporttipohja auttaa systemaattisessa energiatehokkuustyössä ja on hyödyllinen johdon katselmuksessa.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="generateAuditTemplate()">Generoi raporttipohja (JSON)</button>
+    </div>
+  </div>
+
+  <div class="report-card">
+    <h3>📊 Johdon katselmustulosteet</h3>
+    <p>Tiivistelmä energiankulutuksesta, tavoitteista ja toimenpiteiden edistymisestä johdon katselmuskokousta varten.</p>
+    <div id="mgmt-report-content"></div>
+    <button class="btn btn-secondary" style="margin-top:12px" onclick="renderMgmtReport()">Näytä johdon raportti</button>
+  </div>
+
+</div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- Data entry modal (hidden by default) -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:min(520px,95vw);max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h2 style="font-size:16px">Lisää kuukausikulutus</h2>
+      <button onclick="closeDataEntry()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">Vuosi</label>
+        <select id="entry-year" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:inherit">
+          <option>2025</option><option>2024</option><option>2023</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">Kuukausi</label>
+        <select id="entry-month" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:inherit">
+          <option value="1">Tammikuu</option><option value="2">Helmikuu</option>
+          <option value="3">Maaliskuu</option><option value="4">Huhtikuu</option>
+          <option value="5">Toukokuu</option><option value="6">Kesäkuu</option>
+          <option value="7">Heinäkuu</option><option value="8">Elokuu</option>
+          <option value="9">Syyskuu</option><option value="10">Lokakuu</option>
+          <option value="11">Marraskuu</option><option value="12">Joulukuu</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px" id="entry-fields"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="saveEntry()" style="flex:1">Tallenna</button>
+      <button class="btn btn-secondary" onclick="closeDataEntry()">Peruuta</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// Supabase
+// ═══════════════════════════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://yywoyzysgjkhhwveroeb.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5d295enlzZ2praGh3dmVyb2ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1Nzk2MTAsImV4cCI6MjA4OTE1NTYxMH0.Y0U8DkRTADm5b69Bu9PLK7HZ1YLvQiqOnuPshlPAvKM';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Demo-data (käytetään ennen kuin Supabase-taulut ovat käytössä)
+// ═══════════════════════════════════════════════════════════════════════════
+const DEMO_COMPANIES = [
+  {
+    id: 'c1', name: 'Teollisuus Oy', y_tunnus: '1234567-8', sector: 'Teollisuus',
+    city: 'Tampere', etj_agreement_active: true, etj_agreement_date: '2024-03-01',
+    contact_name: 'Matti Virtanen', contact_email: 'matti@teollisuus.fi'
+  },
+  {
+    id: 'c2', name: 'Espoon Kauppakeskus Oy', y_tunnus: '2345678-9', sector: 'Kauppa',
+    city: 'Espoo', etj_agreement_active: false, etj_agreement_date: null,
+    contact_name: 'Anna Korhonen', contact_email: 'anna@kauppakeskus.fi'
+  },
+  {
+    id: 'c3', name: 'Logistics Nordic Oy', y_tunnus: '3456789-0', sector: 'Logistiikka',
+    city: 'Vantaa', etj_agreement_active: true, etj_agreement_date: '2023-09-15',
+    contact_name: 'Jukka Mäkinen', contact_email: 'jukka@logistics.fi'
+  },
+];
+
+// Kulutus MWh/kk, vuodet 2023-2025
+const DEMO_MONTHLY = {
+  c1: {
+    2023: [340,308,295,265,240,225,230,238,260,290,315,348],
+    2024: [355,320,302,272,248,228,235,242,268,298,322,360],
+    2025: [348,315,295,268,242,225,230,238,262,292,318,352],
+  },
+  c2: {
+    2023: [238,215,208,190,172,158,162,168,185,205,222,244],
+    2024: [245,222,212,195,178,162,166,172,190,210,228,250],
+    2025: [242,218,210,192,175,160,164,170,188,208,225,248],
+  },
+  c3: {
+    2023: [1285,1162,1122,1020,925,850,870,905,998,1108,1195,1318],
+    2024: [1310,1185,1142,1042,945,868,888,922,1018,1128,1218,1342],
+    2025: [1295,1172,1132,1028,935,858,878,912,1008,1118,1205,1328],
+  },
+};
+
+const DEMO_BREAKDOWN = {
+  c1: { electricity: 55, heat: 32, gas: 8, oil: 5 },
+  c2: { electricity: 78, heat: 18, gas: 0, oil: 4 },
+  c3: { electricity: 45, heat: 25, gas: 22, oil: 8 },
+};
+
+const DEMO_FLOOR = { c1: 8500, c2: 12000, c3: 42000 };
+const DEMO_EMPLOYEES = { c1: 85, c2: 120, c3: 380 };
+
+const DEMO_ACTIONS = [
+  { id:'a1', company_id:'c1', title:'LED-valaistus tuotantohalliin', category:'valaistus', priority:'high', estimated_savings_mwh:42, estimated_savings_eur:4200, investment_eur:28000, payback_years:6.7, status:'completed', actual_savings_mwh:44, responsible_person:'Matti V.', due_date:'2025-06-30', completed_date:'2025-05-15' },
+  { id:'a2', company_id:'c1', title:'Paineilmajärjestelmän vuotokorjaus', category:'prosessit', priority:'high', estimated_savings_mwh:65, estimated_savings_eur:6500, investment_eur:15000, payback_years:2.3, status:'in_progress', responsible_person:'Erkki T.', due_date:'2025-12-31' },
+  { id:'a3', company_id:'c1', title:'Lämpöpumppu lämmitykseen', category:'lviv', priority:'medium', estimated_savings_mwh:120, estimated_savings_eur:9600, investment_eur:85000, payback_years:8.9, status:'open', responsible_person:'Matti V.', due_date:'2026-06-30' },
+  { id:'a4', company_id:'c2', title:'Kauppakeskuksen ilmastoinnin optimointi', category:'lviv', priority:'high', estimated_savings_mwh:85, estimated_savings_eur:8500, investment_eur:35000, payback_years:4.1, status:'open', responsible_person:'Anna K.', due_date:'2025-10-31' },
+  { id:'a5', company_id:'c2', title:'Kylmälaitteiden modernisaatio', category:'prosessit', priority:'medium', estimated_savings_mwh:55, estimated_savings_eur:5500, investment_eur:40000, payback_years:7.3, status:'open', responsible_person:'Anna K.', due_date:'2026-03-31' },
+  { id:'a6', company_id:'c3', title:'Aurinkovoimalat kattopinta-alalle', category:'uusiutuva', priority:'medium', estimated_savings_mwh:280, estimated_savings_eur:19600, investment_eur:320000, payback_years:16.3, status:'open', responsible_person:'Jukka M.', due_date:'2026-12-31' },
+  { id:'a7', company_id:'c3', title:'Varastolämmityksen lämpöpumput', category:'lviv', priority:'high', estimated_savings_mwh:420, estimated_savings_eur:33600, investment_eur:180000, payback_years:5.4, status:'in_progress', responsible_person:'Pekka L.', due_date:'2025-12-31' },
+  { id:'a8', company_id:'c3', title:'Trukkilaivueen sähköistäminen', category:'prosessit', priority:'medium', estimated_savings_mwh:160, estimated_savings_eur:11200, investment_eur:250000, payback_years:22.3, status:'open', responsible_person:'Jukka M.', due_date:'2027-06-30' },
+];
+
+const DEMO_ALERTS = [
+  { id:'al1', company_id:'c2', severity:'critical', title:'Katselmus vaadittu – eräpäivä 11.10.2026', message:'Espoon Kauppakeskus Oy ylittää 2 700 MWh/v rajan. ETJ+-sopimus puuttuu – energiakatselmus on tehtävä viimeistään 11.10.2026.', triggered_at:'2026-06-01', is_active:true },
+  { id:'al2', company_id:'c2', severity:'warning', title:'Energiavirasto-ilmoitus tekemättä (2025)', message:'Vuoden 2025 kulutustiedot on ilmoitettava Energiavirastolle viimeistään 31.12.2026.', triggered_at:'2026-05-01', is_active:true },
+  { id:'al3', company_id:'c3', severity:'warning', title:'EHS-järjestelmävelvoite – eräpäivä 11.10.2027', message:'Logistics Nordic Oy ylittää 23 600 MWh/v rajan. Sertifioitu ETJ+ tai ISO 50001 vaadittu.', triggered_at:'2026-06-01', is_active:true },
+  { id:'al4', company_id:'c1', severity:'info', title:'ETJ+-sopimus voimassa', message:'Teollisuus Oy on vapautettu katselmusvelvoitteesta ETJ+-sopimuksen perusteella.', triggered_at:'2026-01-15', is_active:true },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════════════════════
+let companies = [];
+let activeCompanyId = null;
+let activeYear = 2025;
+let charts = {};
+let allActions = [];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Compliance logic
+// ═══════════════════════════════════════════════════════════════════════════
+function calcAvg3yr(companyId) {
+  const monthly = DEMO_MONTHLY[companyId];
+  if (!monthly) return 0;
+  const years = [2023, 2024, 2025];
+  const annuals = years.map(y => (monthly[y] || []).reduce((a,b)=>a+b,0));
+  return annuals.reduce((a,b)=>a+b,0) / 3;
+}
+
+function calcAnnual(companyId, year) {
+  return (DEMO_MONTHLY[companyId]?.[year] || []).reduce((a,b)=>a+b,0);
+}
+
+function complianceStatus(company) {
+  const avg = calcAvg3yr(company.id);
+  if (avg <= 2700)  return { status:'compliant',     label:'Ei velvoitetta',         color:'compliant',     deadline:null };
+  if (avg > 23600) {
+    if (company.etj_agreement_active)
+      return { status:'exempt',       label:'ETJ+ Sertifioitu',        color:'exempt',        deadline:'11.10.2027' };
+    return   { status:'non_compliant',label:'EHS-järjestelmä vaadittu', color:'non_compliant', deadline:'11.10.2027' };
+  }
+  if (company.etj_agreement_active)
+    return   { status:'exempt',       label:'ETJ+ – Vapautettu',        color:'exempt',        deadline:null };
+  return     { status:'non_compliant',label:'Katselmus vaadittu',        color:'non_compliant', deadline:'11.10.2026' };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Data loading (Supabase → fallback demo)
+// ═══════════════════════════════════════════════════════════════════════════
+async function loadData() {
+  try {
+    const { data, error } = await db.from('etj_companies').select('*').limit(100);
+    if (error || !data || data.length === 0) throw new Error('no data');
+    companies = data;
+  } catch {
+    companies = DEMO_COMPANIES;
+  }
+  allActions = DEMO_ACTIONS;
+  initCompanySelector();
+  updateSummaryBar();
+  renderComplianceTab();
+  initYearButtons();
+  renderKpiGrid();
+  renderKpiSummary();
+  renderMgmtReportMeta();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Company selector
+// ═══════════════════════════════════════════════════════════════════════════
+function initCompanySelector() {
+  const sel = document.getElementById('company-selector');
+  companies.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.name;
+    sel.appendChild(o);
+  });
+}
+
+function selectCompany(id) {
+  activeCompanyId = id || null;
+  updateSummaryBar();
+  renderComplianceTab();
+  renderConsumptionTab();
+  renderKpiGrid();
+  filterActions();
+  updateComplianceBanner();
+  updateStatusChip();
+}
+
+function getVisibleCompanies() {
+  return activeCompanyId ? companies.filter(c => c.id === activeCompanyId) : companies;
+}
+
+function updateStatusChip() {
+  const chip = document.getElementById('global-status');
+  const vis = getVisibleCompanies();
+  const nonCompliant = vis.filter(c => ['non_compliant'].includes(complianceStatus(c).status));
+  if (nonCompliant.length > 0) {
+    chip.className = 'status-chip chip-red';
+    chip.textContent = `${nonCompliant.length} vaatii toimia`;
+  } else {
+    chip.className = 'status-chip chip-green';
+    chip.textContent = 'ETJ+ Aktiivinen';
+  }
+}
+
+function updateComplianceBanner() {
+  const banner = document.getElementById('compliance-banner');
+  const vis = getVisibleCompanies();
+  const critical = vis.filter(c => complianceStatus(c).status === 'non_compliant');
+  if (critical.length > 0) {
+    const names = critical.map(c => c.name).join(', ');
+    document.getElementById('banner-text').textContent =
+      `${critical.length} yritystä vaatii toimia: ${names} — katso Yhteenveto-välilehti.`;
+    banner.style.display = 'flex';
+    banner.className = 'banner banner-orange';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Summary bar
+// ═══════════════════════════════════════════════════════════════════════════
+function updateSummaryBar() {
+  const vis = getVisibleCompanies();
+  const obligated = vis.filter(c => calcAvg3yr(c.id) > 2700).length;
+  const activeAlerts = DEMO_ALERTS.filter(a =>
+    a.is_active && (a.severity === 'critical' || a.severity === 'warning') &&
+    (!activeCompanyId || a.company_id === activeCompanyId)).length;
+  const savings = allActions
+    .filter(a => a.status === 'completed' && (!activeCompanyId || a.company_id === activeCompanyId))
+    .reduce((s, a) => s + (a.actual_savings_mwh || 0), 0);
+
+  document.getElementById('s-total').textContent    = vis.length;
+  document.getElementById('s-obligated').textContent = obligated;
+  document.getElementById('s-alerts').textContent   = activeAlerts;
+  document.getElementById('s-savings').textContent  = Math.round(savings);
+
+  const nonComp = vis.filter(c => complianceStatus(c).status === 'non_compliant');
+  const dl = nonComp.find(c => calcAvg3yr(c.id) <= 23600);
+  document.getElementById('s-deadline').textContent = dl ? '11.10.2026' : '11.10.2027';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Tab 1: Yhteenveto
+// ═══════════════════════════════════════════════════════════════════════════
+function renderComplianceTab() {
+  const tbody = document.getElementById('tbody-compliance');
+  const vis = getVisibleCompanies();
+  tbody.innerHTML = vis.map(c => {
+    const avg = calcAvg3yr(c.id);
+    const cs  = complianceStatus(c);
+    const threshLabel = avg > 23600 ? '> 23 600 MWh' : avg > 2700 ? '> 2 700 MWh' : '< 2 700 MWh';
+    const etjIcon = c.etj_agreement_active ? '✅ Aktiivinen' : '❌ Ei';
+    return `<tr>
+      <td><strong>${c.name}</strong><br><span style="color:var(--text2);font-size:11px">${c.y_tunnus || ''}</span></td>
+      <td>${c.sector || '–'}</td>
+      <td>${Math.round(avg).toLocaleString('fi-FI')} MWh</td>
+      <td>${threshLabel}</td>
+      <td>${etjIcon}</td>
+      <td><span class="badge badge-${cs.color}">${cs.label}</span></td>
+      <td style="color:${cs.deadline ? 'var(--orange)' : 'var(--text2)'}">${cs.deadline || '–'}</td>
+    </tr>`;
+  }).join('');
+
+  // Alerts
+  const alertList = document.getElementById('alert-list');
+  const alerts = DEMO_ALERTS.filter(a =>
+    a.is_active && (!activeCompanyId || a.company_id === activeCompanyId));
+  alertList.innerHTML = alerts.length ? alerts.map(a => `
+    <div class="alert-item ${a.severity}">
+      <span class="alert-icon">${a.severity==='critical'?'🔴':a.severity==='warning'?'🟠':'🔵'}</span>
+      <div>
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-msg">${a.message}</div>
+      </div>
+    </div>`).join('') : '<div class="empty" style="padding:16px;font-size:13px">Ei aktiivisia hälytyksiä.</div>';
+}
+
+function renderKpiSummary() {
+  const grid = document.getElementById('kpi-summary');
+  const totalCompanies = companies.length;
+  const obligated  = companies.filter(c => calcAvg3yr(c.id) > 2700).length;
+  const etjActive  = companies.filter(c => c.etj_agreement_active).length;
+  const compliant  = companies.filter(c => ['compliant','exempt'].includes(complianceStatus(c).status)).length;
+
+  grid.innerHTML = [
+    { label:'Seurannassa', value:totalCompanies, sub:'yritystä' },
+    { label:'Katselmusvelv. piirissä', value:obligated, sub:'> 2 700 MWh/v', color:'orange' },
+    { label:'ETJ+-sopimus aktiivinen', value:etjActive, sub:'vapautettu katselmusvelv.', color:'accent' },
+    { label:'Vaatimustenmukaisia', value:compliant+'/'+totalCompanies, sub:'compliant + exempt', color:'accent' },
+  ].map(k => `
+    <div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value" style="color:var(--${k.color||'text'})">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Tab 2: Kulutus
+// ═══════════════════════════════════════════════════════════════════════════
+function initYearButtons() {
+  const wrap = document.getElementById('year-btns');
+  [2023,2024,2025].forEach(y => {
+    const btn = document.createElement('button');
+    btn.className = 'year-btn' + (y === activeYear ? ' active' : '');
+    btn.textContent = y;
+    btn.onclick = () => { activeYear = y; document.querySelectorAll('.year-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderConsumptionTab(); };
+    wrap.appendChild(btn);
+  });
+}
+
+function renderConsumptionTab() {
+  const cId = activeCompanyId || 'c1';
+  const c = companies.find(x => x.id === cId) || companies[0];
+  if (!c) return;
+
+  // Threshold meter
+  const avg = calcAvg3yr(c.id);
+  const pct2700  = Math.min(avg / 2700  * 100, 120);
+  const pct23600 = Math.min(avg / 23600 * 100, 120);
+  const bar2700  = document.getElementById('thr-2700-bar');
+  const bar23600 = document.getElementById('thr-23600-bar');
+  bar2700.style.width  = Math.min(pct2700,100)  + '%';
+  bar23600.style.width = Math.min(pct23600,100) + '%';
+  bar2700.className  = 'progress-fill ' + (avg > 2700  ? (c.etj_agreement_active?'fill-green':'fill-orange') : 'fill-green');
+  bar23600.className = 'progress-fill ' + (avg > 23600 ? 'fill-red' : 'fill-green');
+  document.getElementById('thr-2700-val').textContent  = Math.round(avg).toLocaleString('fi-FI') + ' MWh (' + Math.round(pct2700) + '%)';
+  document.getElementById('thr-23600-val').textContent = Math.round(avg).toLocaleString('fi-FI') + ' MWh (' + Math.round(pct23600) + '%)';
+
+  // Monthly chart
+  const monthly = DEMO_MONTHLY[c.id]?.[activeYear] || Array(12).fill(0);
+  const months = ['Tammi','Helmi','Maalis','Huhti','Touko','Kesä','Heinä','Elo','Syys','Loka','Marras','Joulu'];
+  if (charts.monthly) charts.monthly.destroy();
+  charts.monthly = new Chart(document.getElementById('chart-monthly'), {
+    type:'bar',
+    data:{ labels:months, datasets:[{ label:'MWh', data:monthly, backgroundColor:'rgba(76,175,80,.7)', borderColor:'#4CAF50', borderWidth:1, borderRadius:4 }] },
+    options:{ plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'rgba(255,255,255,.05)',drawBorder:false},ticks:{color:'#9BAAC5',font:{size:11}}}, y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5',font:{size:11}}} }, responsive:true }
+  });
+
+  // Breakdown doughnut
+  const bd = DEMO_BREAKDOWN[c.id] || {electricity:70,heat:20,gas:5,oil:5};
+  if (charts.breakdown) charts.breakdown.destroy();
+  charts.breakdown = new Chart(document.getElementById('chart-breakdown'), {
+    type:'doughnut',
+    data:{
+      labels:['Sähkö','Lämpö','Kaasu','Öljy'],
+      datasets:[{ data:[bd.electricity,bd.heat,bd.gas,bd.oil], backgroundColor:['#42A5F5','#FFA726','#AB47BC','#EF5350'], borderWidth:0 }]
+    },
+    options:{ plugins:{legend:{labels:{color:'#9BAAC5',font:{size:12},padding:10}}} , responsive:true }
+  });
+
+  // Annual comparison
+  const years = [2023,2024,2025];
+  const annuals = years.map(y => Math.round(calcAnnual(c.id, y)));
+  const target = Math.round(annuals[0] * 0.95);
+  if (charts.annual) charts.annual.destroy();
+  charts.annual = new Chart(document.getElementById('chart-annual'), {
+    type:'bar',
+    data:{
+      labels:years,
+      datasets:[
+        { label:'Toteutunut (MWh)', data:annuals, backgroundColor:'rgba(76,175,80,.6)', borderColor:'#4CAF50', borderWidth:1, borderRadius:4 },
+        { label:'Tavoite (MWh)',    data:[target,Math.round(target*0.97),Math.round(target*0.94)], type:'line', borderColor:'#FFA726', borderWidth:2, pointBackgroundColor:'#FFA726', fill:false, tension:.3 }
+      ]
+    },
+    options:{ plugins:{legend:{labels:{color:'#9BAAC5',font:{size:12}}}}, scales:{ x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}}, y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}} }, responsive:true }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Tab 3: Tunnusluvut
+// ═══════════════════════════════════════════════════════════════════════════
+function renderKpiGrid() {
+  const cId = activeCompanyId || 'c1';
+  const c = companies.find(x => x.id === cId) || companies[0];
+  if (!c) return;
+
+  const annual25 = calcAnnual(c.id, 2025);
+  const annual24 = calcAnnual(c.id, 2024);
+  const annual23 = calcAnnual(c.id, 2023);
+  const avg3yr   = calcAvg3yr(c.id);
+  const floor    = DEMO_FLOOR[c.id] || 0;
+  const empl     = DEMO_EMPLOYEES[c.id] || 0;
+  const intensity = floor > 0 ? Math.round(annual25 * 1000 / floor) : null;
+  const perEmpl   = empl  > 0 ? Math.round(annual25 * 1000 / empl)  : null;
+  const change    = annual24 > 0 ? ((annual25 - annual24) / annual24 * 100).toFixed(1) : null;
+
+  const grid = document.getElementById('kpi-grid');
+  grid.innerHTML = [
+    { label:'Kulutus 2025', value:Math.round(annual25).toLocaleString('fi-FI') + ' MWh', sub:'vuosikulutus', delta:change ? (change<0?'▼ '+Math.abs(change)+'% vs. 2024':'▲ '+change+'% vs. 2024') : null, up:change>0 },
+    { label:'3v. keskiarvo', value:Math.round(avg3yr).toLocaleString('fi-FI') + ' MWh', sub:'2023–2025 keskiarvo' },
+    { label:'Energiaintensiteetti', value:intensity ? intensity + ' kWh/m²' : '–', sub:'vuosikeskiarvo' },
+    { label:'Kulutus / hlö', value:perEmpl ? perEmpl.toLocaleString('fi-FI') + ' kWh/hlö' : '–', sub:'vuosikeskiarvo' },
+    { label:'Vähenemä 2023→2025', value: (((annual23-annual25)/annual23)*100).toFixed(1) + ' %', sub:'absoluuttinen vähenemä', color:annual25<annual23?'accent':'red' },
+    { label:'Säästöpotentiaali', value: allActions.filter(a=>a.company_id===c.id&&a.status!=='completed').reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI') + ' MWh', sub:'avoimista toimenpiteistä' },
+  ].map(k => `
+    <div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value" style="color:var(--${k.color||'text'})">${k.value}</div>
+      ${k.delta ? `<div class="kpi-delta ${k.up?'delta-up':'delta-down'}">${k.delta}</div>` : ''}
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+
+  // Intensity trend
+  const intData = [2023,2024,2025].map(y =>
+    floor > 0 ? Math.round(calcAnnual(c.id,y) * 1000 / floor) : 0);
+  if (charts.intensity) charts.intensity.destroy();
+  charts.intensity = new Chart(document.getElementById('chart-intensity'), {
+    type:'line',
+    data:{
+      labels:['2023','2024','2025'],
+      datasets:[
+        { label:'kWh/m²', data:intData, borderColor:'#4CAF50', backgroundColor:'rgba(76,175,80,.15)', fill:true, borderWidth:2, pointBackgroundColor:'#4CAF50', tension:.4 }
+      ]
+    },
+    options:{ plugins:{legend:{labels:{color:'#9BAAC5'}}}, scales:{ x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}}, y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}} }, responsive:true }
+  });
+
+  // Target bar
+  const targetMwh = Math.round(annual23 * 0.90);
+  if (charts.target) charts.target.destroy();
+  charts.target = new Chart(document.getElementById('chart-target'), {
+    type:'bar',
+    data:{
+      labels:['2023','2024','2025'],
+      datasets:[
+        { label:'Toteutunut', data:[Math.round(annual23),Math.round(annual24),Math.round(annual25)], backgroundColor:'rgba(76,175,80,.6)', borderRadius:4 },
+        { label:'Tavoite',    data:[Math.round(annual23*0.97),Math.round(annual23*0.94),Math.round(annual23*0.90)], backgroundColor:'rgba(255,167,38,.4)', borderRadius:4 }
+      ]
+    },
+    options:{ plugins:{legend:{labels:{color:'#9BAAC5',font:{size:12}}}}, scales:{ x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}}, y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}} }, responsive:true }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Tab 4: Toimenpiteet
+// ═══════════════════════════════════════════════════════════════════════════
+const CAT_LABELS = { valaistus:'Valaistus', lviv:'LVI/V', prosessit:'Prosessit', kuori:'Rakennuskuori', uusiutuva:'Uusiutuva', kayttaytyminen:'Käyttäytyminen' };
+const PRIO_FI    = { high:'Korkea', medium:'Keskitaso', low:'Matala' };
+const STATUS_FI  = { open:'Avoin', in_progress:'Käynnissä', completed:'Valmis', rejected:'Hylätty' };
+
+function filterActions() {
+  const st  = document.getElementById('f-action-status').value;
+  const cat = document.getElementById('f-action-cat').value;
+  const pr  = document.getElementById('f-action-priority').value;
+
+  let actions = allActions.filter(a =>
+    (!activeCompanyId || a.company_id === activeCompanyId) &&
+    (!st  || a.status === st) &&
+    (!cat || a.category === cat) &&
+    (!pr  || a.priority === pr));
+
+  const tbody = document.getElementById('tbody-actions');
+  tbody.innerHTML = actions.map(a => `
+    <tr>
+      <td><strong>${a.title}</strong>${a.responsible_person ? `<br><span style="color:var(--text2);font-size:11px">${a.responsible_person}</span>` : ''}</td>
+      <td>${CAT_LABELS[a.category] || a.category || '–'}</td>
+      <td><span class="badge badge-${a.priority}">${PRIO_FI[a.priority]||a.priority}</span></td>
+      <td>${a.estimated_savings_mwh ? a.estimated_savings_mwh.toLocaleString('fi-FI') + ' MWh' : '–'}</td>
+      <td>${a.estimated_savings_eur ? a.estimated_savings_eur.toLocaleString('fi-FI') + ' €' : '–'}</td>
+      <td>${a.investment_eur ? a.investment_eur.toLocaleString('fi-FI') + ' €' : '–'}</td>
+      <td>${a.payback_years ? a.payback_years + ' v' : '–'}</td>
+      <td><span class="badge badge-${a.status}">${STATUS_FI[a.status]||a.status}</span></td>
+      <td style="color:var(--text2)">${a.due_date || '–'}</td>
+    </tr>`).join('') || '<tr><td colspan="9" class="empty">Ei toimenpiteitä.</td></tr>';
+
+  // Savings summary
+  const completed = actions.filter(a=>a.status==='completed');
+  const inProg    = actions.filter(a=>a.status==='in_progress'||a.status==='open');
+  document.getElementById('savings-summary').innerHTML = `
+    <div class="savings-box"><label>Todennettuja säästöjä</label><div class="val accent">${completed.reduce((s,a)=>s+(a.actual_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
+    <div class="savings-box"><label>Arvioitu säästöpotentiaali</label><div class="val">${inProg.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
+    <div class="savings-box"><label>Investoinnit yhteensä</label><div class="val">${actions.reduce((s,a)=>s+(a.investment_eur||0),0).toLocaleString('fi-FI')} €</div></div>
+    <div class="savings-box"><label>Toimenpiteitä yhteensä</label><div class="val">${actions.length} kpl</div></div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Tab 5: Raportit
+// ═══════════════════════════════════════════════════════════════════════════
+function renderMgmtReportMeta() {
+  const cId = activeCompanyId || 'c1';
+  const c = companies.find(x => x.id === cId) || companies[0];
+  if (!c) return;
+
+  const avg = calcAvg3yr(c.id);
+  const cs  = complianceStatus(c);
+  const annual25 = calcAnnual(c.id, 2025);
+
+  document.getElementById('report-meta-fields').innerHTML = [
+    { label:'Yritys',                value:c.name },
+    { label:'Y-tunnus',              value:c.y_tunnus || '–' },
+    { label:'Raportointivuosi',      value:'2025' },
+    { label:'3v. ka. kulutus',       value:Math.round(avg).toLocaleString('fi-FI') + ' MWh' },
+    { label:'Kulutus 2025',          value:Math.round(annual25).toLocaleString('fi-FI') + ' MWh' },
+    { label:'Ylitetty raja',         value: avg > 23600 ? '23 600 MWh' : avg > 2700 ? '2 700 MWh' : 'Ei rajaa' },
+    { label:'ETJ+-sopimus',          value: c.etj_agreement_active ? '✅ Aktiivinen' : '❌ Ei' },
+    { label:'Vaatimustenmukaisuus',  value:cs.label },
+  ].map(f => `<div class="meta-field"><label>${f.label}</label><span>${f.value}</span></div>`).join('');
+}
+
+function generateEnergiaviraReport() {
+  const cId = activeCompanyId || 'c1';
+  const c = companies.find(x => x.id === cId) || companies[0];
+  const avg = calcAvg3yr(c.id);
+  const annual25 = calcAnnual(c.id, 2025);
+
+  const report = {
+    meta: {
+      generated_at: new Date().toISOString(),
+      generated_by: 'Spara ETJ+ Light',
+      report_type: 'energiavirasto_vuosi_ilmoitus'
+    },
+    company: {
+      name: c.name,
+      y_tunnus: c.y_tunnus,
+      contact_name: c.contact_name,
+      contact_email: c.contact_email
+    },
+    reporting_year: 2025,
+    energy_consumption: {
+      total_mwh: Math.round(annual25),
+      average_3yr_mwh: Math.round(avg),
+      exceeds_2700_mwh: avg > 2700,
+      exceeds_23600_mwh: avg > 23600,
+      threshold_crossed: avg > 23600 ? '23600' : avg > 2700 ? '2700' : 'none'
+    },
+    compliance: {
+      etj_agreement_active: c.etj_agreement_active,
+      audit_exemption: c.etj_agreement_active && avg <= 23600,
+      ems_required: avg > 23600,
+      ems_deadline: avg > 23600 ? '2027-10-11' : null,
+      audit_deadline: !c.etj_agreement_active && avg > 2700 && avg <= 23600 ? '2026-10-11' : null
+    },
+    submission_deadline: avg > 2700 ? '2026-12-31' : null,
+    energiavirasto_portal: 'https://energia.fi/asiointipalvelu'
+  };
+
+  const blob = new Blob([JSON.stringify(report, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `energiavirasto_ilmoitus_${c.y_tunnus || 'yritys'}_2025.json`;
+  a.click();
+}
+
+function downloadCsvReport() {
+  const cId = activeCompanyId || 'c1';
+  const c = companies.find(x => x.id === cId) || companies[0];
+  const rows = [['Vuosi','Kuukausi','MWh']];
+  [2023,2024,2025].forEach(y => {
+    (DEMO_MONTHLY[c.id]?.[y] || []).forEach((v,i) => rows.push([y, i+1, v]));
+  });
+  const csv = rows.map(r => r.join(';')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `kulutusdata_${c.name.replace(/\s/g,'_')}.csv`;
+  a.click();
+}
+
+function generateAuditTemplate() {
+  const cId = activeCompanyId || 'c1';
+  const c = companies.find(x => x.id === cId) || companies[0];
+  const avg = calcAvg3yr(c.id);
+  const actions = allActions.filter(a => a.company_id === c.id);
+
+  const template = {
+    meta: { report_type:'energiakatselmusraportti_pohja', generated_at:new Date().toISOString(), standard:'ETJ+ Light – Ei sertifioitu' },
+    company: { name:c.name, y_tunnus:c.y_tunnus, sector:c.sector },
+    energy_use: {
+      average_annual_mwh: Math.round(avg),
+      years_covered: [2023,2024,2025],
+      annual_totals: {
+        2023: Math.round(calcAnnual(c.id,2023)),
+        2024: Math.round(calcAnnual(c.id,2024)),
+        2025: Math.round(calcAnnual(c.id,2025)),
+      }
+    },
+    energy_review_findings: actions.map(a => ({
+      measure: a.title,
+      category: a.category,
+      priority: a.priority,
+      estimated_savings_mwh: a.estimated_savings_mwh,
+      investment_eur: a.investment_eur,
+      payback_years: a.payback_years,
+      status: a.status
+    })),
+    total_savings_potential_mwh: actions.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0),
+    next_review_due: '2030-10-11'
+  };
+
+  const blob = new Blob([JSON.stringify(template, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `katselmusraportti_pohja_${c.name.replace(/\s/g,'_')}.json`;
+  a.click();
+}
+
+function renderMgmtReport() {
+  const cId = activeCompanyId || 'c1';
+  const c = companies.find(x => x.id === cId) || companies[0];
+  const avg = calcAvg3yr(c.id);
+  const cs = complianceStatus(c);
+  const acts = allActions.filter(a => a.company_id === c.id);
+  const completed = acts.filter(a=>a.status==='completed');
+  const open      = acts.filter(a=>a.status==='open'||a.status==='in_progress');
+
+  document.getElementById('mgmt-report-content').innerHTML = `
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-top:12px;font-size:13px;line-height:1.7">
+      <div style="font-size:15px;font-weight:700;margin-bottom:10px">Johdon energiakatselmus – ${c.name} – ${new Date().getFullYear()}</div>
+      <div style="color:var(--text2)">Laadittu: ${new Date().toLocaleDateString('fi-FI')}</div>
+      <div class="divider"></div>
+      <div style="margin-bottom:8px"><strong>Energiankulutus (3v. ka.):</strong> ${Math.round(avg).toLocaleString('fi-FI')} MWh/v</div>
+      <div style="margin-bottom:8px"><strong>Vaatimustenmukaisuus:</strong> <span class="badge badge-${cs.color}">${cs.label}</span></div>
+      <div style="margin-bottom:8px"><strong>ETJ+-sopimus:</strong> ${c.etj_agreement_active ? '✅ Aktiivinen' : '❌ Ei aktiivinen'}</div>
+      <div class="divider"></div>
+      <div style="margin-bottom:6px"><strong>Toimenpiteet:</strong></div>
+      <div style="margin-bottom:4px">• Toteutettuja toimenpiteitä: ${completed.length} kpl, säästöt yhteensä ${completed.reduce((s,a)=>s+(a.actual_savings_mwh||0),0)} MWh</div>
+      <div style="margin-bottom:4px">• Avoimia/käynnissä olevia: ${open.length} kpl, arv. säästöpotentiaali ${open.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0)} MWh</div>
+      <div style="margin-bottom:4px">• Kokonaisinvestoinnit: ${acts.reduce((s,a)=>s+(a.investment_eur||0),0).toLocaleString('fi-FI')} €</div>
+      <div class="divider"></div>
+      <div style="color:var(--text2);font-size:12px">Spara ETJ+ Light – Ei sertifioitu energianhallintajärjestelmä. Käytetään energiatehokkuussopimuksen ETJ+-vapautusperusteen tukena.</div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Data entry modal
+// ═══════════════════════════════════════════════════════════════════════════
+function openDataEntry() {
+  const fields = document.getElementById('entry-fields');
+  fields.innerHTML = [
+    ['electricity_mwh','Sähkö (MWh)','0'],
+    ['heat_mwh','Kaukolämpö (MWh)','0'],
+    ['gas_mwh','Kaasu (MWh)','0'],
+    ['oil_mwh','Öljy (MWh)','0'],
+    ['other_mwh','Muu energia (MWh)','0'],
+  ].map(([id,label,ph]) => `
+    <div>
+      <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">${label}</label>
+      <input id="${id}" type="number" min="0" step="0.1" placeholder="${ph}"
+        style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:inherit">
+    </div>`).join('');
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+function closeDataEntry() { document.getElementById('modal-overlay').style.display = 'none'; }
+async function saveEntry() {
+  const cId = activeCompanyId || companies[0]?.id;
+  const year  = +document.getElementById('entry-year').value;
+  const month = +document.getElementById('entry-month').value;
+  const entry = {
+    company_id: cId, year, month,
+    electricity_mwh: +document.getElementById('electricity_mwh').value || 0,
+    heat_mwh:        +document.getElementById('heat_mwh').value        || 0,
+    gas_mwh:         +document.getElementById('gas_mwh').value         || 0,
+    oil_mwh:         +document.getElementById('oil_mwh').value         || 0,
+    other_mwh:       +document.getElementById('other_mwh').value       || 0,
+  };
+  try {
+    const { error } = await db.from('etj_energy_readings').upsert(entry, { onConflict:'company_id,year,month' });
+    if (error) throw error;
+  } catch { /* demo mode – vain lokitetaan */ }
+  closeDataEntry();
+  alert('Kulutusdata tallennettu (demo-tilassa ei tallenneta pysyvästi).');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Tabs
+// ═══════════════════════════════════════════════════════════════════════════
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    const t = tab.dataset.tab;
+    if (t === 'kulutus')      renderConsumptionTab();
+    if (t === 'tunnusluvut')  renderKpiGrid();
+    if (t === 'toimenpiteet') filterActions();
+    if (t === 'raportit')     renderMgmtReportMeta();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════════════════════════
+loadData().then(() => {
+  updateComplianceBanner();
+  updateStatusChip();
+  filterActions();
+});
+</script>
+</body>
+</html>
