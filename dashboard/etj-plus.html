@@ -363,7 +363,24 @@
     .pcard-head { display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px; }
     .pcard-title { font-size:13px;font-weight:600;line-height:1.4; }
     .pcard-stats { display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-top:4px; }
-    .pcard-impact { margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--accent); }
+    .pcard-impact { margin-top:8px;font-size:11px;color:var(--accent); }
+    .pcard-expand-hint { font-size:11px;color:var(--text2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px; }
+    .pcard-expand-hint:hover { color:var(--text); }
+    .pcard-detail { padding-top:12px;margin-top:2px;animation:fadeIn .15s ease; }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+    .pcard-ai-badge { display:inline-flex;align-items:center;gap:5px;background:rgba(76,175,80,.12);border:1px solid rgba(76,175,80,.25);color:var(--accent);font-size:10px;border-radius:6px;padding:2px 8px;margin-bottom:8px; }
+    .pcard-ai-text { font-size:12px;line-height:1.6;color:var(--text);margin-bottom:12px; }
+    .pcard-products { display:flex;flex-direction:column;gap:6px;margin-bottom:12px; }
+    .pcard-product { background:var(--bg3);border-radius:var(--radius);padding:8px 12px;display:flex;align-items:flex-start;gap:8px; }
+    .pcard-product-type { flex-shrink:0;font-size:10px;color:var(--text2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-top:2px;white-space:nowrap; }
+    .pcard-product-body { flex:1; }
+    .pcard-product-name { font-size:12px;font-weight:600; }
+    .pcard-product-provider { font-size:11px;color:var(--text2);margin-top:1px; }
+    .pcard-impl { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px; }
+    @media(max-width:500px){.pcard-impl{grid-template-columns:1fr;}}
+    .pcard-impl-item { background:var(--bg3);border-radius:var(--radius);padding:8px 12px; }
+    .pcard-impl-label { font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:4px;font-weight:600; }
+    .pcard-impl-text { font-size:12px;line-height:1.5;color:var(--text); }
     /* ── Forecast chart stats ── */
     .forecast-stats { display:flex;gap:12px;margin-top:14px;flex-wrap:wrap; }
     .fstat { background:var(--bg3);border-radius:var(--radius);padding:8px 14px; }
@@ -944,6 +961,18 @@ const DEMO_BENCHMARKS = {
   c3b: { median_mwh: 2400, label: 'Logistiikka & varastointi' },
 };
 const EUR_PER_MWH = 100;
+
+// AI-generated solutions for each action (keyed by action id)
+const DEMO_ACTION_SUGGESTIONS = {
+  a1: { solution:'LED-valaistus on jo toteutettu. Kannattaa seuraavaksi tarkistaa valaistuksen ohjaustekniikka (läsnäolotunnistimet, päivänvalo-ohjaus) lisäsäästöjen saavuttamiseksi.', products:[{type:'Laite',name:'Valaistuksen ohjausjärjestelmä (DALI 2)',provider:'Helvar'},{type:'Palvelu',name:'Valaistussuunnittelu ja optimointi',provider:'Ainoa Oy'}], diy:'Ohjaustekniikan lisäys ~4 000–6 000 €, kesto noin viikko. Vaatii sähköasentajan.', outsource:'Avaimet käteen -palvelu sis. suunnittelu, asennus ja takuuhuolto ~8 000 €.' },
+  a2: { solution:'Paineilmavuodot kuluttavat tyypillisesti 20–30 % kompressorien energiasta. Ultraäänimittauksella löytyvät vuodot paikannetaan ja tiivistetään systemaattisesti.', products:[{type:'Palvelu',name:'Paineilman vuodontarkastus (ultraääni)',provider:'Eneria Finland Oy'},{type:'Tuote',name:'Pikaliitintiivisteet ja korjaussarjat',provider:'Festo'},{type:'Laite',name:'Kompressorin taajuusmuuttaja',provider:'Atlas Copco'}], diy:'Ultraäänilaitteen vuokraus ~800 €/vko + tiivisteet ~2 000 €. Kesto 2–3 päivää.', outsource:'Kokonaispalvelu sis. mittaus, raportti ja korjaukset ~8 000–12 000 €. Takaisinmaksu 2–3 kk.' },
+  a3: { solution:'Ilma-vesilämpöpumppu korvaa öljy- tai kaukolämpölämmityksen. COP ~3–4 tarkoittaa käytännössä 75 % energiasäästöä lämmityksessä verrattuna suorasähköön.', products:[{type:'Laite',name:'Teollisuuslämpöpumppu 50–150 kW',provider:'Nibe Industrial'},{type:'Palvelu',name:'LVI-suunnittelu ja asennus avaimet käteen',provider:'Caverion Suomi Oy'},{type:'Rahoitus',name:'Energiatehokkuusinvestoinnin rahoitus',provider:'Finnvera'}], diy:'Laite + asennus ~80 000–90 000 €. Vaatii LVI-ammattilaisen ja rakennusluvan.', outsource:'ESCO-malli: ei alkuinvestointia, takaisinmaksu toteutuneista säästöistä 5–7 v.' },
+  a4: { solution:'Kauppakeskuksen ilmastoinnin VAV-säätö (Variable Air Volume) ja käyttöaikaohjelma leikkaa käyttöajan ulkopuolista kulutusta jopa 40 %.', products:[{type:'Laite',name:'VAV-säätöpellit ja -toimilaitteet',provider:'Swegon Finland Oy'},{type:'Palvelu',name:'Rakennusautomaation päivitys',provider:'Schneider Electric'},{type:'Palvelu',name:'Energiakatsastus ja optimointiraportti',provider:'Granlund Oy'}], diy:'Automaatiosuunnittelu + laitteet ~30 000–40 000 €. Kesto 4–6 vko.', outsource:'Energiasäästöpalvelu tulospalkkauksella – maksat vain toteutuneista säästöistä.' },
+  a5: { solution:'Kylmälaitteiden päivitys luonnonkylmäaineisiin (CO₂ tai propaani) parantaa hyötysuhdetta 15–25 % ja täyttää tulevan EU F-kaasusääntelyn vaatimukset.', products:[{type:'Laite',name:'CO₂-kylmälaitteisto (transcriittinen)',provider:'Carrier Refrigeration'},{type:'Palvelu',name:'Kylmälaitteiden tarkastus ja optimointi',provider:'Porkka Finland Oy'},{type:'Palvelu',name:'Hukkalämmön talteenotto suunnittelu',provider:'Rejlers Oy'}], diy:'Laite + asennus ~35 000–45 000 €. Vaatii kylmäaineasentajaluvan.', outsource:'Kylmätekniikkapalvelu huoltosopimuksella ~2 500 €/kk sis. energia-optimointi.' },
+  a6: { solution:'Katon koko pinta-alan hyödyntäminen aurinkopaneelistolla. Ylijäämäsähkö myydään verkkoon tai varastoidaan akustoon yöaikaista kulutusta varten.', products:[{type:'Laite',name:'Aurinkopaneelit 200–300 kWp (monikide)',provider:'Hanwha Q CELLS'},{type:'Palvelu',name:'Aurinkosähkön avaimet käteen -asennus',provider:'Fortum Solar'},{type:'Rahoitus',name:'PPA-sopimus (ei alkuinvestointia)',provider:'Helen Oy'}], diy:'Paneelit + invertterit + asennus ~250 000–320 000 €. Tarvitaan sähkösuunnitelma ja lupa.', outsource:'PPA (Power Purchase Agreement): nolla investointia, maksat tuotetusta kWh:sta ~7 v ajan.' },
+  a7: { solution:'Kylmävarastojen lauhdelämpö ohjataan lämpöpumpun avulla kuumavesikiertoon lämmitystä ja lämminvesijärjestelmää varten. Hukkalämpö täysin hyödynnetty.', products:[{type:'Laite',name:'Hukkalämmön talteenottoyksikkö',provider:'Star Refrigeration'},{type:'Palvelu',name:'Prosessi-insinöörityö ja suunnittelu',provider:'Granlund Oy'},{type:'Rahoitus',name:'Business Finland energiatuki (tyypillisesti 25–40 %)',provider:'Business Finland'}], diy:'Laitteisto ~150 000–180 000 €, asennus 2–3 kk. Vaatii prosessi- ja LVI-suunnittelun.', outsource:'ESCO-rahoitusmalli: ei alkuinvestointia, takaisinmaksu säästöistä 5–7 v.' },
+  a8: { solution:'Li-ion-trukkilaivue eliminoi dieselkulut ja vähentää sisäilman pakokaasuja. Lataus yöllä halpasähköllä + aurinkosähkö optimoi käyttökustannuksia.', products:[{type:'Laite',name:'Li-ion-vastapainotrukki 1,5–3,5 t',provider:'Toyota Material Handling'},{type:'Laite',name:'3-vaihe-latauspisteet varastoihin',provider:'Ensto Chago'},{type:'Rahoitus',name:'Trukkileasingsopimus huoltoineen',provider:'Toyota Financial Services'}], diy:'Trukit ~30 000–50 000 €/kpl + latausjärjestelmä. Leasing 1 200 €/kk/trukki.', outsource:'Kokonaispalvelu: trukki, lataus, huolto, renkaat — yhdellä kuukausimaksulla.' },
+};
 
 const DEMO_ALERTS = [
   { id:'al1', company_id:'c2', severity:'critical', title:'Katselmus vaadittu – eräpäivä 11.10.2026', message:'Espoon Kauppakeskus Oy ylittää 2 700 MWh/v rajan. ETJ+-sopimus puuttuu – energiakatselmus on tehtävä viimeistään 11.10.2026.', triggered_at:'2026-06-01', is_active:true },
@@ -2017,8 +2046,27 @@ function renderSavingsWidget() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Toimenpidekortti — top 3 prioriteetitoimenpidettä
+// Toimenpidekortti — avattavat kortit top 3 toimenpiteelle
 // ═══════════════════════════════════════════════════════════════════════════
+function togglePcard(id) {
+  const detail = document.getElementById('pcd-' + id);
+  const hint   = document.getElementById('pch-' + id);
+  if (!detail) return;
+  const open = detail.style.display === 'none';
+  detail.style.display = open ? '' : 'none';
+  if (hint) hint.innerHTML = open ? '▲ Piilota ratkaisu' : '▼ Näytä AI-ratkaisu &amp; tarjous';
+}
+
+function openQuoteRequest(actionId) {
+  const a = (allActions||[]).find(x => x.id === actionId);
+  const cId = activeCompanyId || (companies[0]?.id);
+  const c = companies.find(x => x.id === cId);
+  const msg = a && c
+    ? `Tarjouspyyntö lähetetty: "${a.title}" — ${c.name}. Sparan asiantuntija ottaa yhteyttä 24h kuluessa.`
+    : 'Tarjouspyyntö lähetetty. Olemme yhteydessä pian.';
+  showToast(msg);
+}
+
 function renderActionCards() {
   const el = document.getElementById('action-cards-wrap');
   if (!el) return;
@@ -2048,18 +2096,49 @@ function renderActionCards() {
       </div>
       <div class="pcard-grid">
         ${top.map(a => {
-          const impact = annual > 0 ? (a.estimated_savings_mwh / annual * 100).toFixed(1) : '–';
+          const impact  = annual > 0 ? (a.estimated_savings_mwh / annual * 100).toFixed(1) : '–';
+          const sug     = DEMO_ACTION_SUGGESTIONS[a.id];
+          const detailHtml = sug ? `
+            <div class="pcard-detail" id="pcd-${a.id}" style="display:none">
+              <div class="pcard-ai-badge">✦ AI-ratkaisu</div>
+              <div class="pcard-ai-text">${escHtml(sug.solution)}</div>
+              <div class="pcard-products">
+                ${sug.products.map(p=>`
+                  <div class="pcard-product">
+                    <span class="pcard-product-type">${escHtml(p.type)}</span>
+                    <div class="pcard-product-body">
+                      <div class="pcard-product-name">${escHtml(p.name)}</div>
+                      <div class="pcard-product-provider">${escHtml(p.provider)}</div>
+                    </div>
+                  </div>`).join('')}
+              </div>
+              <div class="pcard-impl">
+                <div class="pcard-impl-item">
+                  <div class="pcard-impl-label">Omatoiminen</div>
+                  <div class="pcard-impl-text">${escHtml(sug.diy)}</div>
+                </div>
+                <div class="pcard-impl-item">
+                  <div class="pcard-impl-label">Ulkoistettu</div>
+                  <div class="pcard-impl-text">${escHtml(sug.outsource)}</div>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-sm" style="width:100%" onclick="openQuoteRequest('${a.id}')">📋 Pyydä tarjous Sparalta</button>
+            </div>` : '';
           return `<div class="pcard">
             <div class="pcard-head">
-              <div class="pcard-title">${ICONS[a.category]||'⚡'} ${a.title}</div>
+              <div>
+                <div class="pcard-title">${ICONS[a.category]||'⚡'} ${escHtml(a.title)}</div>
+                <div class="pcard-stats">
+                  <span>⚡ ${(a.estimated_savings_mwh||0).toLocaleString('fi-FI')} MWh/v</span>
+                  <span>💶 ${(a.estimated_savings_eur||0).toLocaleString('fi-FI')} €/v</span>
+                  <span>📅 TMA ${a.payback_years||'–'}v</span>
+                </div>
+                <div class="pcard-impact">↑ ${impact}% vuositavoitteesta</div>
+              </div>
               ${SBADGE[a.status]||''}
             </div>
-            <div class="pcard-stats">
-              <span>⚡ ${(a.estimated_savings_mwh||0).toLocaleString('fi-FI')} MWh/v</span>
-              <span>💶 ${(a.estimated_savings_eur||0).toLocaleString('fi-FI')} €/v</span>
-              <span>📅 TMA ${a.payback_years||'–'}v</span>
-            </div>
-            <div class="pcard-impact">↑ ${impact}% vuositavoitteesta</div>
+            ${sug ? `<div class="pcard-expand-hint" id="pch-${a.id}" onclick="togglePcard('${a.id}')">▼ Näytä AI-ratkaisu &amp; tarjous</div>` : ''}
+            ${detailHtml}
           </div>`;
         }).join('')}
       </div>
@@ -2257,25 +2336,34 @@ function _str(v) {
   return String(v);
 }
 
+// Extract company name from v3 response — top-level OR names[] array
+function _prhName(res) {
+  const top = _str(res.name) || _str(res.companyName);
+  if (top) return top;
+  const arr = (res.names || []).filter(n => !n.endDate).sort((a,b) => (a.order||0)-(b.order||0));
+  return _str((arr.find(n => n.language==='FI') || arr[0] || {}).name);
+}
+
 function _prhToForm(res) {
-  // v3 may have addresses/businessLines as empty on shallow (name-search) responses
-  const addr = (res.addresses || [])
-    .filter(a => !a.endDate)
-    .sort((a,b) => (b.registrationDate||'').localeCompare(a.registrationDate||''))[0] || {};
-  const bline = (res.businessLines || [])
-    .filter(b => !b.endDate)
-    .sort((a,b) => (b.registrationDate||'').localeCompare(a.registrationDate||''))[0] || {};
-  // v3: name may be top-level string OR live in names[] array
-  const nameRaw = res.name != null ? res.name
-    : ((res.names || []).filter(n => !n.endDate).sort((a,b) => (a.order||0)-(b.order||0))[0] || {}).name || '';
+  console.debug('[PRH fields]', Object.keys(res).join(', '));
+  // Prefer registered address (type 1), fall back to any active address
+  const addrs = (res.addresses || []).filter(a => !a.endDate);
+  const addr  = addrs.find(a => a.type === 1) || addrs[0] || {};
+  // Business line: Finnish first, else any active
+  const blines = (res.businessLines || []).filter(b => !b.endDate);
+  const bline  = blines.find(b => b.language==='FI') || blines[0] || {};
+  // City may be in city, postOffice, or municipality field depending on v3 version
+  const cityStr = _str(addr.city) || _str(addr.postOffice) || _str(addr.municipality);
+  // Company form: try both possible field names
+  const formStr = _str(res.companyForm) || _str(res.legalForm) || _str(res.companyFormCode);
   return {
-    cf_name:        _str(nameRaw),
+    cf_name:        _prhName(res),
     cf_ytunnus:     _str(res.businessId),
-    cf_sector:      _str(bline.name),
-    cf_companyForm: _str(res.companyForm),
+    cf_sector:      _str(bline.name) || _str(bline.code),
+    cf_companyForm: formStr,
     cf_address:     _str(addr.street),
     cf_postCode:    _str(addr.postCode),
-    cf_city:        _str(addr.city),
+    cf_city:        cityStr,
     cf_contact:     '',
     cf_email:       '',
     cf_regDate:     _str(res.registrationDate),
@@ -2288,7 +2376,7 @@ async function _prhFetch(url) {
   const r = await fetch(url);
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const data = await r.json();
-  console.debug('[PRH v3]', url, JSON.stringify(data).substring(0, 400));
+  console.debug('[PRH v3]', url, '\n', JSON.stringify(data?.companies?.[0] || data).substring(0, 800));
   // v3 uses "companies"; fall back to "results" just in case
   return data.companies || data.results || [];
 }
@@ -2315,15 +2403,16 @@ function showYtjSuggestions(context, results) {
   const el = document.getElementById(context + '-ytj-dropdown');
   if (!el || !results.length) { if (el) el.style.display = 'none'; return; }
   el.innerHTML = results.map((r, i) => {
-    const name = _str(r.name) || _str(r.businessId) || '–';
+    // Name: top-level OR names[] array (name-search responses often omit top-level name)
+    const name = _prhName(r) || _str(r.businessId) || '–';
     const id   = _str(r.businessId);
-    const form = _str(r.companyForm);
-    // city may come from addresses on full responses, or be absent on shallow ones
-    const city = _str((r.addresses||[]).filter(a=>!a.endDate)[0]?.city || '');
-    const meta = [id, form, city].filter(Boolean).join(' · ');
+    const form = _str(r.companyForm) || _str(r.legalForm);
+    const addrs = (r.addresses||[]).filter(a=>!a.endDate);
+    const city  = _str((addrs[0]||{}).city) || _str((addrs[0]||{}).postOffice) || '';
+    const meta  = [id, form, city].filter(Boolean).join(' · ');
     return `<div class="ytj-dropdown-item" onmousedown="selectYtjSuggestion('${context}',${i})">
       <div class="ytj-item-name">${escHtml(name)}</div>
-      <div class="ytj-item-meta">${escHtml(meta || '–')}</div>
+      <div class="ytj-item-meta">${escHtml(meta || id)}</div>
     </div>`;
   }).join('');
   el._results = results;
