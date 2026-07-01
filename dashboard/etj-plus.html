@@ -408,6 +408,32 @@
     .pcard-impl-item { background:var(--bg3);border-radius:var(--radius);padding:8px 12px; }
     .pcard-impl-label { font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:4px;font-weight:600; }
     .pcard-impl-text { font-size:12px;line-height:1.5;color:var(--text); }
+
+    /* ── Kanban board ── */
+    .kanban-board { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start; }
+    @media(max-width:700px){.kanban-board{grid-template-columns:1fr}}
+    .kanban-col { background:var(--bg3);border-radius:10px;padding:12px 14px; }
+    .kanban-col-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--border) }
+    .kanban-col-title { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px }
+    .kanban-col-count { font-size:11px;color:var(--text2) }
+    .kb-card { background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s }
+    .kb-card:last-child { margin-bottom:0 }
+    .kb-card:hover { border-color:var(--accent);box-shadow:0 2px 12px rgba(0,0,0,.25) }
+    .kb-card-title { font-size:13px;font-weight:600;line-height:1.4;margin-bottom:5px }
+    .kb-card-meta { display:flex;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--text2);margin-bottom:6px }
+    .kb-card-stats { display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--text) }
+    .kb-card-ai { display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--accent);margin-top:6px;padding-top:6px;border-top:1px solid var(--border) }
+    .kb-empty { color:var(--text2);font-size:12px;text-align:center;padding:18px 0;font-style:italic }
+    .view-toggle { display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden }
+    .view-toggle button { background:none;border:none;color:var(--text2);padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s,color .15s }
+    .view-toggle button.active { background:var(--accent);color:#fff }
+
+    /* ── Action detail modal ── */
+    .amodal-kpi { display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:18px }
+    .amodal-kpi-box { background:var(--bg3);border-radius:var(--radius);padding:10px 12px }
+    .amodal-kpi-label { font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px }
+    .amodal-kpi-val { font-size:17px;font-weight:700 }
+
     /* ── Forecast chart stats ── */
     .forecast-stats { display:flex;gap:12px;margin-top:14px;flex-wrap:wrap; }
     .fstat { background:var(--bg3);border-radius:var(--radius);padding:8px 14px; }
@@ -627,48 +653,45 @@
 
 <!-- ══ Tab 4: Toimenpiteet ══ -->
 <div class="tab-content" id="tab-toimenpiteet">
-  <div id="action-cards-wrap"></div>
-  <div class="filters">
-    <select id="f-action-status" onchange="filterActions()">
-      <option value="">Kaikki statukset</option>
-      <option value="open">Avoin</option>
-      <option value="in_progress">Käynnissä</option>
-      <option value="completed">Valmis</option>
-    </select>
-    <select id="f-action-cat" onchange="filterActions()">
-      <option value="">Kaikki kategoriat</option>
-      <option value="valaistus">Valaistus</option>
-      <option value="lviv">LVI/V</option>
-      <option value="prosessit">Prosessit</option>
-      <option value="kuori">Rakennuskuori</option>
-      <option value="uusiutuva">Uusiutuva energia</option>
-      <option value="kayttaytyminen">Käyttäytyminen</option>
-    </select>
-    <select id="f-action-priority" onchange="filterActions()">
-      <option value="">Kaikki prioriteetit</option>
-      <option value="high">Korkea</option>
-      <option value="medium">Keskitaso</option>
-      <option value="low">Matala</option>
-    </select>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+    <div class="filters" style="margin-bottom:0">
+      <select id="f-action-cat" onchange="filterActions()">
+        <option value="">Kaikki kategoriat</option>
+        <option value="valaistus">Valaistus</option>
+        <option value="lviv">LVI/V</option>
+        <option value="prosessit">Prosessit</option>
+        <option value="kuori">Rakennuskuori</option>
+        <option value="uusiutuva">Uusiutuva energia</option>
+        <option value="kayttaytyminen">Käyttäytyminen</option>
+      </select>
+      <select id="f-action-priority" onchange="filterActions()">
+        <option value="">Kaikki prioriteetit</option>
+        <option value="high">Korkea</option>
+        <option value="medium">Keskitaso</option>
+        <option value="low">Matala</option>
+      </select>
+    </div>
+    <div class="view-toggle">
+      <button id="view-kanban-btn" class="active" onclick="setActionView('kanban')">⊞ Kanban</button>
+      <button id="view-list-btn" onclick="setActionView('list')">☰ Lista</button>
+    </div>
   </div>
-  <div class="table-wrap">
+
+  <div class="kanban-board" id="kanban-board"></div>
+
+  <div class="table-wrap" id="action-list-wrap" style="display:none">
     <table>
       <thead>
         <tr>
-          <th>Toimenpide</th>
-          <th>Kategoria</th>
-          <th>Prioriteetti</th>
-          <th>Arv. säästö (MWh)</th>
-          <th>Arv. säästö (€)</th>
-          <th>Investointi (€)</th>
-          <th>Takaisinmaksu</th>
-          <th>Status</th>
-          <th>Eräpäivä</th>
+          <th>Toimenpide</th><th>Kategoria</th><th>Prioriteetti</th>
+          <th>Arv. säästö (MWh)</th><th>Arv. säästö (€)</th>
+          <th>Investointi (€)</th><th>Takaisinmaksu</th><th>Status</th><th>Eräpäivä</th>
         </tr>
       </thead>
       <tbody id="tbody-actions"></tbody>
     </table>
   </div>
+
   <div class="savings-summary" id="savings-summary"></div>
 </div>
 
@@ -899,6 +922,15 @@
 
     <datalist id="tag-datalist"></datalist>
     <datalist id="tag-datalist-annual"></datalist>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- Action detail modal -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="action-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1002;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:min(580px,95vw);max-height:88vh;overflow-y:auto">
+    <div id="action-modal-body"></div>
   </div>
 </div>
 
@@ -1659,23 +1691,90 @@ const CAT_LABELS = { valaistus:'Valaistus', lviv:'LVI/V', prosessit:'Prosessit',
 const PRIO_FI    = { high:'Korkea', medium:'Keskitaso', low:'Matala' };
 const STATUS_FI  = { open:'Avoin', in_progress:'Käynnissä', completed:'Valmis', rejected:'Hylätty' };
 
+let _actionView = 'kanban';
+
+function setActionView(v) {
+  _actionView = v;
+  document.getElementById('view-kanban-btn').classList.toggle('active', v === 'kanban');
+  document.getElementById('view-list-btn').classList.toggle('active', v === 'list');
+  document.getElementById('kanban-board').style.display = v === 'kanban' ? '' : 'none';
+  document.getElementById('action-list-wrap').style.display = v === 'list' ? '' : 'none';
+  filterActions();
+}
+
 function filterActions() {
-  renderActionCards();
-  const st  = document.getElementById('f-action-status').value;
   const cat = document.getElementById('f-action-cat').value;
   const pr  = document.getElementById('f-action-priority').value;
-
-  let actions = allActions.filter(a =>
+  const actions = allActions.filter(a =>
     (!activeCompanyId || a.company_id === activeCompanyId) &&
-    (!st  || a.status === st) &&
     (!cat || a.category === cat) &&
     (!pr  || a.priority === pr));
 
+  if (_actionView === 'kanban') renderKanban(actions);
+  else renderActionList(actions);
+
+  const completed = actions.filter(a => a.status==='completed');
+  const open      = actions.filter(a => a.status==='in_progress' || a.status==='open');
+  document.getElementById('savings-summary').innerHTML = `
+    <div class="savings-box"><label>Todennettuja säästöjä</label><div class="val accent">${completed.reduce((s,a)=>s+(a.actual_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
+    <div class="savings-box"><label>Arvioitu säästöpotentiaali</label><div class="val">${open.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
+    <div class="savings-box"><label>Investoinnit yhteensä</label><div class="val">${actions.reduce((s,a)=>s+(a.investment_eur||0),0).toLocaleString('fi-FI')} €</div></div>
+    <div class="savings-box"><label>Toimenpiteitä yhteensä</label><div class="val">${actions.length} kpl</div></div>`;
+}
+
+const _ACT_ICONS = { valaistus:'💡', lviv:'🌡️', prosessit:'⚙️', kuori:'🏠', uusiutuva:'☀️', kayttaytyminen:'👥' };
+
+function renderKanban(actions) {
+  const board = document.getElementById('kanban-board');
+  if (!board) return;
+  const COLS = [
+    { key:'open',        label:'Avoin',     color:'var(--orange,#ffb74d)' },
+    { key:'in_progress', label:'Käynnissä', color:'#64b5f6' },
+    { key:'completed',   label:'Valmis',    color:'var(--accent)' },
+  ];
+  const PORDER = { high:0, medium:1, low:2 };
+
+  board.innerHTML = COLS.map(col => {
+    const colCards = actions.filter(a => a.status === col.key)
+      .sort((a,b) => (PORDER[a.priority]||9) - (PORDER[b.priority]||9));
+    const totMwh = colCards.reduce((s,a) => s+(a.actual_savings_mwh||a.estimated_savings_mwh||0), 0);
+
+    return `<div class="kanban-col">
+      <div class="kanban-col-header" style="border-bottom-color:${col.color}">
+        <div class="kanban-col-title" style="color:${col.color}">${col.label}</div>
+        <div class="kanban-col-count">${colCards.length} · ${Math.round(totMwh).toLocaleString('fi-FI')} MWh</div>
+      </div>
+      ${colCards.length ? colCards.map(a => {
+        const hasSug = !!DEMO_ACTION_SUGGESTIONS[a.id];
+        return `<div class="kb-card" onclick="openActionModal('${a.id}')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px">
+            <div class="kb-card-title">${_ACT_ICONS[a.category]||'⚡'} ${escHtml(a.title)}</div>
+            <span class="badge badge-${a.priority}" style="flex-shrink:0;margin-top:1px">${PRIO_FI[a.priority]||a.priority}</span>
+          </div>
+          <div class="kb-card-meta">
+            <span>${CAT_LABELS[a.category]||a.category||'–'}</span>
+            ${a.responsible_person ? `<span>· ${escHtml(a.responsible_person)}</span>` : ''}
+          </div>
+          <div class="kb-card-stats">
+            ${(a.estimated_savings_mwh||a.actual_savings_mwh) ? `<span>⚡ ${(a.estimated_savings_mwh||a.actual_savings_mwh).toLocaleString('fi-FI')} MWh/v</span>` : ''}
+            ${a.estimated_savings_eur ? `<span>💶 ${a.estimated_savings_eur.toLocaleString('fi-FI')} €</span>` : ''}
+            ${a.payback_years ? `<span>📅 ${a.payback_years}v TMA</span>` : ''}
+          </div>
+          ${hasSug ? `<div class="kb-card-ai">✦ AI-ratkaisu saatavilla</div>` : ''}
+          ${a.due_date ? `<div style="font-size:10px;color:var(--text2);margin-top:4px">Eräpäivä: ${a.due_date}</div>` : ''}
+        </div>`;
+      }).join('') : `<div class="kb-empty">Ei toimenpiteitä</div>`}
+    </div>`;
+  }).join('');
+}
+
+function renderActionList(actions) {
   const tbody = document.getElementById('tbody-actions');
+  if (!tbody) return;
   tbody.innerHTML = actions.map(a => `
-    <tr>
-      <td><strong>${a.title}</strong>${a.responsible_person ? `<br><span style="color:var(--text2);font-size:11px">${a.responsible_person}</span>` : ''}</td>
-      <td>${CAT_LABELS[a.category] || a.category || '–'}</td>
+    <tr style="cursor:pointer" onclick="openActionModal('${a.id}')">
+      <td><strong>${escHtml(a.title)}</strong>${a.responsible_person ? `<br><span style="color:var(--text2);font-size:11px">${escHtml(a.responsible_person)}</span>` : ''}</td>
+      <td>${CAT_LABELS[a.category]||a.category||'–'}</td>
       <td><span class="badge badge-${a.priority}">${PRIO_FI[a.priority]||a.priority}</span></td>
       <td>${a.estimated_savings_mwh ? a.estimated_savings_mwh.toLocaleString('fi-FI') + ' MWh' : '–'}</td>
       <td>${a.estimated_savings_eur ? a.estimated_savings_eur.toLocaleString('fi-FI') + ' €' : '–'}</td>
@@ -1684,16 +1783,87 @@ function filterActions() {
       <td><span class="badge badge-${a.status}">${STATUS_FI[a.status]||a.status}</span></td>
       <td style="color:var(--text2)">${a.due_date || '–'}</td>
     </tr>`).join('') || '<tr><td colspan="9" class="empty">Ei toimenpiteitä.</td></tr>';
+}
 
-  // Savings summary
-  const completed = actions.filter(a=>a.status==='completed');
-  const inProg    = actions.filter(a=>a.status==='in_progress'||a.status==='open');
-  document.getElementById('savings-summary').innerHTML = `
-    <div class="savings-box"><label>Todennettuja säästöjä</label><div class="val accent">${completed.reduce((s,a)=>s+(a.actual_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
-    <div class="savings-box"><label>Arvioitu säästöpotentiaali</label><div class="val">${inProg.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
-    <div class="savings-box"><label>Investoinnit yhteensä</label><div class="val">${actions.reduce((s,a)=>s+(a.investment_eur||0),0).toLocaleString('fi-FI')} €</div></div>
-    <div class="savings-box"><label>Toimenpiteitä yhteensä</label><div class="val">${actions.length} kpl</div></div>
-  `;
+function openActionModal(id) {
+  const a = allActions.find(x => x.id === id);
+  if (!a) return;
+  const cId = activeCompanyId || companies[0]?.id;
+  const annual = calcAvg3yr(cId);
+  const impact = annual > 0 ? ((a.estimated_savings_mwh||0) / annual * 100).toFixed(1) : null;
+  const sug = DEMO_ACTION_SUGGESTIONS[a.id];
+
+  const kpiItems = [
+    a.estimated_savings_mwh ? { label:'Arv. säästö',    val:(a.estimated_savings_mwh).toLocaleString('fi-FI')+' MWh/v', accent:true } : null,
+    a.actual_savings_mwh    ? { label:'Tot. säästö',    val:(a.actual_savings_mwh).toLocaleString('fi-FI')+' MWh/v', accent:true } : null,
+    a.estimated_savings_eur ? { label:'Säästö €',       val:(a.estimated_savings_eur).toLocaleString('fi-FI')+' €/v' } : null,
+    a.investment_eur        ? { label:'Investointi',    val:(a.investment_eur).toLocaleString('fi-FI')+' €' } : null,
+    a.payback_years         ? { label:'Takaisinmaksu',  val:a.payback_years+' v' } : null,
+    impact                  ? { label:'Osuus kulutuksesta', val:impact+' %', accent:true } : null,
+  ].filter(Boolean);
+
+  const body = `
+    <div style="padding:22px 24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px">
+        <div>
+          <div style="font-size:15px;font-weight:700;line-height:1.45;margin-bottom:8px">${_ACT_ICONS[a.category]||'⚡'} ${escHtml(a.title)}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="badge badge-${a.priority}">${PRIO_FI[a.priority]||a.priority}</span>
+            <span class="badge" style="background:var(--bg4,var(--bg3));color:var(--text2);border:1px solid var(--border)">${CAT_LABELS[a.category]||a.category}</span>
+            <span class="badge badge-${a.status}">${STATUS_FI[a.status]||a.status}</span>
+          </div>
+        </div>
+        <button onclick="closeActionModal()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;flex-shrink:0;line-height:1;padding:0">✕</button>
+      </div>
+
+      ${(a.responsible_person||a.due_date||a.completed_date) ? `
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        ${a.responsible_person ? `<span>👤 ${escHtml(a.responsible_person)}</span>` : ''}
+        ${a.due_date ? `<span>📅 Eräpäivä: ${a.due_date}</span>` : ''}
+        ${a.completed_date ? `<span>✅ Valmistui: ${a.completed_date}</span>` : ''}
+      </div>` : ''}
+
+      <div class="amodal-kpi">
+        ${kpiItems.map(k=>`<div class="amodal-kpi-box">
+          <span class="amodal-kpi-label">${k.label}</span>
+          <div class="amodal-kpi-val" style="${k.accent?'color:var(--accent)':''}">${k.val}</div>
+        </div>`).join('')}
+      </div>
+
+      ${sug ? `
+      <div style="background:rgba(76,175,80,.05);border:1px solid rgba(76,175,80,.2);border-radius:8px;padding:16px;margin-bottom:16px">
+        <div class="pcard-ai-badge" style="margin-bottom:10px">✦ AI-ratkaisu</div>
+        <div class="pcard-ai-text">${escHtml(sug.solution)}</div>
+        <div class="pcard-products">${sug.products.map(p=>`
+          <div class="pcard-product">
+            <span class="pcard-product-type">${escHtml(p.type)}</span>
+            <div class="pcard-product-body">
+              <div class="pcard-product-name">${escHtml(p.name)}</div>
+              <div class="pcard-product-provider">${escHtml(p.provider)}</div>
+            </div>
+          </div>`).join('')}
+        </div>
+        <div class="pcard-impl">
+          <div class="pcard-impl-item">
+            <div class="pcard-impl-label">Omatoiminen</div>
+            <div class="pcard-impl-text">${escHtml(sug.diy)}</div>
+          </div>
+          <div class="pcard-impl-item">
+            <div class="pcard-impl-label">Ulkoistettu</div>
+            <div class="pcard-impl-text">${escHtml(sug.outsource)}</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="openQuoteRequest('${a.id}');closeActionModal()">📋 Pyydä tarjous Sparalta</button>
+      ` : `<p style="color:var(--text2);font-size:13px;text-align:center;padding:8px 0">AI-ratkaisu ei ole saatavilla.</p>`}
+    </div>`;
+
+  document.getElementById('action-modal-body').innerHTML = body;
+  document.getElementById('action-modal').style.display = 'flex';
+}
+
+function closeActionModal() {
+  document.getElementById('action-modal').style.display = 'none';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2210,18 +2380,6 @@ function renderSavingsWidget() {
     </div>`;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Toimenpidekortti — avattavat kortit top 3 toimenpiteelle
-// ═══════════════════════════════════════════════════════════════════════════
-function togglePcard(id) {
-  const detail = document.getElementById('pcd-' + id);
-  const hint   = document.getElementById('pch-' + id);
-  if (!detail) return;
-  const open = detail.style.display === 'none';
-  detail.style.display = open ? '' : 'none';
-  if (hint) hint.innerHTML = open ? '▲ Piilota ratkaisu' : '▼ Näytä AI-ratkaisu &amp; tarjous';
-}
-
 function openQuoteRequest(actionId) {
   const a = (allActions||[]).find(x => x.id === actionId);
   const cId = activeCompanyId || (companies[0]?.id);
@@ -2230,84 +2388,6 @@ function openQuoteRequest(actionId) {
     ? `Tarjouspyyntö lähetetty: "${a.title}" — ${c.name}. Sparan asiantuntija ottaa yhteyttä 24h kuluessa.`
     : 'Tarjouspyyntö lähetetty. Olemme yhteydessä pian.';
   showToast(msg);
-}
-
-function renderActionCards() {
-  const el = document.getElementById('action-cards-wrap');
-  if (!el) return;
-  const cId = activeCompanyId || (companies[0]?.id);
-  if (!cId) { el.innerHTML = ''; return; }
-
-  const annual = calcAvg3yr(cId);
-  const ICONS  = { valaistus:'💡', lviv:'🌡️', prosessit:'⚙️', kuori:'🏠', uusiutuva:'☀️', kayttaytyminen:'👥' };
-  const SBADGE = { open:'<span class="badge badge-orange">Avoin</span>', in_progress:'<span class="badge badge-blue">Käynnissä</span>' };
-  const PORDER = { high:0, medium:1, low:2 };
-  const SORDER = { in_progress:0, open:1, completed:2 };
-
-  const top = (allActions || [])
-    .filter(a => a.company_id === cId && a.status !== 'completed')
-    .sort((a,b) => PORDER[a.priority]-PORDER[b.priority] || SORDER[a.status]-SORDER[b.status])
-    .slice(0, 3);
-
-  if (!top.length) { el.innerHTML = ''; return; }
-  const totMwh = top.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0);
-  const totEur = top.reduce((s,a)=>s+(a.estimated_savings_eur||0),0);
-
-  el.innerHTML = `
-    <div style="margin-bottom:20px">
-      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px">
-        <div class="section-title" style="margin-bottom:0">Tärkeimmät toimenpiteet</div>
-        <span style="font-size:12px;color:var(--text2)">Yhdessä ${totMwh.toLocaleString('fi-FI')} MWh · ${totEur.toLocaleString('fi-FI')} €/v</span>
-      </div>
-      <div class="pcard-grid">
-        ${top.map(a => {
-          const impact  = annual > 0 ? (a.estimated_savings_mwh / annual * 100).toFixed(1) : '–';
-          const sug     = DEMO_ACTION_SUGGESTIONS[a.id];
-          const detailHtml = sug ? `
-            <div class="pcard-detail" id="pcd-${a.id}" style="display:none">
-              <div class="pcard-ai-badge">✦ AI-ratkaisu</div>
-              <div class="pcard-ai-text">${escHtml(sug.solution)}</div>
-              <div class="pcard-products">
-                ${sug.products.map(p=>`
-                  <div class="pcard-product">
-                    <span class="pcard-product-type">${escHtml(p.type)}</span>
-                    <div class="pcard-product-body">
-                      <div class="pcard-product-name">${escHtml(p.name)}</div>
-                      <div class="pcard-product-provider">${escHtml(p.provider)}</div>
-                    </div>
-                  </div>`).join('')}
-              </div>
-              <div class="pcard-impl">
-                <div class="pcard-impl-item">
-                  <div class="pcard-impl-label">Omatoiminen</div>
-                  <div class="pcard-impl-text">${escHtml(sug.diy)}</div>
-                </div>
-                <div class="pcard-impl-item">
-                  <div class="pcard-impl-label">Ulkoistettu</div>
-                  <div class="pcard-impl-text">${escHtml(sug.outsource)}</div>
-                </div>
-              </div>
-              <button class="btn btn-primary btn-sm" style="width:100%" onclick="openQuoteRequest('${a.id}')">📋 Pyydä tarjous Sparalta</button>
-            </div>` : '';
-          return `<div class="pcard">
-            <div class="pcard-head">
-              <div>
-                <div class="pcard-title">${ICONS[a.category]||'⚡'} ${escHtml(a.title)}</div>
-                <div class="pcard-stats">
-                  <span>⚡ ${(a.estimated_savings_mwh||0).toLocaleString('fi-FI')} MWh/v</span>
-                  <span>💶 ${(a.estimated_savings_eur||0).toLocaleString('fi-FI')} €/v</span>
-                  <span>📅 TMA ${a.payback_years||'–'}v</span>
-                </div>
-                <div class="pcard-impact">↑ ${impact}% vuositavoitteesta</div>
-              </div>
-              ${SBADGE[a.status]||''}
-            </div>
-            ${sug ? `<div class="pcard-expand-hint" id="pch-${a.id}" onclick="togglePcard('${a.id}')">▼ Näytä AI-ratkaisu &amp; tarjous</div>` : ''}
-            ${detailHtml}
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
