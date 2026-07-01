@@ -241,6 +241,40 @@
     .site-row td:first-child  { padding-left:50px; }
     .site-row td { font-size:12px;color:var(--text2); }
     .hidden-row { display:none; }
+
+    /* ── Tag pills ── */
+    .tag-pill {
+      display:inline-flex;align-items:center;gap:5px;
+      padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;
+      background:rgba(76,175,80,.15);color:#81c784;border:1px solid rgba(76,175,80,.3);
+    }
+    .tag-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+
+    /* ── Modal section header ── */
+    .modal-section {
+      font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+      color:var(--text2);border-bottom:1px solid var(--border);padding-bottom:6px;
+      margin:18px 0 12px;
+    }
+
+    /* ── Tag row in modal ── */
+    .tag-row {
+      display:grid;grid-template-columns:120px 90px 1fr 28px;gap:6px;align-items:center;
+      margin-bottom:6px;
+    }
+    .tag-row select, .tag-row input[type=number], .tag-row input[type=text] {
+      background:var(--bg3);border:1px solid var(--border);color:var(--text);
+      padding:6px 8px;border-radius:var(--radius);font-size:12px;font-family:inherit;outline:none;
+      width:100%;
+    }
+    .tag-row select:focus,.tag-row input:focus { border-color:var(--accent); }
+    .tag-remove { background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:2px;line-height:1;transition:color .15s; }
+    .tag-remove:hover { color:var(--red); }
+
+    /* ── Report tag table ── */
+    .tag-report-table th { font-size:11px;white-space:nowrap; }
+    .tag-report-table td { font-size:12px; }
+    .tag-report-table .total-col { font-weight:700;color:var(--accent); }
   </style>
 </head>
 <body>
@@ -478,13 +512,27 @@
 <!-- ══ Tab 5: Raportit ══ -->
 <div class="tab-content" id="tab-raportit">
 
+  <!-- Tägi-raportti -->
+  <div class="report-card">
+    <h3>🏷️ Tägiraportti – kulutus käyttökohteittain</h3>
+    <p>Energiankulutus jaoteltuna tägien (käyttökohteiden / prosessien) mukaan. Tägitykset syötetään <em>Lisää kulutusdata</em> -lomakkeella.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+      <select id="tag-report-year" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none" onchange="renderTagReport()">
+        <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="renderTagReport()">Päivitä</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportTagReport()">Lataa Excel (CSV)</button>
+    </div>
+    <div id="tag-report-content" style="overflow-x:auto"></div>
+  </div>
+
   <div class="report-card">
     <h3>📋 Energiaviraston vuosi-ilmoitus</h3>
     <p>Yrityksen on ilmoitettava Energiavirastolle, jos energian loppukulutus ylittää 2 700 tai 23 600 MWh. Ilmoitus vuodelta 2025 on tehtävä viimeistään <strong>31.12.2026</strong>. Vuodesta 2026 eteenpäin ilmoitus tehdään vuosittain <strong>30.4. mennessä</strong>.</p>
     <div class="report-meta" id="report-meta-fields"></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="generateEnergiaviraReport()">Generoi ilmoitus (JSON)</button>
-      <button class="btn btn-secondary" onclick="downloadCsvReport()">Lataa CSV</button>
+      <button class="btn btn-secondary" onclick="downloadCsvReport()">Lataa kulutusdata (CSV)</button>
     </div>
   </div>
 
@@ -493,6 +541,7 @@
     <p>ETJ+-sopimus vapauttaa katselmusvelvoitteesta, mutta katselmusraporttipohja auttaa systemaattisessa energiatehokkuustyössä ja on hyödyllinen johdon katselmuksessa.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="generateAuditTemplate()">Generoi raporttipohja (JSON)</button>
+      <button class="btn btn-secondary" onclick="exportActionsReport()">Lataa toimenpiteet (CSV)</button>
     </div>
   </div>
 
@@ -500,7 +549,10 @@
     <h3>📊 Johdon katselmustulosteet</h3>
     <p>Tiivistelmä energiankulutuksesta, tavoitteista ja toimenpiteiden edistymisestä johdon katselmuskokousta varten.</p>
     <div id="mgmt-report-content"></div>
-    <button class="btn btn-secondary" style="margin-top:12px" onclick="renderMgmtReport()">Näytä johdon raportti</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn btn-secondary" onclick="renderMgmtReport()">Näytä johdon raportti</button>
+      <button class="btn btn-secondary" onclick="exportMgmtReport()">Lataa johdon raportti (CSV)</button>
+    </div>
   </div>
 
 </div>
@@ -522,6 +574,16 @@
         <tr><td colspan="4" class="empty">Ladataan…</td></tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="section-title" style="margin-top:28px">Tägit</div>
+  <div id="admin-tags-wrap" style="margin-bottom:24px">
+    <div class="table-wrap" style="margin-bottom:10px">
+      <table>
+        <thead><tr><th>Tägi</th><th>Yritys</th><th>Kuvaus</th><th>Luotu</th></tr></thead>
+        <tbody id="tbody-tags"><tr><td colspan="4" class="empty">Ladataan…</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
   <div class="section-title">Konsernirakenne</div>
@@ -549,16 +611,18 @@
 <!-- Data entry modal (hidden by default) -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center">
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:min(520px,95vw);max-height:85vh;overflow-y:auto">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:min(620px,95vw);max-height:90vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <h2 style="font-size:16px">Lisää kuukausikulutus</h2>
       <button onclick="closeDataEntry()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer">✕</button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+
+    <!-- Period selection -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
       <div>
         <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">Vuosi</label>
         <select id="entry-year" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:inherit">
-          <option>2025</option><option>2024</option><option>2023</option>
+          <option>2026</option><option selected>2025</option><option>2024</option><option>2023</option>
         </select>
       </div>
       <div>
@@ -573,8 +637,27 @@
         </select>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px" id="entry-fields"></div>
-    <div style="display:flex;gap:10px">
+
+    <!-- Section: totals -->
+    <div class="modal-section">Energiankulutus yhteensä (MWh)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px" id="entry-fields"></div>
+
+    <!-- Section: tag allocations -->
+    <div class="modal-section" style="display:flex;justify-content:space-between;align-items:center">
+      <span>Tägitykset <span style="font-size:10px;color:var(--text2);font-weight:400;text-transform:none;letter-spacing:0">(valinnainen – erittele kulutus käyttökohteittain)</span></span>
+      <button class="btn btn-secondary btn-sm" onclick="addTagRow()">+ Lisää rivi</button>
+    </div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;display:grid;grid-template-columns:120px 90px 1fr 28px;gap:6px;padding:0 2px">
+      <span>Energialähde</span><span>MWh</span><span>Tägi (uusi tai valitse listasta)</span><span></span>
+    </div>
+    <div id="tag-rows"></div>
+    <div style="font-size:11px;color:var(--text2);margin-top:6px">
+      Tägit tallentuvat yrityskohtaisesti – kirjoita uusi nimi tai valitse aiempi ehdotuksista.
+    </div>
+    <!-- Hidden datalist updated dynamically -->
+    <datalist id="tag-datalist"></datalist>
+
+    <div style="display:flex;gap:10px;margin-top:18px">
       <button class="btn btn-primary" onclick="saveEntry()" style="flex:1">Tallenna</button>
       <button class="btn btn-secondary" onclick="closeDataEntry()">Peruuta</button>
     </div>
@@ -657,6 +740,48 @@ const DEMO_ALERTS = [
   { id:'al4', company_id:'c1', severity:'info', title:'ETJ+-sopimus voimassa', message:'Teollisuus Oy on vapautettu katselmusvelvoitteesta ETJ+-sopimuksen perusteella.', triggered_at:'2026-01-15', is_active:true },
 ];
 
+// Tags – yrityskohtaiset energian käyttökohdeleimat
+let DEMO_TAGS = [
+  { id:'t1', company_id:'c1', name:'Tuotantolinja A',       color:'#4CAF50', description:'Päätuotantolinja' },
+  { id:'t2', company_id:'c1', name:'Toimistot',             color:'#42A5F5', description:'Toimistorakennukset' },
+  { id:'t3', company_id:'c1', name:'Lämmitys',              color:'#FFA726', description:'Tilojen lämmitys' },
+  { id:'t4', company_id:'c3', name:'Kuljetuskalusto',       color:'#ef5350', description:'Kuorma-autot ja trukit' },
+  { id:'t5', company_id:'c3', name:'Kylmävarastot',         color:'#AB47BC', description:'Kylmäsäilytys' },
+  { id:'t6', company_id:'c3', name:'Toimistot',             color:'#42A5F5', description:'Toimistorakennukset' },
+  { id:'t7', company_id:'c3', name:'Sulattamo',             color:'#FFA726', description:'Sulattamoprosessi' },
+  { id:'t8', company_id:'c2', name:'Kauppakeskuksen valaistus', color:'#66BB6A', description:'LED-valaistus' },
+  { id:'t9', company_id:'c2', name:'Kylmäkojeet',           color:'#29B6F6', description:'Kylmälaitteet' },
+];
+
+// Tag allocations – pre-generated for all 12 months of 2025
+const DEMO_TAG_ALLOCATIONS = (() => {
+  const rows = []; let n = 1;
+  const mk = (cid, y, m, et, mwh, tid) => ({ id:'ta'+String(n++).padStart(3,'0'), company_id:cid, year:y, month:m, energy_type:et, amount_mwh:mwh, tag_id:tid });
+  // c1 – electricity split Tuotantolinja A / Toimistot, heat → Lämmitys
+  (DEMO_MONTHLY.c1?.[2025]||[]).forEach((tot, i) => {
+    const m = i+1, e = Math.round(tot*0.55), h = Math.round(tot*0.32);
+    rows.push(mk('c1',2025,m,'electricity',Math.round(e*0.79),'t1'));
+    rows.push(mk('c1',2025,m,'electricity',e-Math.round(e*0.79),'t2'));
+    rows.push(mk('c1',2025,m,'heat',h,'t3'));
+  });
+  // c3 – electricity Kylmävarastot / Toimistot, gas → Sulattamo, oil → Kuljetuskalusto
+  (DEMO_MONTHLY.c3?.[2025]||[]).forEach((tot, i) => {
+    const m = i+1, e = Math.round(tot*0.45), g = Math.round(tot*0.22), o = Math.round(tot*0.08);
+    rows.push(mk('c3',2025,m,'electricity',Math.round(e*0.62),'t5'));
+    rows.push(mk('c3',2025,m,'electricity',e-Math.round(e*0.62),'t6'));
+    rows.push(mk('c3',2025,m,'gas',g,'t7'));
+    rows.push(mk('c3',2025,m,'oil',o,'t4'));
+  });
+  // c2 – first 3 months only (demo: not fully tagged)
+  [1,2,3].forEach(m => {
+    const tot = DEMO_MONTHLY.c2?.[2025]?.[m-1]||0;
+    const e = Math.round(tot*0.78);
+    rows.push(mk('c2',2025,m,'electricity',Math.round(e*0.65),'t8'));
+    rows.push(mk('c2',2025,m,'electricity',e-Math.round(e*0.65),'t9'));
+  });
+  return rows;
+})();
+
 // Child companies for hierarchy demo
 const DEMO_CHILD_COMPANIES = [
   { id:'c1a', name:'Teollisuus Tampere (haara)', parent_id:'c1', y_tunnus:'1234567-A', sector:'Teollisuus', city:'Tampere', etj_agreement_active:true },
@@ -722,6 +847,8 @@ let charts = {};
 let allActions = [];
 let currentUser    = null;
 let currentProfile = null;
+let allTags        = [];         // loaded/managed tag objects
+let allTagAllocs   = [];         // tag allocation rows in memory
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Compliance logic
@@ -848,7 +975,9 @@ async function loadData() {
     companies = [...DEMO_COMPANIES, ...DEMO_CHILD_COMPANIES];
     DEMO_MODE = true;
   }
-  allActions = DEMO_ACTIONS;
+  allActions   = DEMO_ACTIONS;
+  allTags      = [...DEMO_TAGS];
+  allTagAllocs = [...DEMO_TAG_ALLOCATIONS];
   activeCompanyId = null;
   // Reset selector options
   const sel = document.getElementById('company-selector');
@@ -1350,18 +1479,15 @@ function generateEnergiaviraReport() {
 }
 
 function downloadCsvReport() {
-  const cId = activeCompanyId || 'c1';
+  const cId = activeCompanyId || companies.find(c=>!c.parent_id)?.id || companies[0]?.id;
   const c = companies.find(x => x.id === cId) || companies[0];
-  const rows = [['Vuosi','Kuukausi','MWh']];
+  if (!c) return;
+  const rows = [['Kulutusdata', c.name, new Date().toLocaleDateString('fi-FI')], [],
+                ['Vuosi','Kuukausi','Sähkö (MWh)','Kaukolämpö','Kaasu','Öljy','Muu','Yhteensä']];
   [2023,2024,2025].forEach(y => {
-    (DEMO_MONTHLY[c.id]?.[y] || []).forEach((v,i) => rows.push([y, i+1, v]));
+    (DEMO_MONTHLY[c.id]?.[y] || []).forEach((v,i) => rows.push([y, i+1, '','',' ','','' ,v]));
   });
-  const csv = rows.map(r => r.join(';')).join('\n');
-  const blob = new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `kulutusdata_${c.name.replace(/\s/g,'_')}.csv`;
-  a.click();
+  csvDownload(rows, `kulutusdata_${c.name.replace(/\s+/g,'_')}.csv`);
 }
 
 function generateAuditTemplate() {
@@ -1432,25 +1558,87 @@ function renderMgmtReport() {
 // ═══════════════════════════════════════════════════════════════════════════
 // Data entry modal
 // ═══════════════════════════════════════════════════════════════════════════
+const ENERGY_TYPES = [
+  ['electricity','Sähkö'],['heat','Kaukolämpö'],
+  ['gas','Kaasu'],['oil','Öljy'],['other','Muu energia'],
+];
+const ENERGY_FIELD = { electricity:'electricity_mwh', heat:'heat_mwh', gas:'gas_mwh', oil:'oil_mwh', other:'other_mwh' };
+
+function getCompanyTags(cId) {
+  return allTags.filter(t => t.company_id === cId);
+}
+
+function ensureTag(cId, name) {
+  name = name.trim();
+  if (!name) return null;
+  let tag = allTags.find(t => t.company_id === cId && t.name.toLowerCase() === name.toLowerCase());
+  if (!tag) {
+    tag = { id:'t_' + Date.now(), company_id:cId, name, color:'#4CAF50', description:'' };
+    allTags.push(tag);
+    DEMO_TAGS.push(tag);
+  }
+  return tag;
+}
+
+function refreshTagDatalist(cId) {
+  const dl = document.getElementById('tag-datalist');
+  if (!dl) return;
+  const tags = getCompanyTags(cId);
+  dl.innerHTML = tags.map(t => `<option value="${t.name.replace(/"/g,'&quot;')}">`).join('');
+}
+
+function addTagRow(type, amount, tagName) {
+  const wrap = document.getElementById('tag-rows');
+  const idx  = wrap.children.length;
+  const typeOpts = ENERGY_TYPES.map(([v,l]) =>
+    `<option value="${v}"${v===(type||'electricity')?' selected':''}>${l}</option>`).join('');
+  const row = document.createElement('div');
+  row.className = 'tag-row';
+  row.dataset.idx = idx;
+  row.innerHTML = `
+    <select>${typeOpts}</select>
+    <input type="number" min="0" step="0.1" placeholder="MWh" value="${amount||''}">
+    <input type="text" list="tag-datalist" placeholder="Tägin nimi…" value="${tagName||''}">
+    <button class="tag-remove" onclick="this.closest('.tag-row').remove()" title="Poista rivi">✕</button>`;
+  wrap.appendChild(row);
+}
+
+function getTagRows() {
+  return Array.from(document.querySelectorAll('#tag-rows .tag-row')).map(row => {
+    const [selEl, numEl, nameEl] = row.querySelectorAll('select,input');
+    return { energy_type: selEl.value, amount_mwh: parseFloat(numEl.value) || 0, tag_name: nameEl.value.trim() };
+  }).filter(r => r.amount_mwh > 0 && r.tag_name);
+}
+
 function openDataEntry() {
-  const fields = document.getElementById('entry-fields');
-  fields.innerHTML = [
-    ['electricity_mwh','Sähkö (MWh)','0'],
-    ['heat_mwh','Kaukolämpö (MWh)','0'],
-    ['gas_mwh','Kaasu (MWh)','0'],
-    ['oil_mwh','Öljy (MWh)','0'],
-    ['other_mwh','Muu energia (MWh)','0'],
-  ].map(([id,label,ph]) => `
+  const cId = activeCompanyId || companies.find(c=>!c.parent_id)?.id || companies[0]?.id;
+
+  // Fill totals fields
+  document.getElementById('entry-fields').innerHTML = ENERGY_TYPES.map(([type, label]) => `
     <div>
-      <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">${label}</label>
-      <input id="${id}" type="number" min="0" step="0.1" placeholder="${ph}"
+      <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">${label} (MWh)</label>
+      <input id="${ENERGY_FIELD[type]}" type="number" min="0" step="0.1" placeholder="0"
         style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:inherit">
     </div>`).join('');
+
+  // Reset tag rows – pre-populate with last saved allocations for this period
+  document.getElementById('tag-rows').innerHTML = '';
+  const yr = +document.getElementById('entry-year').value || 2025;
+  const mo = +document.getElementById('entry-month').value || 1;
+  const existing = allTagAllocs.filter(a => a.company_id === cId && a.year === yr && a.month === mo);
+  existing.forEach(a => {
+    const tag = allTags.find(t => t.id === a.tag_id);
+    if (tag) addTagRow(a.energy_type, a.amount_mwh, tag.name);
+  });
+
+  refreshTagDatalist(cId);
   document.getElementById('modal-overlay').style.display = 'flex';
 }
+
 function closeDataEntry() { document.getElementById('modal-overlay').style.display = 'none'; }
+
 async function saveEntry() {
-  const cId = activeCompanyId || companies[0]?.id;
+  const cId  = activeCompanyId || companies.find(c=>!c.parent_id)?.id || companies[0]?.id;
   const year  = +document.getElementById('entry-year').value;
   const month = +document.getElementById('entry-month').value;
   const entry = {
@@ -1461,12 +1649,228 @@ async function saveEntry() {
     oil_mwh:         +document.getElementById('oil_mwh').value         || 0,
     other_mwh:       +document.getElementById('other_mwh').value       || 0,
   };
-  try {
-    const { error } = await db.from('etj_energy_readings').upsert(entry, { onConflict:'company_id,year,month' });
-    if (error) throw error;
-  } catch { /* demo mode – vain lokitetaan */ }
+  const total = entry.electricity_mwh + entry.heat_mwh + entry.gas_mwh + entry.oil_mwh + entry.other_mwh;
+
+  // ── Collect tag rows ──────────────────────────────────────────────────────
+  const tagRowData = getTagRows();
+  const newAllocs  = tagRowData.map(r => {
+    const tag = ensureTag(cId, r.tag_name);
+    return tag ? { id:'ta_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+                   company_id:cId, year, month,
+                   energy_type:r.energy_type, amount_mwh:r.amount_mwh, tag_id:tag.id } : null;
+  }).filter(Boolean);
+
+  if (!DEMO_MODE) {
+    // ── Supabase save ─────────────────────────────────────────────────────
+    try {
+      const { error: re } = await db.from('etj_energy_readings').upsert(entry, { onConflict:'company_id,year,month' });
+      if (re) throw re;
+
+      // Ensure new tags exist
+      for (const r of tagRowData) {
+        const name = r.tag_name.trim();
+        if (!name) continue;
+        await db.from('etj_energy_tags')
+          .upsert({ company_id:cId, name }, { onConflict:'company_id,name', ignoreDuplicates:true });
+      }
+      // Reload tag ids
+      const { data: freshTags } = await db.from('etj_energy_tags').select('*').eq('company_id', cId);
+      if (freshTags) freshTags.forEach(t => { if (!allTags.find(x=>x.id===t.id)) allTags.push(t); });
+
+      // Delete old allocations for this period then insert new
+      await db.from('etj_energy_tag_allocations')
+        .delete().eq('company_id',cId).eq('year',year).eq('month',month);
+      if (newAllocs.length) {
+        const toInsert = tagRowData.map(r => {
+          const tag = allTags.find(t => t.company_id===cId && t.name.toLowerCase()===r.tag_name.toLowerCase());
+          return tag ? { company_id:cId, year, month, energy_type:r.energy_type, amount_mwh:r.amount_mwh, tag_id:tag.id } : null;
+        }).filter(Boolean);
+        if (toInsert.length) await db.from('etj_energy_tag_allocations').insert(toInsert);
+      }
+    } catch(e) { console.warn('Supabase save error:', e); }
+  }
+
+  // ── Always update in-memory data (demo + live) ────────────────────────
+  if (total > 0) {
+    if (!DEMO_MONTHLY[cId]) DEMO_MONTHLY[cId] = {};
+    // Distribute total into months array – if array exists, update just this slot
+    if (!DEMO_MONTHLY[cId][year]) DEMO_MONTHLY[cId][year] = Array(12).fill(0);
+    DEMO_MONTHLY[cId][year][month-1] = total;
+  }
+
+  // Replace tag allocations for this period
+  allTagAllocs = allTagAllocs.filter(a => !(a.company_id===cId && a.year===year && a.month===month));
+  allTagAllocs.push(...newAllocs);
+
   closeDataEntry();
-  alert('Kulutusdata tallennettu (demo-tilassa ei tallenneta pysyvästi).');
+
+  // Re-render affected panels
+  updateSummaryBar(); updateStatusChip(); updateComplianceBanner();
+  renderComplianceTab(); renderKpiGrid(); renderKpiSummary(); renderMgmtReportMeta();
+  if (document.getElementById('tab-raportit').classList.contains('active')) renderTagReport();
+  const savedMsg = DEMO_MODE
+    ? `Tallennettu muistiin (demo). Yhteensä ${total.toLocaleString('fi-FI')} MWh, ${newAllocs.length} tägitystä.`
+    : `Tallennettu Supabaseen. Yhteensä ${total.toLocaleString('fi-FI')} MWh, ${newAllocs.length} tägitystä.`;
+  showToast(savedMsg);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Toast notification
+// ═══════════════════════════════════════════════════════════════════════════
+function showToast(msg, dur = 3500) {
+  let t = document.getElementById('_toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_toast';
+    Object.assign(t.style, {
+      position:'fixed', bottom:'24px', right:'24px', zIndex:'9998',
+      background:'var(--bg3)', border:'1px solid var(--border)',
+      color:'var(--text)', padding:'12px 18px', borderRadius:'8px',
+      fontSize:'13px', boxShadow:'0 4px 20px rgba(0,0,0,.4)',
+      transition:'opacity .3s', maxWidth:'360px', lineHeight:'1.5',
+    });
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, dur);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CSV helper
+// ═══════════════════════════════════════════════════════════════════════════
+function csvDownload(rows, filename) {
+  const csv = '﻿' + rows.map(r =>
+    r.map(v => (v == null ? '' : String(v).includes(';') || String(v).includes('"') || String(v).includes('\n')
+      ? '"' + String(v).replace(/"/g,'""') + '"' : v)).join(';')
+  ).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = filename;
+  a.click();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Tab Raportit – Tägiraportti
+// ═══════════════════════════════════════════════════════════════════════════
+const MONTH_ABBR = ['Tam','Hel','Maa','Huh','Tou','Kes','Hei','Elo','Syy','Lok','Mar','Jou'];
+const ENERGY_LABELS = { electricity:'Sähkö', heat:'Kaukolämpö', gas:'Kaasu', oil:'Öljy', other:'Muu' };
+
+function getTagReportData(year, cIds) {
+  const allocs = allTagAllocs.filter(a => a.year === year && cIds.includes(a.company_id));
+  // Group by (tag_id, energy_type) → month totals
+  const map = new Map();
+  allocs.forEach(a => {
+    const tag = allTags.find(t => t.id === a.tag_id);
+    if (!tag) return;
+    const key = tag.name + '§' + a.energy_type;
+    if (!map.has(key)) map.set(key, { tag_name:tag.name, tag_color:tag.color, energy_type:a.energy_type, months:Array(12).fill(0) });
+    map.get(key).months[a.month-1] += a.amount_mwh;
+  });
+  return [...map.values()].sort((a,b) => a.tag_name.localeCompare(b.tag_name,'fi'));
+}
+
+function renderTagReport() {
+  const year  = +document.getElementById('tag-report-year').value || 2025;
+  const vis   = getVisibleCompanies();
+  const cIds  = vis.map(c => c.id);
+  const rows  = getTagReportData(year, cIds);
+  const el    = document.getElementById('tag-report-content');
+
+  if (!rows.length) {
+    el.innerHTML = '<p style="color:var(--text2);font-size:13px;padding:12px 0">Ei tägityksiä tälle vuodelle. Lisää tägityksiä kulutusdata-lomakkeella.</p>';
+    return;
+  }
+
+  const totalRow = Array(12).fill(0);
+  rows.forEach(r => r.months.forEach((v,i) => totalRow[i] += v));
+
+  const html = `
+    <table class="tag-report-table" style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="background:var(--bg3);border-bottom:1px solid var(--border)">
+          <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--text2)">Tägi</th>
+          <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--text2)">Energialähde</th>
+          ${MONTH_ABBR.map(m=>`<th style="padding:8px 6px;text-align:right;font-size:11px;color:var(--text2)">${m}</th>`).join('')}
+          <th style="padding:8px 10px;text-align:right;font-size:11px;color:var(--text2)">Yhteensä</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => {
+          const tot = r.months.reduce((a,b)=>a+b,0);
+          return `<tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:7px 10px">
+              <span class="tag-pill"><span class="tag-dot" style="background:${r.tag_color}"></span>${r.tag_name}</span>
+            </td>
+            <td style="padding:7px 10px;color:var(--text2)">${ENERGY_LABELS[r.energy_type]||r.energy_type}</td>
+            ${r.months.map(v=>`<td style="padding:7px 6px;text-align:right;color:var(--text2)">${v>0?v.toLocaleString('fi-FI'):''}</td>`).join('')}
+            <td style="padding:7px 10px;text-align:right;font-weight:700;color:var(--accent)">${Math.round(tot).toLocaleString('fi-FI')}</td>
+          </tr>`;
+        }).join('')}
+        <tr style="background:var(--bg3);border-top:2px solid var(--border)">
+          <td colspan="2" style="padding:8px 10px;font-weight:700">Kaikki tägit yhteensä</td>
+          ${totalRow.map(v=>`<td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--accent)">${v>0?Math.round(v).toLocaleString('fi-FI'):''}</td>`).join('')}
+          <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--accent)">${Math.round(totalRow.reduce((a,b)=>a+b,0)).toLocaleString('fi-FI')}</td>
+        </tr>
+      </tbody>
+    </table>`;
+  el.innerHTML = html;
+}
+
+function exportTagReport() {
+  const year  = +document.getElementById('tag-report-year').value || 2025;
+  const vis   = getVisibleCompanies();
+  const cIds  = vis.map(c => c.id);
+  const rows  = getTagReportData(year, cIds);
+  const header = ['Tägi','Energialähde',...MONTH_ABBR,'Yhteensä (MWh)'];
+  const data   = rows.map(r => {
+    const tot = r.months.reduce((a,b)=>a+b,0);
+    return [r.tag_name, ENERGY_LABELS[r.energy_type]||r.energy_type, ...r.months, Math.round(tot)];
+  });
+  // Add summary section below
+  csvDownload(
+    [['Tägiraportti ' + year], [], header, ...data,
+     [], ['KULUTUS YHTEENSÄ (kaikki tägit)'],
+     ['','',...MONTH_ABBR.map((_,i)=>Math.round(rows.reduce((s,r)=>s+r.months[i],0))),
+       Math.round(rows.reduce((s,r)=>s+r.months.reduce((a,b)=>a+b,0),0))]
+    ],
+    `tagiraportti_${year}.csv`
+  );
+}
+
+function exportActionsReport() {
+  const cId = activeCompanyId;
+  const acts = allActions.filter(a => !cId || a.company_id === cId);
+  csvDownload([
+    ['Toimenpideraportti', new Date().toLocaleDateString('fi-FI')],
+    ['Toimenpide','Kategoria','Prioriteetti','Arv. säästö (MWh)','Arv. säästö (€)','Investointi (€)','Takaisinmaksu (v)','Status','Eräpäivä','Vastuuhenkilö','Tod. säästö (MWh)'],
+    ...acts.map(a=>[a.title, a.category||'', a.priority||'', a.estimated_savings_mwh||0, a.estimated_savings_eur||0,
+                    a.investment_eur||0, a.payback_years||'', a.status||'', a.due_date||'',
+                    a.responsible_person||'', a.actual_savings_mwh||''])
+  ], `toimenpiteet_${activeCompanyId||'kaikki'}.csv`);
+}
+
+function exportMgmtReport() {
+  const cId = activeCompanyId || companies.find(c=>!c.parent_id)?.id || companies[0]?.id;
+  const c   = companies.find(x=>x.id===cId) || companies[0];
+  if (!c) return;
+  const avg = calcAvg3yr(c.id);
+  const cs  = complianceStatus(c);
+  const acts = allActions.filter(a=>a.company_id===c.id);
+  csvDownload([
+    ['Johdon katselmustulosteet', c.name, new Date().toLocaleDateString('fi-FI')],
+    [],
+    ['Yritys', c.name], ['Y-tunnus', c.y_tunnus||''], ['Toimiala', c.sector||''],
+    ['3v. ka. kulutus (MWh)', Math.round(avg)], ['Vaatimustenmukaisuus', cs.label],
+    ['ETJ+-sopimus', c.etj_agreement_active?'Aktiivinen':'Ei'],
+    [], ['KULUTUS VUOSITTAIN'],
+    ['Vuosi','Kulutus (MWh)'],
+    ...[2023,2024,2025].map(y=>[y, Math.round(calcAnnual(c.id,y))]),
+    [], ['TOIMENPITEET'],
+    ['Toimenpide','Status','Arv. säästö (MWh)','Tod. säästö (MWh)'],
+    ...acts.map(a=>[a.title, a.status, a.estimated_savings_mwh||0, a.actual_savings_mwh||'']),
+  ], `johdon_raportti_${c.name.replace(/\s+/g,'_')}.csv`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1481,6 +1885,17 @@ function renderHallintaTab() {
       <td style="color:var(--text2)">${u.scope}</td>
       <td style="color:var(--text2)">${u.created_at}</td>
     </tr>`).join('');
+
+  // Tags table
+  document.getElementById('tbody-tags').innerHTML = allTags.map(t => {
+    const co = companies.find(c=>c.id===t.company_id);
+    return `<tr>
+      <td><span class="tag-pill"><span class="tag-dot" style="background:${t.color}"></span>${t.name}</span></td>
+      <td>${co?.name||t.company_id}</td>
+      <td style="color:var(--text2)">${t.description||'–'}</td>
+      <td style="color:var(--text2)">${t.created_at ? t.created_at.slice(0,10) : '–'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="4" class="empty">Ei tägejä.</td></tr>';
 
   const roots = getRootCompanies();
   let html = '';
@@ -1511,7 +1926,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     if (t === 'kulutus')      renderConsumptionTab();
     if (t === 'tunnusluvut')  renderKpiGrid();
     if (t === 'toimenpiteet') filterActions();
-    if (t === 'raportit')     renderMgmtReportMeta();
+    if (t === 'raportit')     { renderMgmtReportMeta(); renderTagReport(); }
     if (t === 'hallinta')     renderHallintaTab();
   });
 });
