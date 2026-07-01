@@ -1920,8 +1920,8 @@ function buildCompanyForm(containerId, data, readonly) {
     <div class="detail-field${f.full?' detail-full':''}">
       <label>${f.label}</label>
       ${f.type === 'textarea'
-        ? `<textarea id="${f.id}" rows="3" ${readonly||f.readonly?'readonly':''}>${data[f.id]||''}</textarea>`
-        : `<input type="text" id="${f.id}" value="${(data[f.id]||'').replace(/"/g,'&quot;')}" ${readonly||f.readonly?'readonly':''}>`
+        ? `<textarea id="${f.id}" rows="3" ${readonly||f.readonly?'readonly':''}>${String(data[f.id]||'')}</textarea>`
+        : `<input type="text" id="${f.id}" value="${String(data[f.id]||'').replace(/"/g,'&quot;')}" ${readonly||f.readonly?'readonly':''}>`
       }
     </div>`).join('');
 }
@@ -2002,42 +2002,70 @@ function saveCompanyDetail() {
 const PRH_V3 = 'https://avoindata.prh.fi/opendata-ytj-api/v3/companies';
 const _ytjDebounce = {};
 
+// Safely extracts a string from PRH API values that may be objects, arrays,
+// or plain strings depending on the v3 response shape.
+function _str(v) {
+  if (v == null) return '';
+  if (typeof v === 'string') return v;
+  if (Array.isArray(v)) {
+    // [{name:"...", language:"FI", endDate:null}, ...] — prefer active Finnish entry
+    const active = v.filter(x => !x.endDate);
+    const pick = active.find(x => (x.language||'').toUpperCase() === 'FI') || active[0] || v[0];
+    if (!pick) return '';
+    return _str(pick.name || pick.value || pick);
+  }
+  if (typeof v === 'object') {
+    return _str(v.name || v.value || v.fi || v.FI || v.EN || v.en ||
+      Object.values(v).find(x => x && typeof x === 'string') || '');
+  }
+  return String(v);
+}
+
 function _prhToForm(res) {
+  // v3 may have addresses/businessLines as empty on shallow (name-search) responses
   const addr = (res.addresses || [])
     .filter(a => !a.endDate)
     .sort((a,b) => (b.registrationDate||'').localeCompare(a.registrationDate||''))[0] || {};
   const bline = (res.businessLines || [])
     .filter(b => !b.endDate)
     .sort((a,b) => (b.registrationDate||'').localeCompare(a.registrationDate||''))[0] || {};
+  // v3: name may be top-level string OR live in names[] array
+  const nameRaw = res.name != null ? res.name
+    : ((res.names || []).filter(n => !n.endDate).sort((a,b) => (a.order||0)-(b.order||0))[0] || {}).name || '';
   return {
-    cf_name:        res.name || '',
-    cf_ytunnus:     res.businessId || '',
-    cf_sector:      bline.name || '',
-    cf_companyForm: res.companyForm || '',
-    cf_address:     addr.street || '',
-    cf_postCode:    addr.postCode || '',
-    cf_city:        addr.city || '',
+    cf_name:        _str(nameRaw),
+    cf_ytunnus:     _str(res.businessId),
+    cf_sector:      _str(bline.name),
+    cf_companyForm: _str(res.companyForm),
+    cf_address:     _str(addr.street),
+    cf_postCode:    _str(addr.postCode),
+    cf_city:        _str(addr.city),
     cf_contact:     '',
     cf_email:       '',
-    cf_regDate:     res.registrationDate || '',
+    cf_regDate:     _str(res.registrationDate),
     cf_notes:       '',
   };
 }
 
-async function prhFetchByBusinessId(id) {
-  const r = await fetch(`${PRH_V3}?businessId=${encodeURIComponent(id.trim())}`);
+// Returns raw company objects from the API (minimal or full depending on endpoint)
+async function _prhFetch(url) {
+  const r = await fetch(url);
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const data = await r.json();
-  const res = (data.companies || [])[0];
-  if (!res) throw new Error('Ei löydy Y-tunnuksella ' + id.trim());
-  return _prhToForm(res);
+  console.debug('[PRH v3]', url, JSON.stringify(data).substring(0, 400));
+  // v3 uses "companies"; fall back to "results" just in case
+  return data.companies || data.results || [];
+}
+
+async function prhFetchByBusinessId(id) {
+  const items = await _prhFetch(`${PRH_V3}?businessId=${encodeURIComponent(_str(id).trim())}`);
+  if (!items.length) throw new Error('Ei löydy Y-tunnuksella ' + _str(id).trim());
+  return _prhToForm(items[0]);
 }
 
 async function prhSearchByName(name) {
-  const r = await fetch(`${PRH_V3}?name=${encodeURIComponent(name.trim())}&maxResults=10`);
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const data = await r.json();
-  return (data.companies || []).map(res => ({ ...res, _form: _prhToForm(res) }));
+  const items = await _prhFetch(`${PRH_V3}?name=${encodeURIComponent(name.trim())}&maxResults=10`);
+  return items;
 }
 
 function hideYtjDropdown(context) {
@@ -2045,39 +2073,53 @@ function hideYtjDropdown(context) {
   if (el) el.style.display = 'none';
 }
 
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 function showYtjSuggestions(context, results) {
   const el = document.getElementById(context + '-ytj-dropdown');
   if (!el || !results.length) { if (el) el.style.display = 'none'; return; }
   el.innerHTML = results.map((r, i) => {
-    const meta = [r.businessId, r.companyForm, r._form.cf_city].filter(Boolean).join(' · ');
+    const name = _str(r.name) || _str(r.businessId) || '–';
+    const id   = _str(r.businessId);
+    const form = _str(r.companyForm);
+    // city may come from addresses on full responses, or be absent on shallow ones
+    const city = _str((r.addresses||[]).filter(a=>!a.endDate)[0]?.city || '');
+    const meta = [id, form, city].filter(Boolean).join(' · ');
     return `<div class="ytj-dropdown-item" onmousedown="selectYtjSuggestion('${context}',${i})">
-      <div class="ytj-item-name">${escHtml(r.name || r.businessId)}</div>
-      <div class="ytj-item-meta">${escHtml(meta)}</div>
+      <div class="ytj-item-name">${escHtml(name)}</div>
+      <div class="ytj-item-meta">${escHtml(meta || '–')}</div>
     </div>`;
   }).join('');
   el._results = results;
   el.style.display = '';
 }
 
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function selectYtjSuggestion(context, idx) {
+// When user clicks a suggestion, always re-fetch by businessId to get full details
+async function selectYtjSuggestion(context, idx) {
   const el = document.getElementById(context + '-ytj-dropdown');
-  const r = el?._results?.[idx];
+  const r  = el?._results?.[idx];
   if (!r) return;
   hideYtjDropdown(context);
-  const formId   = context === 'detail' ? 'company-detail-fields' : 'addco-fields';
-  const statusId = context + '-ytj-status';
-  document.getElementById(context + '-ytj-input').value = r.businessId || '';
-  if (context === 'detail' && !_companyEditMode) {
-    _companyEditMode = true;
-    document.getElementById('company-edit-btn').textContent = 'Peruuta muokkaus';
-    document.getElementById('company-save-row').style.display = 'flex';
+  const bId = _str(r.businessId);
+  if (!bId) return;
+  const st     = document.getElementById(context + '-ytj-status');
+  const formId = context === 'detail' ? 'company-detail-fields' : 'addco-fields';
+  document.getElementById(context + '-ytj-input').value = bId;
+  st.className = 'ytj-status ytj-spin'; st.textContent = 'Haetaan tietoja…';
+  try {
+    const formData = await prhFetchByBusinessId(bId);
+    if (context === 'detail' && !_companyEditMode) {
+      _companyEditMode = true;
+      document.getElementById('company-edit-btn').textContent = 'Peruuta muokkaus';
+      document.getElementById('company-save-row').style.display = 'flex';
+    }
+    buildCompanyForm(formId, formData, false);
+    st.className = 'ytj-status ytj-ok';
+    st.textContent = '✓ Tiedot haettu: ' + formData.cf_name + (formData.cf_city ? ', ' + formData.cf_city : '');
+  } catch(e) {
+    st.className = 'ytj-status ytj-err';
+    st.textContent = 'Haku epäonnistui: ' + e.message;
   }
-  buildCompanyForm(formId, r._form, false);
-  const st = document.getElementById(statusId);
-  st.className = 'ytj-status ytj-ok';
-  st.textContent = '✓ Tiedot haettu: ' + r._form.cf_name + (r._form.cf_city ? ', ' + r._form.cf_city : '');
 }
 
 function ytjInputChanged(context) {
@@ -2102,30 +2144,40 @@ async function fetchAndFillYTJ(context) {
   if (!val) { st.className='ytj-status ytj-err'; st.textContent='Syötä Y-tunnus tai yrityksen nimi.'; return; }
   st.className='ytj-status ytj-spin'; st.textContent='Haetaan…';
   try {
-    let formData;
     if (/^\d{7}-\d$/.test(val)) {
-      formData = await prhFetchByBusinessId(val);
+      // Direct businessId lookup → fill form immediately
+      const formData = await prhFetchByBusinessId(val);
+      if (context === 'detail' && !_companyEditMode) {
+        _companyEditMode = true;
+        document.getElementById('company-edit-btn').textContent = 'Peruuta muokkaus';
+        document.getElementById('company-save-row').style.display = 'flex';
+      }
+      buildCompanyForm(formId, formData, false);
+      st.className = 'ytj-status ytj-ok';
+      st.textContent = '✓ Tiedot haettu: ' + formData.cf_name + (formData.cf_city ? ', ' + formData.cf_city : '');
     } else {
+      // Name search → show dropdown (or auto-fill if exactly 1 result)
       const results = await prhSearchByName(val);
       if (!results.length) throw new Error('Ei tuloksia haulle "' + val + '"');
       if (results.length === 1) {
-        formData = results[0]._form;
-        document.getElementById(inputId).value = results[0].businessId || '';
+        // Single match: fetch full details directly
+        const bId = _str(results[0].businessId);
+        document.getElementById(inputId).value = bId;
+        const formData = await prhFetchByBusinessId(bId);
+        if (context === 'detail' && !_companyEditMode) {
+          _companyEditMode = true;
+          document.getElementById('company-edit-btn').textContent = 'Peruuta muokkaus';
+          document.getElementById('company-save-row').style.display = 'flex';
+        }
+        buildCompanyForm(formId, formData, false);
+        st.className = 'ytj-status ytj-ok';
+        st.textContent = '✓ Tiedot haettu: ' + formData.cf_name + (formData.cf_city ? ', ' + formData.cf_city : '');
       } else {
         showYtjSuggestions(context, results);
         st.className = 'ytj-status ytj-ok';
         st.textContent = results.length + ' hakutulosta – valitse alta.';
-        return;
       }
     }
-    if (context === 'detail' && !_companyEditMode) {
-      _companyEditMode = true;
-      document.getElementById('company-edit-btn').textContent = 'Peruuta muokkaus';
-      document.getElementById('company-save-row').style.display = 'flex';
-    }
-    buildCompanyForm(formId, formData, false);
-    st.className = 'ytj-status ytj-ok';
-    st.textContent = '✓ Tiedot haettu: ' + formData.cf_name + (formData.cf_city ? ', ' + formData.cf_city : '');
   } catch(e) {
     st.className = 'ytj-status ytj-err';
     st.textContent = 'Haku epäonnistui: ' + e.message;
