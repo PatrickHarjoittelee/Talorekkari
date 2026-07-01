@@ -189,15 +189,115 @@
       .header-right { margin-left:0;flex-wrap:wrap;width:100%; }
       main { padding:16px; }
     }
+
+    /* ── Login screen ── */
+    #login-screen {
+      position:fixed;inset:0;background:var(--bg);z-index:9999;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .login-box {
+      background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+      padding:36px;width:min(420px,95vw);
+    }
+    .login-logo { display:flex;align-items:center;gap:12px;margin-bottom:28px; }
+    .login-logo .logo { width:44px;height:44px;font-size:20px; }
+    .login-logo h2 { font-size:18px;font-weight:700; }
+    .login-logo h2 span { color:var(--accent); }
+    .form-group { margin-bottom:14px; }
+    .form-group label { display:block;font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px; }
+    .form-group input {
+      width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);
+      padding:10px 12px;border-radius:var(--radius);font-size:14px;font-family:inherit;outline:none;
+    }
+    .form-group input:focus { border-color:var(--accent); }
+    .login-error { color:var(--red);font-size:12px;margin-bottom:10px;min-height:16px; }
+    .login-divider { display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--text2);font-size:12px; }
+    .login-divider::before,.login-divider::after { content:'';flex:1;height:1px;background:var(--border); }
+    .persona-grid { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
+    .persona-btn {
+      background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);
+      padding:10px 12px;cursor:pointer;text-align:left;color:var(--text);font-family:inherit;
+      transition:border-color .2s,background .2s;
+    }
+    .persona-btn:hover { border-color:var(--accent);background:var(--bg4); }
+    .persona-btn .p-role { font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px; }
+    .persona-btn .p-name { font-size:13px;font-weight:600; }
+    .persona-btn .p-desc { font-size:11px;color:var(--text2);margin-top:2px; }
+
+    /* ── Role badge ── */
+    .role-badge {
+      padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+    }
+    .role-admin        { background:rgba(239,83,80,.2);color:#e57373; }
+    .role-municipality { background:rgba(66,165,245,.2);color:#64b5f6; }
+    .role-customer     { background:rgba(76,175,80,.2);color:#81c784; }
+
+    /* ── Hierarchy tree ── */
+    .tree-row td { transition:background .15s; }
+    .tree-toggle { display:inline-block;width:18px;text-align:center;font-size:11px;color:var(--text2);cursor:pointer;vertical-align:middle; }
+    .child-row { background:rgba(0,0,0,.12); }
+    .child-row td:first-child { padding-left:30px; }
+    .site-row  { background:rgba(0,0,0,.22); }
+    .site-row td:first-child  { padding-left:50px; }
+    .site-row td { font-size:12px;color:var(--text2); }
+    .hidden-row { display:none; }
   </style>
 </head>
 <body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo">S</div>
+      <h2>Spara <span>ETJ+ Light</span></h2>
+    </div>
+    <div class="form-group">
+      <label>Sähköposti</label>
+      <input type="email" id="login-email" placeholder="tunnus@yritys.fi" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Salasana</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:8px" onclick="doLogin()">Kirjaudu sisään</button>
+    <div class="login-divider">tai valitse demo-henkilö</div>
+    <div class="persona-grid">
+      <button class="persona-btn" onclick="loginAsPersona('admin')">
+        <div class="p-role">Spara Admin</div>
+        <div class="p-name">Ylläpitäjä</div>
+        <div class="p-desc">Näkee kaiken</div>
+      </button>
+      <button class="persona-btn" onclick="loginAsPersona('municipality')">
+        <div class="p-role">Kunta</div>
+        <div class="p-name">Espoon kaupunki</div>
+        <div class="p-desc">Espoo-yritykset</div>
+      </button>
+      <button class="persona-btn" onclick="loginAsPersona('customer_large')">
+        <div class="p-role">Asiakas</div>
+        <div class="p-name">Logistics Nordic</div>
+        <div class="p-desc">Konsernirakenne</div>
+      </button>
+      <button class="persona-btn" onclick="loginAsPersona('customer_small')">
+        <div class="p-role">Asiakas</div>
+        <div class="p-name">Teollisuus Oy</div>
+        <div class="p-desc">2 toimipaikkaa</div>
+      </button>
+    </div>
+  </div>
+</div>
 
 <header>
   <div class="logo">S</div>
   <h1>Spara <span>ETJ+ Light</span> — Energianhallinta</h1>
   <div class="header-right">
     <a class="back-link" href="index.html">← Kiinteistörekisteri</a>
+    <div id="user-info" style="display:none;align-items:center;gap:8px">
+      <span id="user-display-name" style="font-size:13px;color:var(--text2)"></span>
+      <span id="user-role-badge" class="role-badge"></span>
+      <button class="btn btn-secondary btn-sm" onclick="doLogout()">Ulos</button>
+    </div>
     <select class="company-select" id="company-selector" onchange="selectCompany(this.value)">
       <option value="">Kaikki yritykset</option>
     </select>
@@ -227,6 +327,7 @@
   <div class="tab" data-tab="tunnusluvut">Tunnusluvut</div>
   <div class="tab" data-tab="toimenpiteet">Toimenpiteet</div>
   <div class="tab" data-tab="raportit">Raportit</div>
+  <div class="tab" data-tab="hallinta" id="tab-hallinta-btn" style="display:none">Hallinta</div>
 </div>
 
 <main>
@@ -404,6 +505,44 @@
 
 </div>
 
+<!-- ══ Tab 6: Hallinta (admin only) ══ -->
+<div class="tab-content" id="tab-hallinta">
+  <div class="section-title">Käyttäjähallinta</div>
+  <div class="table-wrap" style="margin-bottom:24px">
+    <table>
+      <thead>
+        <tr>
+          <th>Nimi</th>
+          <th>Rooli</th>
+          <th>Kunta / Yritykset</th>
+          <th>Luotu</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-users">
+        <tr><td colspan="4" class="empty">Ladataan…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-title">Konsernirakenne</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Yritys / Käyttöpaikka</th>
+          <th>Tyyppi</th>
+          <th>Kaupunki</th>
+          <th>Yläyhtiö</th>
+          <th>Käyttöpaikat</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-hierarchy">
+        <tr><td colspan="5" class="empty">Ladataan…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 </main>
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
@@ -518,6 +657,60 @@ const DEMO_ALERTS = [
   { id:'al4', company_id:'c1', severity:'info', title:'ETJ+-sopimus voimassa', message:'Teollisuus Oy on vapautettu katselmusvelvoitteesta ETJ+-sopimuksen perusteella.', triggered_at:'2026-01-15', is_active:true },
 ];
 
+// Child companies for hierarchy demo
+const DEMO_CHILD_COMPANIES = [
+  { id:'c1a', name:'Teollisuus Tampere (haara)', parent_id:'c1', y_tunnus:'1234567-A', sector:'Teollisuus', city:'Tampere', etj_agreement_active:true },
+  { id:'c1b', name:'Teollisuus Turku (haara)',   parent_id:'c1', y_tunnus:'1234567-B', sector:'Teollisuus', city:'Turku',   etj_agreement_active:true },
+  { id:'c3a', name:'LN Varasto Helsinki',         parent_id:'c3', y_tunnus:'3456789-A', sector:'Logistiikka', city:'Helsinki', etj_agreement_active:true },
+  { id:'c3b', name:'LN Varasto Vantaa',           parent_id:'c3', y_tunnus:'3456789-B', sector:'Logistiikka', city:'Vantaa',   etj_agreement_active:true },
+];
+DEMO_CHILD_COMPANIES.forEach(c => {
+  DEMO_MONTHLY[c.id] = {};
+  const base = c.parent_id === 'c1' ? 900 : 2800;
+  [2023,2024,2025].forEach(y => {
+    const sf = [1.20,1.08,1.02,0.92,0.82,0.74,0.75,0.80,0.90,1.02,1.10,1.22];
+    const tot = base * (1 + (y-2023)*0.02);
+    const ss  = sf.reduce((a,b)=>a+b,0);
+    DEMO_MONTHLY[c.id][y] = sf.map(f => Math.round(tot*f/ss*10)/10);
+  });
+});
+
+const DEMO_SITES = [
+  { id:'s1', company_id:'c1',  name:'Päätehdas',           city:'Tampere', floor_area_m2:5000, site_type:'production', active:true, spara_usage_point_id:'FI001' },
+  { id:'s2', company_id:'c1',  name:'Toimistokiinteistö',  city:'Tampere', floor_area_m2:3500, site_type:'office',     active:true, spara_usage_point_id:null },
+  { id:'s3', company_id:'c2',  name:'Kauppakeskus Tapiola',city:'Espoo',   floor_area_m2:12000,site_type:'retail',     active:true, spara_usage_point_id:'FI002' },
+  { id:'s4', company_id:'c3',  name:'Päävarasto',          city:'Vantaa',  floor_area_m2:25000,site_type:'warehouse',  active:true, spara_usage_point_id:'FI003' },
+  { id:'s5', company_id:'c3',  name:'Terminaali',          city:'Helsinki',floor_area_m2:17000,site_type:'warehouse',  active:true, spara_usage_point_id:'FI004' },
+  { id:'s6', company_id:'c3a', name:'Helsinki-Varasto',    city:'Helsinki',floor_area_m2:8000, site_type:'warehouse',  active:true, spara_usage_point_id:'FI005' },
+  { id:'s7', company_id:'c3b', name:'Vantaa-Varasto 2',   city:'Vantaa',  floor_area_m2:9500, site_type:'warehouse',  active:true, spara_usage_point_id:'FI006' },
+];
+
+const DEMO_PERSONAS = {
+  admin: {
+    id:'demo-admin', email:'admin@sparaenergia.com',
+    display_name:'Spara Admin', role:'spara_admin', municipality:null, company_ids:null
+  },
+  municipality: {
+    id:'demo-muni', email:'energia@espoo.fi',
+    display_name:'Espoon kaupunki', role:'municipality', municipality:'Espoo', company_ids:null
+  },
+  customer_large: {
+    id:'demo-cust-lg', email:'jukka@logistics.fi',
+    display_name:'Jukka Mäkinen', role:'customer', municipality:null, company_ids:['c3','c3a','c3b']
+  },
+  customer_small: {
+    id:'demo-cust-sm', email:'matti@teollisuus.fi',
+    display_name:'Matti Virtanen', role:'customer', municipality:null, company_ids:['c1','c1a','c1b']
+  },
+};
+
+const DEMO_USERS = [
+  { display_name:'Spara Admin',    role:'spara_admin',   scope:'Kaikki yritykset',    created_at:'2024-01-01' },
+  { display_name:'Espoon kaupunki',role:'municipality',   scope:'Kunta: Espoo',        created_at:'2024-02-15' },
+  { display_name:'Jukka Mäkinen',  role:'customer',       scope:'Logistics Nordic -konserni', created_at:'2024-03-10' },
+  { display_name:'Matti Virtanen', role:'customer',       scope:'Teollisuus Oy -konserni',     created_at:'2024-04-01' },
+];
+
 // ═══════════════════════════════════════════════════════════════════════════
 // State
 // ═══════════════════════════════════════════════════════════════════════════
@@ -527,6 +720,8 @@ let activeCompanyId = null;
 let activeYear = 2025;
 let charts = {};
 let allActions = [];
+let currentUser    = null;
+let currentProfile = null;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Compliance logic
@@ -557,6 +752,80 @@ function complianceStatus(company) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Auth
+// ═══════════════════════════════════════════════════════════════════════════
+async function initAuth() {
+  const { data: { session } } = await db.auth.getSession();
+  if (session?.user) {
+    await handleAuthUser(session.user);
+    return;
+  }
+  db.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) await handleAuthUser(session.user);
+    else if (event === 'SIGNED_OUT') showLoginScreen();
+  });
+  showLoginScreen();
+}
+
+async function handleAuthUser(user) {
+  const { data: profile } = await db.from('etj_user_profiles').select('*').eq('id', user.id).single();
+  currentUser    = user;
+  currentProfile = profile || { role:'customer', display_name: user.email, municipality:null, company_ids:null };
+  hideLoginScreen();
+  showUserInfo();
+  await loadData();
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Syötä sähköposti ja salasana.'; return; }
+  const { error } = await db.auth.signInWithPassword({ email, password: pass });
+  if (error) errEl.textContent = 'Kirjautuminen epäonnistui: ' + error.message;
+}
+
+async function doLogout() {
+  if (currentUser?.id?.startsWith('demo-')) {
+    currentUser = null; currentProfile = null;
+    showLoginScreen();
+    return;
+  }
+  await db.auth.signOut();
+}
+
+function loginAsPersona(key) {
+  const p = DEMO_PERSONAS[key];
+  currentUser    = { id: p.id, email: p.email };
+  currentProfile = { role: p.role, display_name: p.display_name, municipality: p.municipality, company_ids: p.company_ids };
+  DEMO_MODE = true;
+  hideLoginScreen();
+  showUserInfo();
+  loadData();
+}
+
+function showLoginScreen() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('user-info').style.display = 'none';
+}
+function hideLoginScreen() {
+  document.getElementById('login-screen').style.display = 'none';
+}
+function showUserInfo() {
+  const roleLabels  = { spara_admin:'Admin', municipality:'Kunta', customer:'Asiakas' };
+  const roleClasses = { spara_admin:'role-admin', municipality:'role-municipality', customer:'role-customer' };
+  const role = currentProfile?.role || 'customer';
+  document.getElementById('user-display-name').textContent = currentProfile?.display_name || currentUser?.email || '';
+  const badge = document.getElementById('user-role-badge');
+  badge.textContent = roleLabels[role] || role;
+  badge.className = 'role-badge ' + (roleClasses[role] || 'role-customer');
+  document.getElementById('user-info').style.display = 'flex';
+  // Show admin tab only for spara_admin
+  document.getElementById('tab-hallinta-btn').style.display = role === 'spara_admin' ? '' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Data loading (Supabase → fallback demo)
 // Only leaves demo mode when BOTH company rows AND consumption data exist;
 // otherwise stays entirely in demo mode so DEMO_MONTHLY ids always match.
@@ -576,10 +845,14 @@ async function loadData() {
     DEMO_MODE = false;
     _buildMonthlyFromAnnuals(cos, ac);
   } catch {
-    companies = DEMO_COMPANIES;
+    companies = [...DEMO_COMPANIES, ...DEMO_CHILD_COMPANIES];
     DEMO_MODE = true;
   }
   allActions = DEMO_ACTIONS;
+  activeCompanyId = null;
+  // Reset selector options
+  const sel = document.getElementById('company-selector');
+  sel.innerHTML = '<option value="">Kaikki yritykset</option>';
   initCompanySelector();
   updateSummaryBar();
   renderComplianceTab();
@@ -587,6 +860,10 @@ async function loadData() {
   renderKpiGrid();
   renderKpiSummary();
   renderMgmtReportMeta();
+  if (currentProfile?.role === 'spara_admin') renderHallintaTab();
+  updateComplianceBanner();
+  updateStatusChip();
+  filterActions();
 }
 
 // Distribute real annual totals into monthly estimates using a seasonal profile.
@@ -610,9 +887,10 @@ function _buildMonthlyFromAnnuals(cos, annuals) {
 // ═══════════════════════════════════════════════════════════════════════════
 function initCompanySelector() {
   const sel = document.getElementById('company-selector');
-  companies.forEach(c => {
+  getVisibleCompanies().forEach(c => {
     const o = document.createElement('option');
-    o.value = c.id; o.textContent = c.name;
+    o.value = c.id;
+    o.textContent = c.parent_id ? '  ↳ ' + c.name : c.name;
     sel.appendChild(o);
   });
 }
@@ -629,7 +907,31 @@ function selectCompany(id) {
 }
 
 function getVisibleCompanies() {
-  return activeCompanyId ? companies.filter(c => c.id === activeCompanyId) : companies;
+  let all = companies;
+  const role = currentProfile?.role;
+  if (role === 'municipality') {
+    const muni = (currentProfile.municipality || '').toLowerCase();
+    all = all.filter(c => (c.city || '').toLowerCase() === muni);
+  } else if (role === 'customer') {
+    const allowed = currentProfile.company_ids || [];
+    all = all.filter(c => allowed.includes(c.id));
+  }
+  return activeCompanyId ? all.filter(c => c.id === activeCompanyId) : all;
+}
+
+// Root-level companies only (no children), respecting role filter
+function getRootCompanies() {
+  return getVisibleCompanies().filter(c => !c.parent_id);
+}
+
+// Children of a given parent, respecting role filter
+function getChildCompanies(parentId) {
+  return getVisibleCompanies().filter(c => c.parent_id === parentId);
+}
+
+// Sites for a company
+function getSitesFor(companyId) {
+  return DEMO_SITES.filter(s => s.company_id === companyId && s.active);
 }
 
 function updateStatusChip() {
@@ -686,24 +988,84 @@ function updateSummaryBar() {
 // ═══════════════════════════════════════════════════════════════════════════
 // Tab 1: Yhteenveto
 // ═══════════════════════════════════════════════════════════════════════════
+function complianceRow(c, extraClass) {
+  const avg = calcAvg3yr(c.id);
+  const cs  = complianceStatus(c);
+  const threshLabel = avg > 23600 ? '> 23 600 MWh' : avg > 2700 ? '> 2 700 MWh' : '< 2 700 MWh';
+  const etjIcon = c.etj_agreement_active ? '✅' : '❌';
+  const children = getChildCompanies(c.id);
+  const hasChildren = children.length > 0;
+  const sites = getSitesFor(c.id);
+  const childCount = children.length;
+  const siteCount  = sites.length;
+  const infoStr = (childCount > 0 ? childCount + ' tytäryhtiötä' : '') +
+                  (childCount > 0 && siteCount > 0 ? ', ' : '') +
+                  (siteCount  > 0 ? siteCount + ' kohdetta' : '');
+  const toggleId = 'tree-' + c.id;
+  return `<tr class="${extraClass || ''} tree-row" onclick="toggleTreeChildren('${c.id}')">
+    <td>
+      <span class="tree-toggle" id="toggle-${c.id}">${hasChildren||siteCount>0 ? '▶' : ' '}</span>
+      <strong>${c.name}</strong>
+      ${infoStr ? `<br><span style="color:var(--text2);font-size:11px;padding-left:18px">${infoStr}</span>` : ''}
+    </td>
+    <td>${c.sector || '–'}</td>
+    <td>${avg > 0 ? Math.round(avg).toLocaleString('fi-FI') + ' MWh' : '–'}</td>
+    <td>${threshLabel}</td>
+    <td>${etjIcon}</td>
+    <td><span class="badge badge-${cs.color}">${cs.label}</span></td>
+    <td style="color:${cs.deadline ? 'var(--orange)' : 'var(--text2)'}">${cs.deadline || '–'}</td>
+  </tr>`;
+}
+
+function toggleTreeChildren(parentId) {
+  const rows = document.querySelectorAll('[data-parent="' + parentId + '"]');
+  if (!rows.length) return;
+  const hidden = rows[0].classList.contains('hidden-row');
+  rows.forEach(r => r.classList.toggle('hidden-row', !hidden));
+  const toggle = document.getElementById('toggle-' + parentId);
+  if (toggle) toggle.textContent = hidden ? '▼' : '▶';
+}
+
 function renderComplianceTab() {
   const tbody = document.getElementById('tbody-compliance');
-  const vis = getVisibleCompanies();
-  tbody.innerHTML = vis.map(c => {
-    const avg = calcAvg3yr(c.id);
-    const cs  = complianceStatus(c);
-    const threshLabel = avg > 23600 ? '> 23 600 MWh' : avg > 2700 ? '> 2 700 MWh' : '< 2 700 MWh';
-    const etjIcon = c.etj_agreement_active ? '✅ Aktiivinen' : '❌ Ei';
-    return `<tr>
-      <td><strong>${c.name}</strong><br><span style="color:var(--text2);font-size:11px">${c.y_tunnus || ''}</span></td>
-      <td>${c.sector || '–'}</td>
-      <td>${Math.round(avg).toLocaleString('fi-FI')} MWh</td>
-      <td>${threshLabel}</td>
-      <td>${etjIcon}</td>
-      <td><span class="badge badge-${cs.color}">${cs.label}</span></td>
-      <td style="color:${cs.deadline ? 'var(--orange)' : 'var(--text2)'}">${cs.deadline || '–'}</td>
-    </tr>`;
-  }).join('');
+  const roots = activeCompanyId
+    ? getVisibleCompanies().filter(c => c.id === activeCompanyId)
+    : getRootCompanies();
+
+  let html = '';
+  roots.forEach(c => {
+    html += complianceRow(c, '');
+    const children = getChildCompanies(c.id);
+    const sites = getSitesFor(c.id);
+    children.forEach(ch => {
+      html += `<tr class="child-row hidden-row" data-parent="${c.id}" onclick="toggleTreeChildren('${ch.id}')">
+        <td><span class="tree-toggle" id="toggle-${ch.id}">${getSitesFor(ch.id).length > 0 ? '▶' : ' '}</span>${ch.name}</td>
+        <td>${ch.sector || '–'}</td>
+        <td>${calcAvg3yr(ch.id) > 0 ? Math.round(calcAvg3yr(ch.id)).toLocaleString('fi-FI') + ' MWh' : '–'}</td>
+        <td>${calcAvg3yr(ch.id) > 23600 ? '> 23 600' : calcAvg3yr(ch.id) > 2700 ? '> 2 700' : '< 2 700'}</td>
+        <td>${ch.etj_agreement_active ? '✅' : '❌'}</td>
+        <td><span class="badge badge-${complianceStatus(ch).color}">${complianceStatus(ch).label}</span></td>
+        <td>–</td>
+      </tr>`;
+      getSitesFor(ch.id).forEach(s => {
+        html += `<tr class="site-row hidden-row" data-parent="${ch.id}">
+          <td>📍 ${s.name}</td>
+          <td>${s.site_type || '–'}</td>
+          <td colspan="4" style="color:var(--text2)">${s.floor_area_m2 ? s.floor_area_m2.toLocaleString('fi-FI') + ' m²' : ''} ${s.spara_usage_point_id ? '· Spara: ' + s.spara_usage_point_id : ''}</td>
+          <td></td>
+        </tr>`;
+      });
+    });
+    sites.forEach(s => {
+      html += `<tr class="site-row hidden-row" data-parent="${c.id}">
+        <td>📍 ${s.name}</td>
+        <td>${s.site_type || '–'}</td>
+        <td colspan="4" style="color:var(--text2)">${s.floor_area_m2 ? s.floor_area_m2.toLocaleString('fi-FI') + ' m²' : ''} ${s.spara_usage_point_id ? '· Spara: ' + s.spara_usage_point_id : ''}</td>
+        <td></td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML = html || '<tr><td colspan="7" class="empty">Ei yrityksiä.</td></tr>';
 
   // Alerts
   const alertList = document.getElementById('alert-list');
@@ -1108,6 +1470,35 @@ async function saveEntry() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Tab 6: Hallinta
+// ═══════════════════════════════════════════════════════════════════════════
+function renderHallintaTab() {
+  const roleLabels  = { spara_admin:'Admin', municipality:'Kunta', customer:'Asiakas' };
+  document.getElementById('tbody-users').innerHTML = DEMO_USERS.map(u => `
+    <tr>
+      <td>${u.display_name}</td>
+      <td><span class="role-badge role-${u.role === 'spara_admin' ? 'admin' : u.role}">${roleLabels[u.role] || u.role}</span></td>
+      <td style="color:var(--text2)">${u.scope}</td>
+      <td style="color:var(--text2)">${u.created_at}</td>
+    </tr>`).join('');
+
+  const roots = getRootCompanies();
+  let html = '';
+  roots.forEach(c => {
+    const children = getChildCompanies(c.id);
+    const sites    = getSitesFor(c.id);
+    html += `<tr><td><strong>${c.name}</strong></td><td>Pääyhtiö</td><td>${c.city||'–'}</td><td>–</td><td>${sites.length} kohdetta</td></tr>`;
+    children.forEach(ch => {
+      html += `<tr class="child-row"><td>${ch.name}</td><td>Tytäryhtiö</td><td>${ch.city||'–'}</td><td>${c.name}</td><td>${getSitesFor(ch.id).length} kohdetta</td></tr>`;
+    });
+    sites.forEach(s => {
+      html += `<tr class="site-row"><td>📍 ${s.name}</td><td>${s.site_type||'–'}</td><td>${s.city||'–'}</td><td>${c.name}</td><td>${s.spara_usage_point_id ? '🔌 ' + s.spara_usage_point_id : '–'}</td></tr>`;
+    });
+  });
+  document.getElementById('tbody-hierarchy').innerHTML = html || '<tr><td colspan="5" class="empty">–</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Tabs
 // ═══════════════════════════════════════════════════════════════════════════
 document.querySelectorAll('.tab').forEach(tab => {
@@ -1121,17 +1512,14 @@ document.querySelectorAll('.tab').forEach(tab => {
     if (t === 'tunnusluvut')  renderKpiGrid();
     if (t === 'toimenpiteet') filterActions();
     if (t === 'raportit')     renderMgmtReportMeta();
+    if (t === 'hallinta')     renderHallintaTab();
   });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Init
 // ═══════════════════════════════════════════════════════════════════════════
-loadData().then(() => {
-  updateComplianceBanner();
-  updateStatusChip();
-  filterActions();
-});
+initAuth();
 </script>
 </body>
 </html>
