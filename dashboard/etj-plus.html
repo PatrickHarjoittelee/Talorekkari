@@ -271,6 +271,33 @@
     .tag-remove { background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:2px;line-height:1;transition:color .15s; }
     .tag-remove:hover { color:var(--red); }
 
+    /* ── Annual entry table ── */
+    .at-head th { font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--border);padding:7px 4px;white-space:nowrap }
+    .at-sticky-0 { position:sticky;left:0;z-index:3;background:var(--bg2);padding-left:10px !important }
+    .at-sticky-1 { position:sticky;left:116px;z-index:3;background:var(--bg2);padding-left:8px !important }
+    .at-head .at-sticky-0,.at-head .at-sticky-1 { z-index:4;background:var(--bg2) }
+    .at-mo { width:60px;min-width:54px;text-align:center;padding:4px 2px }
+    .at-total-h { width:68px;min-width:64px;background:rgba(255,255,255,.04) }
+    .at-group-row td { background:var(--bg3);font-size:12px;font-weight:600;padding:5px 10px;cursor:pointer;user-select:none;border-top:1px solid var(--border);border-bottom:1px solid var(--border) }
+    .at-group-row:hover td { background:var(--border) }
+    .at-row td { padding:3px 2px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle }
+    .at-row td.at-sticky-0,.at-row td.at-sticky-1 { background:var(--bg2) }
+    .at-row input[type=number] { width:54px;background:var(--bg3);border:1px solid transparent;color:var(--text);padding:3px 4px;border-radius:4px;text-align:right;font-family:inherit;font-size:12px }
+    .at-row input[type=number]:focus { border-color:var(--accent);outline:none }
+    .at-row input[type=text] { width:100%;background:var(--bg3);border:1px solid transparent;color:var(--text);padding:3px 6px;border-radius:4px;font-family:inherit;font-size:12px }
+    .at-row input[type=text]:focus { border-color:var(--accent);outline:none }
+    .at-row select { width:100%;background:var(--bg3);border:1px solid transparent;color:var(--text);padding:3px 4px;border-radius:4px;font-family:inherit;font-size:12px }
+    .at-row select:focus { border-color:var(--accent);outline:none }
+    .at-total-cell { text-align:right;font-size:12px;color:var(--accent);font-weight:600;padding:3px 8px;background:rgba(255,255,255,.03) }
+    .at-sum-row td { background:var(--bg3);font-size:12px;color:var(--text2);padding:4px 6px;border-top:1px solid var(--border) }
+    .at-sum-row .at-mo { text-align:right;color:var(--text);font-size:11px }
+    .at-sum-row .at-total-cell { color:var(--accent);font-weight:700 }
+    .at-grand-row td { background:var(--bg4,#1a1a2e);font-weight:700;font-size:12px;padding:6px 6px;border-top:2px solid var(--border) }
+    .at-grand-row .at-mo { text-align:right;color:var(--text) }
+    .at-grand-row .at-total-cell { color:var(--accent);font-size:13px }
+    .at-del-btn { background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px;line-height:1 }
+    .at-del-btn:hover { color:#ef5350;background:rgba(239,83,80,.12) }
+
     /* ── Report tag table ── */
     .tag-report-table th { font-size:11px;white-space:nowrap; }
     .tag-report-table td { font-size:12px; }
@@ -828,56 +855,50 @@
 <!-- Data entry modal (hidden by default) -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center">
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:min(620px,95vw);max-height:90vh;overflow-y:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h2 style="font-size:16px">Lisää kuukausikulutus</h2>
-      <button onclick="closeDataEntry()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer">✕</button>
-    </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;width:min(98vw,1320px);max-height:92vh;display:flex;flex-direction:column;gap:12px">
 
-    <!-- Period selection -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
-      <div>
-        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">Vuosi</label>
-        <select id="entry-year" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:inherit">
+    <!-- Header row -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <h2 style="font-size:16px;margin:0">Vuosikulutus – tägitykset</h2>
+      <div style="display:flex;align-items:center;gap:12px">
+        <select id="entry-year" onchange="_reloadAnnualOnYearChange()"
+          style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:inherit;font-size:13px">
           <option>2026</option><option selected>2025</option><option>2024</option><option>2023</option>
         </select>
-      </div>
-      <div>
-        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">Kuukausi</label>
-        <select id="entry-month" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:inherit">
-          <option value="1">Tammikuu</option><option value="2">Helmikuu</option>
-          <option value="3">Maaliskuu</option><option value="4">Huhtikuu</option>
-          <option value="5">Toukokuu</option><option value="6">Kesäkuu</option>
-          <option value="7">Heinäkuu</option><option value="8">Elokuu</option>
-          <option value="9">Syyskuu</option><option value="10">Lokakuu</option>
-          <option value="11">Marraskuu</option><option value="12">Joulukuu</option>
-        </select>
+        <button onclick="closeDataEntry()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;line-height:1">✕</button>
       </div>
     </div>
 
-    <!-- Section: totals -->
-    <div class="modal-section">Energiankulutus yhteensä (MWh)</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px" id="entry-fields"></div>
+    <!-- Scrollable table -->
+    <div style="overflow:auto;flex:1;min-height:0;border:1px solid var(--border);border-radius:8px">
+      <table id="annual-table" style="border-collapse:collapse;min-width:1160px;width:100%">
+        <thead>
+          <tr class="at-head">
+            <th class="at-sticky-0" style="min-width:116px;text-align:left">Energialähde</th>
+            <th class="at-sticky-1" style="min-width:150px;text-align:left">Tägi</th>
+            <th class="at-mo at-total-h">Yht.</th>
+            <th class="at-mo">Tam</th><th class="at-mo">Hel</th><th class="at-mo">Maa</th>
+            <th class="at-mo">Huh</th><th class="at-mo">Tou</th><th class="at-mo">Kes</th>
+            <th class="at-mo">Hei</th><th class="at-mo">Elo</th><th class="at-mo">Syy</th>
+            <th class="at-mo">Lok</th><th class="at-mo">Mar</th><th class="at-mo">Jou</th>
+            <th style="width:30px"></th>
+          </tr>
+        </thead>
+        <tbody id="annual-tbody"></tbody>
+      </table>
+    </div>
 
-    <!-- Section: tag allocations -->
-    <div class="modal-section" style="display:flex;justify-content:space-between;align-items:center">
-      <span>Tägitykset <span style="font-size:10px;color:var(--text2);font-weight:400;text-transform:none;letter-spacing:0">(valinnainen – erittele kulutus käyttökohteittain)</span></span>
-      <button class="btn btn-secondary btn-sm" onclick="addTagRow()">+ Lisää rivi</button>
+    <!-- Footer row -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <button class="btn btn-secondary btn-sm" onclick="addAnnualRow()">+ Lisää rivi</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" onclick="closeDataEntry()">Peruuta</button>
+        <button class="btn btn-primary" onclick="saveAnnualEntry()">Tallenna kaikki</button>
+      </div>
     </div>
-    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;display:grid;grid-template-columns:120px 90px 1fr 28px;gap:6px;padding:0 2px">
-      <span>Energialähde</span><span>MWh</span><span>Tägi (uusi tai valitse listasta)</span><span></span>
-    </div>
-    <div id="tag-rows"></div>
-    <div style="font-size:11px;color:var(--text2);margin-top:6px">
-      Tägit tallentuvat yrityskohtaisesti – kirjoita uusi nimi tai valitse aiempi ehdotuksista.
-    </div>
-    <!-- Hidden datalist updated dynamically -->
+
     <datalist id="tag-datalist"></datalist>
-
-    <div style="display:flex;gap:10px;margin-top:18px">
-      <button class="btn btn-primary" onclick="saveEntry()" style="flex:1">Tallenna</button>
-      <button class="btn btn-secondary" onclick="closeDataEntry()">Peruuta</button>
-    </div>
+    <datalist id="tag-datalist-annual"></datalist>
   </div>
 </div>
 
@@ -1845,11 +1866,11 @@ function ensureTag(cId, name) {
   return tag;
 }
 
-function refreshTagDatalist(cId) {
-  const dl = document.getElementById('tag-datalist');
-  if (!dl) return;
+function refreshTagDatalist(cId, dlId) {
+  const ids = dlId ? [dlId] : ['tag-datalist','tag-datalist-annual'];
   const tags = getCompanyTags(cId);
-  dl.innerHTML = tags.map(t => `<option value="${t.name.replace(/"/g,'&quot;')}">`).join('');
+  const opts = tags.map(t => `<option value="${t.name.replace(/"/g,'&quot;')}">`).join('');
+  ids.forEach(id => { const dl = document.getElementById(id); if (dl) dl.innerHTML = opts; });
 }
 
 function addTagRow(type, amount, tagName) {
@@ -1875,108 +1896,252 @@ function getTagRows() {
   }).filter(r => r.amount_mwh > 0 && r.tag_name);
 }
 
+// Annual entry table state
+let _annualRows = [];
+let _annualCollapsed = new Set();
+let _annualRowId = 0;
+
 function openDataEntry() {
   const cId = activeCompanyId || companies.find(c=>!c.parent_id)?.id || companies[0]?.id;
-
-  // Fill totals fields
-  document.getElementById('entry-fields').innerHTML = ENERGY_TYPES.map(([type, label]) => `
-    <div>
-      <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">${label} (MWh)</label>
-      <input id="${ENERGY_FIELD[type]}" type="number" min="0" step="0.1" placeholder="0"
-        style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:inherit">
-    </div>`).join('');
-
-  // Reset tag rows – pre-populate with last saved allocations for this period
-  document.getElementById('tag-rows').innerHTML = '';
   const yr = +document.getElementById('entry-year').value || 2025;
-  const mo = +document.getElementById('entry-month').value || 1;
-  const existing = allTagAllocs.filter(a => a.company_id === cId && a.year === yr && a.month === mo);
-  existing.forEach(a => {
-    const tag = allTags.find(t => t.id === a.tag_id);
-    if (tag) addTagRow(a.energy_type, a.amount_mwh, tag.name);
-  });
-
+  _loadAnnualRows(cId, yr);
   refreshTagDatalist(cId);
   document.getElementById('modal-overlay').style.display = 'flex';
 }
 
 function closeDataEntry() { document.getElementById('modal-overlay').style.display = 'none'; }
 
-async function saveEntry() {
-  const cId  = activeCompanyId || companies.find(c=>!c.parent_id)?.id || companies[0]?.id;
-  const year  = +document.getElementById('entry-year').value;
-  const month = +document.getElementById('entry-month').value;
-  const entry = {
-    company_id: cId, year, month,
-    electricity_mwh: +document.getElementById('electricity_mwh').value || 0,
-    heat_mwh:        +document.getElementById('heat_mwh').value        || 0,
-    gas_mwh:         +document.getElementById('gas_mwh').value         || 0,
-    oil_mwh:         +document.getElementById('oil_mwh').value         || 0,
-    other_mwh:       +document.getElementById('other_mwh').value       || 0,
-  };
-  const total = entry.electricity_mwh + entry.heat_mwh + entry.gas_mwh + entry.oil_mwh + entry.other_mwh;
+function _reloadAnnualOnYearChange() {
+  const cId = activeCompanyId || companies.find(c=>!c.parent_id)?.id || companies[0]?.id;
+  const yr = +document.getElementById('entry-year').value || 2025;
+  _loadAnnualRows(cId, yr);
+}
 
-  // ── Collect tag rows ──────────────────────────────────────────────────────
-  const tagRowData = getTagRows();
-  const newAllocs  = tagRowData.map(r => {
-    const tag = ensureTag(cId, r.tag_name);
-    return tag ? { id:'ta_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
-                   company_id:cId, year, month,
-                   energy_type:r.energy_type, amount_mwh:r.amount_mwh, tag_id:tag.id } : null;
-  }).filter(Boolean);
+function _loadAnnualRows(cId, yr) {
+  _annualRows = [];
+  _annualRowId = 0;
+  const allocs = allTagAllocs.filter(a => a.company_id === cId && a.year === yr);
+  const map = {};
+  allocs.forEach(a => {
+    const tag = allTags.find(t => t.id === a.tag_id);
+    if (!tag) return;
+    const key = `${a.energy_type}::${a.tag_id}`;
+    if (!map[key]) {
+      map[key] = { id: ++_annualRowId, energy_type: a.energy_type, tag_name: tag.name, months: Array(12).fill(0) };
+      _annualRows.push(map[key]);
+    }
+    map[key].months[a.month - 1] += a.amount_mwh;
+  });
+  if (_annualRows.length === 0) {
+    _annualRows.push({ id: ++_annualRowId, energy_type: 'electricity', tag_name: '', months: Array(12).fill(0) });
+  }
+  renderAnnualTable();
+}
+
+function renderAnnualTable() {
+  const tbody = document.getElementById('annual-tbody');
+  if (!tbody) return;
+  const groups = {};
+  ENERGY_TYPES.forEach(([type]) => { groups[type] = []; });
+  _annualRows.forEach(r => { (groups[r.energy_type] = groups[r.energy_type] || []).push(r); });
+
+  let html = '';
+
+  ENERGY_TYPES.forEach(([type, label]) => {
+    const rows = (groups[type] || []);
+    if (!rows.length) return;
+    const collapsed = _annualCollapsed.has(type);
+    const gTotal = rows.reduce((s,r) => s + r.months.reduce((a,v) => a+v, 0), 0);
+
+    html += `<tr class="at-group-row" onclick="toggleAnnualGroup('${type}')">
+      <td colspan="16">
+        <span style="font-family:monospace;margin-right:5px">${collapsed ? '▶' : '▼'}</span>${label}
+        <span style="color:var(--text2);font-weight:400;font-size:11px;margin-left:8px">${rows.length} rivi${rows.length===1?'':'ä'} · ${Math.round(gTotal).toLocaleString('fi-FI')} MWh/v</span>
+      </td>
+    </tr>`;
+
+    if (!collapsed) {
+      rows.forEach(row => {
+        const rTotal = row.months.reduce((s,v) => s+v, 0);
+        const typeOpts = ENERGY_TYPES.map(([v,l]) =>
+          `<option value="${v}"${v===row.energy_type?' selected':''}>${l}</option>`).join('');
+        html += `<tr class="at-row" data-rowid="${row.id}">
+          <td class="at-sticky-0" style="padding-left:22px">
+            <select onchange="updateAnnualRowField(${row.id},'energy_type',this.value)">${typeOpts}</select>
+          </td>
+          <td class="at-sticky-1">
+            <input type="text" list="tag-datalist-annual" value="${row.tag_name.replace(/"/g,'&quot;')}"
+              oninput="updateAnnualRowField(${row.id},'tag_name',this.value)" placeholder="Tägi…">
+          </td>
+          <td class="at-total-cell">${rTotal > 0 ? Math.round(rTotal).toLocaleString('fi-FI') : ''}</td>
+          ${row.months.map((v,i) =>
+            `<td class="at-mo"><input type="number" min="0" step="0.1" value="${v||''}" placeholder=""
+              oninput="updateAnnualRowMonth(${row.id},${i},this.value)"></td>`
+          ).join('')}
+          <td><button class="at-del-btn" onclick="deleteAnnualRow(${row.id})">✕</button></td>
+        </tr>`;
+      });
+
+      // Group subtotal row
+      const mSums = Array(12).fill(0);
+      rows.forEach(r => r.months.forEach((v,i) => mSums[i] += v));
+      const mTotal = mSums.reduce((s,v) => s+v, 0);
+      html += `<tr class="at-sum-row" data-sumgroup="${type}">
+        <td class="at-sticky-0" colspan="2" style="text-align:right;font-style:italic;padding-right:10px">${label} yht.</td>
+        <td class="at-total-cell">${mTotal > 0 ? Math.round(mTotal).toLocaleString('fi-FI') : '–'}</td>
+        ${mSums.map(v => `<td class="at-mo">${v > 0 ? (Math.round(v*10)/10).toLocaleString('fi-FI') : '–'}</td>`).join('')}
+        <td></td>
+      </tr>`;
+    }
+  });
+
+  // Grand total row
+  const gSums = Array(12).fill(0);
+  _annualRows.forEach(r => r.months.forEach((v,i) => gSums[i] += v));
+  const gTotal = gSums.reduce((s,v) => s+v, 0);
+  html += `<tr class="at-grand-row" data-sumgroup="grand">
+    <td class="at-sticky-0" colspan="2" style="text-align:right;padding-right:10px">Kaikki yhteensä</td>
+    <td class="at-total-cell" style="font-size:13px">${gTotal > 0 ? Math.round(gTotal).toLocaleString('fi-FI') : '–'}</td>
+    ${gSums.map(v => `<td class="at-mo">${v > 0 ? Math.round(v).toLocaleString('fi-FI') : '–'}</td>`).join('')}
+    <td></td>
+  </tr>`;
+
+  tbody.innerHTML = html;
+}
+
+function toggleAnnualGroup(type) {
+  if (_annualCollapsed.has(type)) _annualCollapsed.delete(type);
+  else _annualCollapsed.add(type);
+  renderAnnualTable();
+}
+
+function addAnnualRow(type) {
+  const defaultType = type || (_annualRows.length ? _annualRows[_annualRows.length-1].energy_type : 'electricity');
+  _annualRows.push({ id: ++_annualRowId, energy_type: defaultType, tag_name: '', months: Array(12).fill(0) });
+  if (_annualCollapsed.has(defaultType)) _annualCollapsed.delete(defaultType);
+  renderAnnualTable();
+  setTimeout(() => {
+    const tbody = document.getElementById('annual-tbody');
+    const last = tbody && tbody.querySelector(`tr[data-rowid="${_annualRowId}"]`);
+    if (last) last.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }, 60);
+}
+
+function deleteAnnualRow(id) {
+  _annualRows = _annualRows.filter(r => r.id !== id);
+  renderAnnualTable();
+}
+
+function updateAnnualRowField(id, field, val) {
+  const row = _annualRows.find(r => r.id === id);
+  if (!row) return;
+  row[field] = val;
+  if (field === 'energy_type') renderAnnualTable();
+}
+
+function updateAnnualRowMonth(id, moIdx, val) {
+  const row = _annualRows.find(r => r.id === id);
+  if (!row) return;
+  row.months[moIdx] = parseFloat(val) || 0;
+  clearTimeout(updateAnnualRowMonth._t);
+  updateAnnualRowMonth._t = setTimeout(_refreshAnnualTotals, 180);
+}
+
+function _refreshAnnualTotals() {
+  // Update per-row Yht. cells
+  _annualRows.forEach(row => {
+    const tr = document.querySelector(`tr[data-rowid="${row.id}"]`);
+    if (!tr) return;
+    const tc = tr.querySelector('.at-total-cell');
+    if (tc) { const s = row.months.reduce((a,v) => a+v, 0); tc.textContent = s > 0 ? Math.round(s).toLocaleString('fi-FI') : ''; }
+  });
+  // Update group sum rows
+  ENERGY_TYPES.forEach(([type]) => {
+    const sumTr = document.querySelector(`tr[data-sumgroup="${type}"]`);
+    if (!sumTr) return;
+    const groupRows = _annualRows.filter(r => r.energy_type === type);
+    const mSums = Array(12).fill(0);
+    groupRows.forEach(r => r.months.forEach((v,i) => mSums[i] += v));
+    const tot = mSums.reduce((s,v) => s+v, 0);
+    const cells = sumTr.querySelectorAll('td');
+    if (cells[2]) cells[2].textContent = tot > 0 ? Math.round(tot).toLocaleString('fi-FI') : '–';
+    mSums.forEach((v,i) => { if (cells[3+i]) cells[3+i].textContent = v > 0 ? (Math.round(v*10)/10).toLocaleString('fi-FI') : '–'; });
+  });
+  // Update grand total row
+  const grandTr = document.querySelector('tr[data-sumgroup="grand"]');
+  if (grandTr) {
+    const gSums = Array(12).fill(0);
+    _annualRows.forEach(r => r.months.forEach((v,i) => gSums[i] += v));
+    const tot = gSums.reduce((s,v) => s+v, 0);
+    const cells = grandTr.querySelectorAll('td');
+    if (cells[2]) cells[2].textContent = tot > 0 ? Math.round(tot).toLocaleString('fi-FI') : '–';
+    gSums.forEach((v,i) => { if (cells[3+i]) cells[3+i].textContent = v > 0 ? Math.round(v).toLocaleString('fi-FI') : '–'; });
+  }
+}
+
+async function saveAnnualEntry() {
+  const cId = activeCompanyId || companies.find(c=>!c.parent_id)?.id || companies[0]?.id;
+  const yr = +document.getElementById('entry-year').value || 2025;
+
+  const newAllocs = [];
+  let tagCount = 0;
+
+  for (const row of _annualRows) {
+    if (!row.tag_name.trim()) continue;
+    const tag = ensureTag(cId, row.tag_name.trim());
+    if (!tag) continue;
+    tagCount++;
+    for (let mo = 1; mo <= 12; mo++) {
+      const v = row.months[mo - 1];
+      if (!(v > 0)) continue;
+      newAllocs.push({
+        id: 'ta_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+        company_id: cId, year: yr, month: mo,
+        energy_type: row.energy_type, amount_mwh: v, tag_id: tag.id
+      });
+    }
+  }
 
   if (!DEMO_MODE) {
-    // ── Supabase save ─────────────────────────────────────────────────────
     try {
-      const { error: re } = await db.from('etj_energy_readings').upsert(entry, { onConflict:'company_id,year,month' });
-      if (re) throw re;
-
-      // Ensure new tags exist
-      for (const r of tagRowData) {
-        const name = r.tag_name.trim();
-        if (!name) continue;
+      for (const row of _annualRows) {
+        if (!row.tag_name.trim()) continue;
         await db.from('etj_energy_tags')
-          .upsert({ company_id:cId, name }, { onConflict:'company_id,name', ignoreDuplicates:true });
+          .upsert({ company_id:cId, name:row.tag_name.trim() }, { onConflict:'company_id,name', ignoreDuplicates:true });
       }
-      // Reload tag ids
       const { data: freshTags } = await db.from('etj_energy_tags').select('*').eq('company_id', cId);
       if (freshTags) freshTags.forEach(t => { if (!allTags.find(x=>x.id===t.id)) allTags.push(t); });
 
-      // Delete old allocations for this period then insert new
-      await db.from('etj_energy_tag_allocations')
-        .delete().eq('company_id',cId).eq('year',year).eq('month',month);
+      await db.from('etj_energy_tag_allocations').delete().eq('company_id',cId).eq('year',yr);
       if (newAllocs.length) {
-        const toInsert = tagRowData.map(r => {
-          const tag = allTags.find(t => t.company_id===cId && t.name.toLowerCase()===r.tag_name.toLowerCase());
-          return tag ? { company_id:cId, year, month, energy_type:r.energy_type, amount_mwh:r.amount_mwh, tag_id:tag.id } : null;
-        }).filter(Boolean);
-        if (toInsert.length) await db.from('etj_energy_tag_allocations').insert(toInsert);
+        const toInsert = newAllocs.map(a => ({
+          company_id:a.company_id, year:a.year, month:a.month,
+          energy_type:a.energy_type, amount_mwh:a.amount_mwh, tag_id:a.tag_id
+        }));
+        await db.from('etj_energy_tag_allocations').insert(toInsert);
       }
     } catch(e) { console.warn('Supabase save error:', e); }
   }
 
-  // ── Always update in-memory data (demo + live) ────────────────────────
-  if (total > 0) {
-    if (!DEMO_MONTHLY[cId]) DEMO_MONTHLY[cId] = {};
-    // Distribute total into months array – if array exists, update just this slot
-    if (!DEMO_MONTHLY[cId][year]) DEMO_MONTHLY[cId][year] = Array(12).fill(0);
-    DEMO_MONTHLY[cId][year][month-1] = total;
-  }
-
-  // Replace tag allocations for this period
-  allTagAllocs = allTagAllocs.filter(a => !(a.company_id===cId && a.year===year && a.month===month));
+  // Update in-memory
+  allTagAllocs = allTagAllocs.filter(a => !(a.company_id===cId && a.year===yr));
   allTagAllocs.push(...newAllocs);
 
-  closeDataEntry();
+  // Rebuild monthly totals from allocations
+  const monthTotals = Array(12).fill(0);
+  newAllocs.forEach(a => { monthTotals[a.month-1] += a.amount_mwh; });
+  if (!DEMO_MONTHLY[cId]) DEMO_MONTHLY[cId] = {};
+  DEMO_MONTHLY[cId][yr] = monthTotals;
 
-  // Re-render affected panels
+  closeDataEntry();
   updateSummaryBar(); updateStatusChip(); updateComplianceBanner();
   renderComplianceTab(); renderKpiGrid(); renderKpiSummary(); renderSavingsWidget(); renderMgmtReportMeta();
   if (document.getElementById('tab-raportit').classList.contains('active')) renderTagReport();
-  const savedMsg = DEMO_MODE
-    ? `Tallennettu muistiin (demo). Yhteensä ${total.toLocaleString('fi-FI')} MWh, ${newAllocs.length} tägitystä.`
-    : `Tallennettu Supabaseen. Yhteensä ${total.toLocaleString('fi-FI')} MWh, ${newAllocs.length} tägitystä.`;
-  showToast(savedMsg);
+
+  const total = monthTotals.reduce((s,v) => s+v, 0);
+  showToast(DEMO_MODE
+    ? `Tallennettu muistiin (demo). ${total.toLocaleString('fi-FI')} MWh, ${tagCount} tägiä, ${newAllocs.length} riviä.`
+    : `Tallennettu Supabaseen. ${total.toLocaleString('fi-FI')} MWh, ${tagCount} tägiä.`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
