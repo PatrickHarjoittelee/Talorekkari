@@ -339,6 +339,36 @@
     .ytj-dropdown-item:hover { background:var(--bg3); }
     .ytj-item-name { font-weight:600; }
     .ytj-item-meta { font-size:11px;color:var(--text2);margin-top:2px; }
+    /* ── Savings potential widget ── */
+    .savings-widget { background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-top:18px; }
+    .sw-head { font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:14px;display:flex;align-items:center;gap:8px; }
+    .sw-ai-badge { background:var(--bg3);border-radius:10px;padding:2px 8px;font-size:10px;letter-spacing:.3px; }
+    .sw-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px; }
+    @media(max-width:580px){.sw-grid{grid-template-columns:1fr 1fr;}}
+    .sw-cell { background:var(--bg3);border-radius:var(--radius);padding:12px 14px; }
+    .sw-cell-label { font-size:11px;color:var(--text2);margin-bottom:4px; }
+    .sw-cell-value { font-size:21px;font-weight:700; }
+    .sw-cell-sub { font-size:11px;color:var(--text2);margin-top:2px; }
+    .sw-bar-wrap { height:6px;background:var(--bg3);border-radius:4px;margin:2px 0 10px;position:relative; }
+    .sw-bar-fill { height:6px;border-radius:4px;background:linear-gradient(90deg,var(--accent),rgba(76,175,80,.4)); }
+    .sw-bar-marker { position:absolute;top:-5px;width:2px;height:16px;border-radius:1px;background:#FFA726; }
+    .sw-targets { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+    .sw-target { background:var(--bg3);border-radius:var(--radius);padding:12px 14px; }
+    .sw-target-year { font-size:11px;color:var(--text2);margin-bottom:4px; }
+    .sw-target-pct { font-size:22px;font-weight:700;color:var(--accent); }
+    .sw-target-detail { font-size:12px;color:var(--text2);margin-top:4px; }
+    /* ── Priority action cards ── */
+    .pcard-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin-bottom:24px; }
+    .pcard { background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px; }
+    .pcard-head { display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px; }
+    .pcard-title { font-size:13px;font-weight:600;line-height:1.4; }
+    .pcard-stats { display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-top:4px; }
+    .pcard-impact { margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--accent); }
+    /* ── Forecast chart stats ── */
+    .forecast-stats { display:flex;gap:12px;margin-top:14px;flex-wrap:wrap; }
+    .fstat { background:var(--bg3);border-radius:var(--radius);padding:8px 14px; }
+    .fstat-label { font-size:11px;color:var(--text2); }
+    .fstat-value { font-size:15px;font-weight:700;margin-top:2px; }
     .modal-tabs { display:flex;gap:0;margin-bottom:18px;border-bottom:1px solid var(--border); }
     .modal-tab { padding:8px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;transition:color .2s,border-color .2s; }
     .modal-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
@@ -479,6 +509,7 @@
 
   <div class="section-title">Velvoitteen yhteenveto</div>
   <div class="kpi-grid" id="kpi-summary"></div>
+  <div id="savings-widget-wrap"></div>
 </div>
 
 <!-- ══ Tab 2: Kulutus ══ -->
@@ -525,6 +556,14 @@
       <canvas id="chart-annual" height="200"></canvas>
     </div>
   </div>
+
+  <div class="section-row">
+    <div class="chart-wrap" style="flex:1">
+      <h3>Ennuste loppuvuoteen</h3>
+      <canvas id="chart-forecast" height="180"></canvas>
+      <div class="forecast-stats" id="forecast-stats"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ══ Tab 3: Tunnusluvut ══ -->
@@ -544,6 +583,7 @@
 
 <!-- ══ Tab 4: Toimenpiteet ══ -->
 <div class="tab-content" id="tab-toimenpiteet">
+  <div id="action-cards-wrap"></div>
   <div class="filters">
     <select id="f-action-status" onchange="filterActions()">
       <option value="">Kaikki statukset</option>
@@ -893,6 +933,18 @@ const DEMO_ACTIONS = [
   { id:'a8', company_id:'c3', title:'Trukkilaivueen sähköistäminen', category:'prosessit', priority:'medium', estimated_savings_mwh:160, estimated_savings_eur:11200, investment_eur:250000, payback_years:22.3, status:'open', responsible_person:'Jukka M.', due_date:'2027-06-30' },
 ];
 
+// Sector benchmarks used for savings potential calculation (MWh/year median for similar-sized companies)
+const DEMO_BENCHMARKS = {
+  c1:  { median_mwh: 1850, label: 'Teollisuus (pk-yritykset)' },
+  c2:  { median_mwh: 3200, label: 'Vähittäiskauppa' },
+  c3:  { median_mwh: 24000, label: 'Logistiikka & varastointi' },
+  c1a: { median_mwh: 750,  label: 'Teollisuus (pk-yritykset)' },
+  c1b: { median_mwh: 750,  label: 'Teollisuus (pk-yritykset)' },
+  c3a: { median_mwh: 2400, label: 'Logistiikka & varastointi' },
+  c3b: { median_mwh: 2400, label: 'Logistiikka & varastointi' },
+};
+const EUR_PER_MWH = 100;
+
 const DEMO_ALERTS = [
   { id:'al1', company_id:'c2', severity:'critical', title:'Katselmus vaadittu – eräpäivä 11.10.2026', message:'Espoon Kauppakeskus Oy ylittää 2 700 MWh/v rajan. ETJ+-sopimus puuttuu – energiakatselmus on tehtävä viimeistään 11.10.2026.', triggered_at:'2026-06-01', is_active:true },
   { id:'al2', company_id:'c2', severity:'warning', title:'Energiavirasto-ilmoitus tekemättä (2025)', message:'Vuoden 2025 kulutustiedot on ilmoitettava Energiavirastolle viimeistään 31.12.2026.', triggered_at:'2026-05-01', is_active:true },
@@ -1168,6 +1220,7 @@ async function loadData() {
   initYearButtons();
   renderKpiGrid();
   renderKpiSummary();
+  renderSavingsWidget();
   renderMgmtReportMeta();
   if (currentProfile?.role === 'spara_admin') renderHallintaTab();
   updateComplianceBanner();
@@ -1480,6 +1533,8 @@ function renderConsumptionTab() {
     },
     options:{ plugins:{legend:{labels:{color:'#9BAAC5',font:{size:12}}}}, scales:{ x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}}, y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}} }, responsive:true }
   });
+
+  renderForecast();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1555,6 +1610,7 @@ const PRIO_FI    = { high:'Korkea', medium:'Keskitaso', low:'Matala' };
 const STATUS_FI  = { open:'Avoin', in_progress:'Käynnissä', completed:'Valmis', rejected:'Hylätty' };
 
 function filterActions() {
+  renderActionCards();
   const st  = document.getElementById('f-action-status').value;
   const cat = document.getElementById('f-action-cat').value;
   const pr  = document.getElementById('f-action-priority').value;
@@ -1886,12 +1942,192 @@ async function saveEntry() {
 
   // Re-render affected panels
   updateSummaryBar(); updateStatusChip(); updateComplianceBanner();
-  renderComplianceTab(); renderKpiGrid(); renderKpiSummary(); renderMgmtReportMeta();
+  renderComplianceTab(); renderKpiGrid(); renderKpiSummary(); renderSavingsWidget(); renderMgmtReportMeta();
   if (document.getElementById('tab-raportit').classList.contains('active')) renderTagReport();
   const savedMsg = DEMO_MODE
     ? `Tallennettu muistiin (demo). Yhteensä ${total.toLocaleString('fi-FI')} MWh, ${newAllocs.length} tägitystä.`
     : `Tallennettu Supabaseen. Yhteensä ${total.toLocaleString('fi-FI')} MWh, ${newAllocs.length} tägitystä.`;
   showToast(savedMsg);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Säästöpotentiaali-widget
+// ═══════════════════════════════════════════════════════════════════════════
+function renderSavingsWidget() {
+  const el = document.getElementById('savings-widget-wrap');
+  if (!el) return;
+  const cId = activeCompanyId || (companies[0]?.id);
+  if (!cId) { el.innerHTML = ''; return; }
+  const current = calcAvg3yr(cId);
+  if (current < 10) { el.innerHTML = ''; return; }
+
+  const bm = DEMO_BENCHMARKS[cId] || { median_mwh: current * 0.82, label: 'Toimiala (arvio)' };
+  const gap_mwh = Math.max(0, current - bm.median_mwh);
+  const gap_pct = gap_mwh / current * 100;
+  const y1_pct  = +Math.max(3, Math.min(gap_pct * 0.45, 10)).toFixed(1);
+  const y3_pct  = +Math.max(5, Math.min(gap_pct * 0.80, 20)).toFixed(1);
+  const y1_mwh  = Math.round(current * y1_pct / 100);
+  const y3_mwh  = Math.round(current * y3_pct / 100);
+  const markerPct = Math.round(Math.min(bm.median_mwh / current * 100, 98));
+
+  el.innerHTML = `
+    <div class="savings-widget">
+      <div class="sw-head">Säästöpotentiaali <span class="sw-ai-badge">AI-laskettu</span></div>
+      <div class="sw-grid">
+        <div class="sw-cell">
+          <div class="sw-cell-label">Nykyinen kulutus (3v ka)</div>
+          <div class="sw-cell-value">${Math.round(current).toLocaleString('fi-FI')}</div>
+          <div class="sw-cell-sub">MWh/vuosi</div>
+        </div>
+        <div class="sw-cell">
+          <div class="sw-cell-label">Toimialan mediaani</div>
+          <div class="sw-cell-value" style="color:var(--accent)">${Math.round(bm.median_mwh).toLocaleString('fi-FI')}</div>
+          <div class="sw-cell-sub">${bm.label}</div>
+        </div>
+        <div class="sw-cell">
+          <div class="sw-cell-label">Tunnistettu potentiaali</div>
+          <div class="sw-cell-value" style="color:#FFA726">${Math.round(gap_pct)}%</div>
+          <div class="sw-cell-sub">${Math.round(gap_mwh).toLocaleString('fi-FI')} MWh/v</div>
+        </div>
+      </div>
+      <div class="sw-bar-wrap">
+        <div class="sw-bar-fill" style="width:100%"></div>
+        <div class="sw-bar-marker" style="left:${markerPct}%" title="Toimialan mediaani"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);display:flex;justify-content:space-between;margin-bottom:14px">
+        <span>Mediaani: ${Math.round(bm.median_mwh).toLocaleString('fi-FI')} MWh</span>
+        <span>Nykyinen: ${Math.round(current).toLocaleString('fi-FI')} MWh</span>
+      </div>
+      <div class="sw-targets">
+        <div class="sw-target">
+          <div class="sw-target-year">Vuosi 1 — Tavoite</div>
+          <div class="sw-target-pct">${y1_pct}%</div>
+          <div class="sw-target-detail">${y1_mwh.toLocaleString('fi-FI')} MWh &nbsp;·&nbsp; ~${Math.round(y1_mwh*EUR_PER_MWH).toLocaleString('fi-FI')} €/v</div>
+        </div>
+        <div class="sw-target">
+          <div class="sw-target-year">Vuosi 3 — Tavoite</div>
+          <div class="sw-target-pct">${y3_pct}%</div>
+          <div class="sw-target-detail">${y3_mwh.toLocaleString('fi-FI')} MWh &nbsp;·&nbsp; ~${Math.round(y3_mwh*EUR_PER_MWH).toLocaleString('fi-FI')} €/v</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:12px">
+        * Perustuu toimialakohtaiseen vertailutietoon. Tarkennetaan lähtötasomittauksen jälkeen.
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Toimenpidekortti — top 3 prioriteetitoimenpidettä
+// ═══════════════════════════════════════════════════════════════════════════
+function renderActionCards() {
+  const el = document.getElementById('action-cards-wrap');
+  if (!el) return;
+  const cId = activeCompanyId || (companies[0]?.id);
+  if (!cId) { el.innerHTML = ''; return; }
+
+  const annual = calcAvg3yr(cId);
+  const ICONS  = { valaistus:'💡', lviv:'🌡️', prosessit:'⚙️', kuori:'🏠', uusiutuva:'☀️', kayttaytyminen:'👥' };
+  const SBADGE = { open:'<span class="badge badge-orange">Avoin</span>', in_progress:'<span class="badge badge-blue">Käynnissä</span>' };
+  const PORDER = { high:0, medium:1, low:2 };
+  const SORDER = { in_progress:0, open:1, completed:2 };
+
+  const top = (allActions || [])
+    .filter(a => a.company_id === cId && a.status !== 'completed')
+    .sort((a,b) => PORDER[a.priority]-PORDER[b.priority] || SORDER[a.status]-SORDER[b.status])
+    .slice(0, 3);
+
+  if (!top.length) { el.innerHTML = ''; return; }
+  const totMwh = top.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0);
+  const totEur = top.reduce((s,a)=>s+(a.estimated_savings_eur||0),0);
+
+  el.innerHTML = `
+    <div style="margin-bottom:20px">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px">
+        <div class="section-title" style="margin-bottom:0">Tärkeimmät toimenpiteet</div>
+        <span style="font-size:12px;color:var(--text2)">Yhdessä ${totMwh.toLocaleString('fi-FI')} MWh · ${totEur.toLocaleString('fi-FI')} €/v</span>
+      </div>
+      <div class="pcard-grid">
+        ${top.map(a => {
+          const impact = annual > 0 ? (a.estimated_savings_mwh / annual * 100).toFixed(1) : '–';
+          return `<div class="pcard">
+            <div class="pcard-head">
+              <div class="pcard-title">${ICONS[a.category]||'⚡'} ${a.title}</div>
+              ${SBADGE[a.status]||''}
+            </div>
+            <div class="pcard-stats">
+              <span>⚡ ${(a.estimated_savings_mwh||0).toLocaleString('fi-FI')} MWh/v</span>
+              <span>💶 ${(a.estimated_savings_eur||0).toLocaleString('fi-FI')} €/v</span>
+              <span>📅 TMA ${a.payback_years||'–'}v</span>
+            </div>
+            <div class="pcard-impact">↑ ${impact}% vuositavoitteesta</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Ennustekäyrä — toteutunut + trendi + tavoite
+// ═══════════════════════════════════════════════════════════════════════════
+function renderForecast() {
+  const cId = activeCompanyId || (companies[0]?.id);
+  if (!cId) return;
+  const monthly = DEMO_MONTHLY[cId]?.[activeYear] || Array(12).fill(0);
+  const MONTHS  = ['Tammi','Helmi','Maalis','Huhti','Touko','Kesä','Heinä','Elo','Syys','Loka','Marras','Joulu'];
+
+  // Find last month with data
+  let lastIdx = -1;
+  for (let i = 11; i >= 0; i--) { if (monthly[i] > 0) { lastIdx = i; break; } }
+  if (lastIdx < 0) return;
+  const n = lastIdx + 1;
+
+  // Linear regression on actual months
+  const xs = Array.from({length:n},(_,i)=>i);
+  const ys = monthly.slice(0, n);
+  const xm = xs.reduce((s,x)=>s+x,0)/n;
+  const ym = ys.reduce((s,y)=>s+y,0)/n;
+  let num=0, den=0;
+  xs.forEach((x,i)=>{ num+=(x-xm)*(ys[i]-ym); den+=(x-xm)**2; });
+  const slope = den?num/den:0, intercept = ym-slope*xm;
+
+  const actual = monthly.map((v,i) => i<=lastIdx ? v : null);
+  const trend  = MONTHS.map((_,i) => i<=lastIdx ? null : +Math.max(0,intercept+slope*i).toFixed(1));
+
+  // Target: prior year * (1 - y1 savings %)
+  const priorAnnual = calcAnnual(cId, activeYear-1);
+  const bm  = DEMO_BENCHMARKS[cId];
+  const cur3 = calcAvg3yr(cId);
+  const gapPct = bm ? Math.max(0,(cur3-bm.median_mwh)/cur3*100) : 18;
+  const y1Pct  = Math.max(3, Math.min(gapPct*0.45, 10));
+  const annualTarget = priorAnnual>0 ? Math.round(priorAnnual*(1-y1Pct/100)) : 0;
+  const monthlyTarget = annualTarget>0 ? Array(12).fill(+(annualTarget/12).toFixed(1)) : null;
+
+  // Forecast total
+  const actualSum  = monthly.slice(0,n).reduce((s,v)=>s+v,0);
+  const trendSum   = trend.reduce((s,v)=>s+(v||0),0);
+  const forecastTotal = Math.round(actualSum+trendSum);
+  const gap = annualTarget>0 ? forecastTotal-annualTarget : null;
+
+  if (charts.forecast) charts.forecast.destroy();
+  const datasets = [
+    { label:'Toteutunut (MWh)', data:actual, borderColor:'#4CAF50', backgroundColor:'rgba(76,175,80,.12)', borderWidth:2, pointBackgroundColor:'#4CAF50', fill:true, tension:.35, spanGaps:false },
+    { label:'Trendi (ennuste)', data:trend,  borderColor:'rgba(76,175,80,.55)', borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, tension:.35, spanGaps:false },
+  ];
+  if (monthlyTarget) datasets.push({ label:'Tavoite', data:monthlyTarget, borderColor:'#FFA726', borderWidth:2, borderDash:[4,3], pointRadius:0, fill:false });
+  charts.forecast = new Chart(document.getElementById('chart-forecast'), {
+    type:'line', data:{ labels:MONTHS, datasets },
+    options:{ plugins:{ legend:{ labels:{ color:'#9BAAC5',font:{size:12},boxWidth:16 } }, tooltip:{mode:'index',intersect:false} },
+              scales:{ x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5',font:{size:11}}}, y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5',font:{size:11}}} }, responsive:true }
+  });
+
+  const statsEl = document.getElementById('forecast-stats');
+  if (!statsEl) return;
+  const gapColor = gap===null?'var(--text)':gap<=0?'var(--accent)':'#FFA726';
+  const gapText  = gap===null?'–':gap<=0?`${Math.abs(gap).toLocaleString('fi-FI')} MWh alle tavoitteen ✓`:`+${gap.toLocaleString('fi-FI')} MWh yli tavoitteen`;
+  statsEl.innerHTML = `
+    <div class="fstat"><div class="fstat-label">Ennuste ${activeYear}</div><div class="fstat-value">${forecastTotal.toLocaleString('fi-FI')} MWh</div></div>
+    ${annualTarget>0?`<div class="fstat"><div class="fstat-label">Vuostavoite</div><div class="fstat-value" style="color:var(--accent)">${annualTarget.toLocaleString('fi-FI')} MWh</div></div>
+    <div class="fstat"><div class="fstat-label">Ennuste vs. tavoite</div><div class="fstat-value" style="color:${gapColor}">${gapText}</div></div>`:''}`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2242,7 +2478,7 @@ function saveNewCompany() {
   const sel = document.getElementById('company-selector');
   sel.innerHTML = '<option value="">Kaikki yritykset</option>';
   initCompanySelector();
-  renderComplianceTab(); updateSummaryBar(); renderKpiSummary();
+  renderComplianceTab(); updateSummaryBar(); renderKpiSummary(); renderSavingsWidget();
   closeAddCompany();
   showToast('Yritys lisätty: ' + newCo.name);
 }
@@ -2456,6 +2692,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
     const t = tab.dataset.tab;
+    if (t === 'yhteenveto')   renderSavingsWidget();
     if (t === 'kulutus')      renderConsumptionTab();
     if (t === 'tunnusluvut')  renderKpiGrid();
     if (t === 'toimenpiteet') filterActions();
