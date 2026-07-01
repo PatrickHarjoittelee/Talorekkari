@@ -408,6 +408,55 @@
     .pcard-impl-item { background:var(--bg3);border-radius:var(--radius);padding:8px 12px; }
     .pcard-impl-label { font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:4px;font-weight:600; }
     .pcard-impl-text { font-size:12px;line-height:1.5;color:var(--text); }
+
+    /* ── Kanban board ── */
+    .kanban-board { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start; }
+    @media(max-width:700px){.kanban-board{grid-template-columns:1fr}}
+    .kanban-col { background:var(--bg3);border-radius:10px;padding:12px 14px; }
+    .kanban-col-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--border) }
+    .kanban-col-title { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px }
+    .kanban-col-count { font-size:11px;color:var(--text2) }
+    .kb-card { background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s }
+    .kb-card:last-child { margin-bottom:0 }
+    .kb-card:hover { border-color:var(--accent);box-shadow:0 2px 12px rgba(0,0,0,.25) }
+    .kb-card-title { font-size:13px;font-weight:600;line-height:1.4;margin-bottom:5px }
+    .kb-card-meta { display:flex;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--text2);margin-bottom:6px }
+    .kb-card-stats { display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--text) }
+    .kb-card-ai { display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--accent);margin-top:6px;padding-top:6px;border-top:1px solid var(--border) }
+    .kb-empty { color:var(--text2);font-size:12px;text-align:center;padding:18px 0;font-style:italic }
+    .view-toggle { display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden }
+    .view-toggle button { background:none;border:none;color:var(--text2);padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s,color .15s }
+    .view-toggle button.active { background:var(--accent);color:#fff }
+
+    /* ── Action detail modal ── */
+    .amodal-kpi { display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:18px }
+    .amodal-kpi-box { background:var(--bg3);border-radius:var(--radius);padding:10px 12px }
+    .amodal-kpi-label { font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px }
+    .amodal-kpi-val { font-size:17px;font-weight:700 }
+
+    /* ── Import modal ── */
+    .import-tabs { display:flex;border-bottom:1px solid var(--border) }
+    .import-tab { background:none;border:none;color:var(--text2);padding:10px 18px;font-size:13px;font-family:inherit;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap }
+    .import-tab.active { color:var(--text);border-bottom-color:var(--accent) }
+    .import-tab:hover:not(.active) { color:var(--text) }
+    .drop-zone { border:2px dashed var(--border);border-radius:8px;padding:32px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s }
+    .drop-zone:hover,.drop-zone.drag-over { border-color:var(--accent);background:rgba(76,175,80,.05) }
+    .drop-zone input[type=file] { display:none }
+    .import-preview { margin-top:14px;border:1px solid var(--border);border-radius:8px;overflow:hidden }
+    .import-preview table { width:100%;border-collapse:collapse;font-size:12px }
+    .import-preview th { background:var(--bg3);color:var(--text2);padding:6px 10px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em }
+    .import-preview td { padding:5px 10px;border-top:1px solid var(--border) }
+    .import-preview tr:hover td { background:var(--bg3) }
+    .import-stat { background:var(--bg3);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text2) }
+    .import-stat strong { color:var(--text) }
+    .invoice-row { display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:6px;background:var(--bg3);margin-bottom:6px;font-size:12px }
+    .invoice-badge { flex-shrink:0;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600 }
+    .ib-electricity { background:rgba(66,165,245,.2);color:#42A5F5 }
+    .ib-heat        { background:rgba(255,167,38,.2);color:#FFA726 }
+    .ib-gas         { background:rgba(171,71,188,.2);color:#AB47BC }
+    .ib-oil         { background:rgba(239,83,80,.2);color:#EF5350 }
+    .ib-other       { background:rgba(120,144,156,.2);color:#90A4AE }
+
     /* ── Forecast chart stats ── */
     .forecast-stats { display:flex;gap:12px;margin-top:14px;flex-wrap:wrap; }
     .fstat { background:var(--bg3);border-radius:var(--radius);padding:8px 14px; }
@@ -558,9 +607,10 @@
 
 <!-- ══ Tab 2: Kulutus ══ -->
 <div class="tab-content" id="tab-kulutus">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
     <div class="year-btns" id="year-btns"></div>
     <button class="btn btn-secondary btn-sm" onclick="openDataEntry()">+ Lisää kulutusdata</button>
+    <button class="btn btn-secondary btn-sm" onclick="openImportModal()" style="border-color:var(--accent);color:var(--accent)">↑ Tuo data</button>
   </div>
 
   <div class="threshold-wrap" id="threshold-meter">
@@ -627,48 +677,45 @@
 
 <!-- ══ Tab 4: Toimenpiteet ══ -->
 <div class="tab-content" id="tab-toimenpiteet">
-  <div id="action-cards-wrap"></div>
-  <div class="filters">
-    <select id="f-action-status" onchange="filterActions()">
-      <option value="">Kaikki statukset</option>
-      <option value="open">Avoin</option>
-      <option value="in_progress">Käynnissä</option>
-      <option value="completed">Valmis</option>
-    </select>
-    <select id="f-action-cat" onchange="filterActions()">
-      <option value="">Kaikki kategoriat</option>
-      <option value="valaistus">Valaistus</option>
-      <option value="lviv">LVI/V</option>
-      <option value="prosessit">Prosessit</option>
-      <option value="kuori">Rakennuskuori</option>
-      <option value="uusiutuva">Uusiutuva energia</option>
-      <option value="kayttaytyminen">Käyttäytyminen</option>
-    </select>
-    <select id="f-action-priority" onchange="filterActions()">
-      <option value="">Kaikki prioriteetit</option>
-      <option value="high">Korkea</option>
-      <option value="medium">Keskitaso</option>
-      <option value="low">Matala</option>
-    </select>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+    <div class="filters" style="margin-bottom:0">
+      <select id="f-action-cat" onchange="filterActions()">
+        <option value="">Kaikki kategoriat</option>
+        <option value="valaistus">Valaistus</option>
+        <option value="lviv">LVI/V</option>
+        <option value="prosessit">Prosessit</option>
+        <option value="kuori">Rakennuskuori</option>
+        <option value="uusiutuva">Uusiutuva energia</option>
+        <option value="kayttaytyminen">Käyttäytyminen</option>
+      </select>
+      <select id="f-action-priority" onchange="filterActions()">
+        <option value="">Kaikki prioriteetit</option>
+        <option value="high">Korkea</option>
+        <option value="medium">Keskitaso</option>
+        <option value="low">Matala</option>
+      </select>
+    </div>
+    <div class="view-toggle">
+      <button id="view-kanban-btn" class="active" onclick="setActionView('kanban')">⊞ Kanban</button>
+      <button id="view-list-btn" onclick="setActionView('list')">☰ Lista</button>
+    </div>
   </div>
-  <div class="table-wrap">
+
+  <div class="kanban-board" id="kanban-board"></div>
+
+  <div class="table-wrap" id="action-list-wrap" style="display:none">
     <table>
       <thead>
         <tr>
-          <th>Toimenpide</th>
-          <th>Kategoria</th>
-          <th>Prioriteetti</th>
-          <th>Arv. säästö (MWh)</th>
-          <th>Arv. säästö (€)</th>
-          <th>Investointi (€)</th>
-          <th>Takaisinmaksu</th>
-          <th>Status</th>
-          <th>Eräpäivä</th>
+          <th>Toimenpide</th><th>Kategoria</th><th>Prioriteetti</th>
+          <th>Arv. säästö (MWh)</th><th>Arv. säästö (€)</th>
+          <th>Investointi (€)</th><th>Takaisinmaksu</th><th>Status</th><th>Eräpäivä</th>
         </tr>
       </thead>
       <tbody id="tbody-actions"></tbody>
     </table>
   </div>
+
   <div class="savings-summary" id="savings-summary"></div>
 </div>
 
@@ -902,6 +949,145 @@
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- Action detail modal -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="action-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1002;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:min(580px,95vw);max-height:88vh;overflow-y:auto">
+    <div id="action-modal-body"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- Data import modal -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="import-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1003;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:min(700px,96vw);max-height:90vh;display:flex;flex-direction:column">
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <h2 style="font-size:15px;margin:0">Tuo kulutusdata</h2>
+      <button onclick="closeImportModal()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;line-height:1">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="import-tabs" style="flex-shrink:0">
+      <button class="import-tab active" id="itab-csv"      onclick="switchImportTab('csv')">📂 CSV-tiedosto</button>
+      <button class="import-tab"        id="itab-datahub"  onclick="switchImportTab('datahub')">⚡ Datahub API</button>
+      <button class="import-tab"        id="itab-invoice"  onclick="switchImportTab('invoice')">🧾 Lasku / AI</button>
+    </div>
+
+    <!-- Scrollable body -->
+    <div style="overflow-y:auto;flex:1;min-height:0;padding:20px 22px">
+
+      <!-- ── CSV tab ── -->
+      <div id="import-tab-csv">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div>
+            <label style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Energialähde</label>
+            <select id="import-energy-type" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-family:inherit;font-size:13px">
+              <option value="electricity">Sähkö</option>
+              <option value="heat">Kaukolämpö</option>
+              <option value="gas">Kaasu</option>
+              <option value="oil">Öljy</option>
+              <option value="other">Muu energia</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Vuosi (automaattinen CSV:stä)</label>
+            <select id="import-year" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-family:inherit;font-size:13px">
+              <option value="auto" selected>Automaattinen</option>
+              <option value="2026">2026</option><option value="2025">2025</option>
+              <option value="2024">2024</option><option value="2023">2023</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Drop zone -->
+        <div class="drop-zone" id="csv-drop-zone" onclick="document.getElementById('csv-file-input').click()"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="event.preventDefault();this.classList.remove('drag-over');handleCsvDrop(event.dataTransfer.files)">
+          <input type="file" id="csv-file-input" accept=".csv,.txt,.tsv" onchange="handleCsvFile(this.files)">
+          <div style="font-size:28px;margin-bottom:8px">📂</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px">Valitse CSV tai vedä tähän</div>
+          <div style="font-size:11px;color:var(--text2)">Datahub tuntidata (CSV), kuukausitiedosto tai mikä tahansa aikasarjadata</div>
+        </div>
+
+        <div style="margin-top:10px;font-size:11px;color:var(--text2);line-height:1.6">
+          <strong style="color:var(--text)">Tuetut muodot:</strong>
+          Datahub-tuntidata (Alkuaika;Kulutus (kWh)), yksinkertainen kuukausitiedosto (Kuukausi;MWh),
+          tai mikä tahansa CSV jossa on päivämäärä- ja kulutusluvut.
+        </div>
+
+        <div id="csv-preview" style="display:none;margin-top:14px"></div>
+
+        <div id="csv-import-footer" style="display:none;display:none;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+          <div id="csv-import-stats" class="import-stat"></div>
+          <button class="btn btn-primary" onclick="importCsvData()">↓ Tuo data</button>
+        </div>
+      </div>
+
+      <!-- ── Datahub API tab ── -->
+      <div id="import-tab-datahub" style="display:none">
+        <div style="background:rgba(66,165,245,.07);border:1px solid rgba(66,165,245,.2);border-radius:8px;padding:14px 16px;margin-bottom:18px;font-size:13px;line-height:1.6">
+          <strong style="color:#42A5F5">⚡ Datahub-integraatio</strong> mahdollistaa sähkönkulutusdatan automaattisen haun
+          suoraan Suomen sähkömarkkinoiden tietokeskuksesta (datahub.fi) kolmen vuoden ajalta takautuvasti.
+          Tarvitset GSRN-mittaripisteesi tunnuksen ja operaattoriltasi saatavan API-avaimen.
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px">
+          <div>
+            <label style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">GSRN-numero (mittaripiste)</label>
+            <input id="dh-gsrn" type="text" placeholder="246700000012345678" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Haettava aikaväli</label>
+            <select id="dh-period" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-family:inherit;font-size:13px">
+              <option value="3y">3 vuotta taaksepäin</option>
+              <option value="1y">1 vuosi</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="runDatahubDemo()" style="width:100%;margin-bottom:14px">⚡ Hae Datahubista (demo)</button>
+        <div id="dh-result" style="font-size:12px;color:var(--text2)">
+          <em>Oikea Datahub-integraatio vaatii OIDC-kirjautumisen ja jakeluverkkoyhtiön valtuutuksen. Paina "Hae Datahubista (demo)" nähdäksesi demotulosteen.</em>
+        </div>
+      </div>
+
+      <!-- ── Invoice / AI tab ── -->
+      <div id="import-tab-invoice" style="display:none">
+        <div style="background:rgba(255,167,38,.07);border:1px solid rgba(255,167,38,.2);border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:13px;line-height:1.6">
+          <strong style="color:#FFA726">🧾 Lasku / kuitti AI-tunnistus</strong> — tuo PDF-laskuja, kuitteja tai
+          kirjanpitoaineistoa. AI etsii energian toimittajat, laskurivit ja laskee energiamäärät MWh-yksiköissä.
+          Toimii sähkö-, lämpö-, kaasu- ja öljylaskuille.
+        </div>
+
+        <div class="drop-zone" id="inv-drop-zone" onclick="document.getElementById('inv-file-input').click()">
+          <input type="file" id="inv-file-input" accept=".pdf,.csv,.xlsx,.jpg,.png" multiple
+            onchange="handleInvoiceFile(this.files)">
+          <div style="font-size:28px;margin-bottom:8px">🧾</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px">Valitse lasku(t) tai kirjanpitodata</div>
+          <div style="font-size:11px;color:var(--text2)">PDF, CSV, Excel, kuvakaappaus — AI tunnistaa energiamäärät</div>
+        </div>
+
+        <div id="inv-status" style="margin-top:12px;font-size:12px;color:var(--text2);text-align:center"></div>
+
+        <div id="inv-result" style="display:none;margin-top:14px">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">AI-tunnistuksen tulos</div>
+          <div id="inv-result-rows"></div>
+          <div id="inv-import-footer" style="display:flex;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);gap:10px">
+            <span id="inv-import-total" style="color:var(--text2);font-size:12px;align-self:center"></span>
+            <button class="btn btn-primary" onclick="importInvoiceData()">↓ Tuo tunnistetut tiedot</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end scroll body -->
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════════════════════
 // Supabase
@@ -959,6 +1145,56 @@ const DEMO_BREAKDOWN = {
 
 const DEMO_FLOOR = { c1: 8500, c2: 12000, c3: 42000 };
 const DEMO_EMPLOYEES = { c1: 85, c2: 120, c3: 380 };
+
+// Per-energy-type monthly breakdown (populated lazily from DEMO_BREAKDOWN or CSV import)
+const DEMO_ENERGY_MONTHLY = {};
+
+// Energy type display config
+const ENERGY_COLORS = {
+  electricity: { bg:'rgba(66,165,245,.8)',   border:'#42A5F5', label:'Sähkö' },
+  heat:        { bg:'rgba(255,167,38,.8)',   border:'#FFA726', label:'Lämpö' },
+  gas:         { bg:'rgba(171,71,188,.8)',   border:'#AB47BC', label:'Kaasu' },
+  oil:         { bg:'rgba(239,83,80,.8)',    border:'#EF5350', label:'Öljy' },
+  other:       { bg:'rgba(120,144,156,.75)', border:'#78909C', label:'Muu' },
+};
+
+function _getEnergyMonthly(cId, year) {
+  if (!DEMO_ENERGY_MONTHLY[cId]) DEMO_ENERGY_MONTHLY[cId] = {};
+  if (!DEMO_ENERGY_MONTHLY[cId][year]) {
+    const total = DEMO_MONTHLY[cId]?.[year] || Array(12).fill(0);
+    const bd = DEMO_BREAKDOWN[cId] || { electricity:70, heat:20, gas:5, oil:5 };
+    const otherPct = Math.max(0, 100 - (bd.electricity||0) - (bd.heat||0) - (bd.gas||0) - (bd.oil||0));
+    DEMO_ENERGY_MONTHLY[cId][year] = {
+      electricity: total.map(v => +(v * (bd.electricity||0) / 100).toFixed(1)),
+      heat:        total.map(v => +(v * (bd.heat||0)        / 100).toFixed(1)),
+      gas:         total.map(v => +(v * (bd.gas||0)         / 100).toFixed(1)),
+      oil:         total.map(v => +(v * (bd.oil||0)         / 100).toFixed(1)),
+      other:       total.map(v => +(v * otherPct             / 100).toFixed(1)),
+    };
+  }
+  return DEMO_ENERGY_MONTHLY[cId][year];
+}
+
+function _setEnergyMonthlyType(cId, year, energyType, values12) {
+  if (!DEMO_ENERGY_MONTHLY[cId]) DEMO_ENERGY_MONTHLY[cId] = {};
+  if (!DEMO_ENERGY_MONTHLY[cId][year]) _getEnergyMonthly(cId, year);
+  DEMO_ENERGY_MONTHLY[cId][year][energyType] = values12;
+  // Recompute total
+  const types = Object.keys(ENERGY_COLORS);
+  const newTotals = Array(12).fill(0).map((_,i) =>
+    +types.reduce((s,t) => s + (DEMO_ENERGY_MONTHLY[cId][year][t]?.[i]||0), 0).toFixed(1));
+  if (!DEMO_MONTHLY[cId]) DEMO_MONTHLY[cId] = {};
+  DEMO_MONTHLY[cId][year] = newTotals;
+  // Update breakdown percentages
+  const annTotal = newTotals.reduce((s,v) => s+v, 0);
+  if (annTotal > 0) {
+    DEMO_BREAKDOWN[cId] = {};
+    types.forEach(t => {
+      const tSum = (DEMO_ENERGY_MONTHLY[cId][year][t]||[]).reduce((s,v)=>s+v,0);
+      DEMO_BREAKDOWN[cId][t] = Math.round(tSum / annTotal * 100);
+    });
+  }
+}
 
 const DEMO_ACTIONS = [
   { id:'a1', company_id:'c1', title:'LED-valaistus tuotantohalliin', category:'valaistus', priority:'high', estimated_savings_mwh:42, estimated_savings_eur:4200, investment_eur:28000, payback_years:6.7, status:'completed', actual_savings_mwh:44, responsible_person:'Matti V.', due_date:'2025-06-30', completed_date:'2025-05-15' },
@@ -1545,14 +1781,31 @@ function renderConsumptionTab() {
   document.getElementById('thr-2700-val').textContent  = Math.round(avg).toLocaleString('fi-FI') + ' MWh (' + Math.round(pct2700) + '%)';
   document.getElementById('thr-23600-val').textContent = Math.round(avg).toLocaleString('fi-FI') + ' MWh (' + Math.round(pct23600) + '%)';
 
-  // Monthly chart
-  const monthly = DEMO_MONTHLY[c.id]?.[activeYear] || Array(12).fill(0);
+  // Monthly stacked bar
   const months = ['Tammi','Helmi','Maalis','Huhti','Touko','Kesä','Heinä','Elo','Syys','Loka','Marras','Joulu'];
+  const em = _getEnergyMonthly(c.id, activeYear);
   if (charts.monthly) charts.monthly.destroy();
   charts.monthly = new Chart(document.getElementById('chart-monthly'), {
     type:'bar',
-    data:{ labels:months, datasets:[{ label:'MWh', data:monthly, backgroundColor:'rgba(76,175,80,.7)', borderColor:'#4CAF50', borderWidth:1, borderRadius:4 }] },
-    options:{ plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'rgba(255,255,255,.05)',drawBorder:false},ticks:{color:'#9BAAC5',font:{size:11}}}, y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5',font:{size:11}}} }, responsive:true }
+    data:{
+      labels: months,
+      datasets: Object.entries(ENERGY_COLORS).map(([type, cfg]) => ({
+        label: cfg.label,
+        data: em[type] || Array(12).fill(0),
+        backgroundColor: cfg.bg,
+        borderWidth: 0,
+      }))
+    },
+    options:{
+      plugins:{ legend:{ labels:{ color:'#9BAAC5', font:{ size:11 }, boxWidth:12 } },
+        tooltip:{ callbacks:{ label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('fi-FI')} MWh` } } },
+      scales:{
+        x:{ stacked:true, grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ color:'#9BAAC5', font:{ size:11 } } },
+        y:{ stacked:true, grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ color:'#9BAAC5', font:{ size:11 },
+          callback: v => v.toLocaleString('fi-FI') } }
+      },
+      responsive:true
+    }
   });
 
   // Breakdown doughnut
@@ -1659,23 +1912,90 @@ const CAT_LABELS = { valaistus:'Valaistus', lviv:'LVI/V', prosessit:'Prosessit',
 const PRIO_FI    = { high:'Korkea', medium:'Keskitaso', low:'Matala' };
 const STATUS_FI  = { open:'Avoin', in_progress:'Käynnissä', completed:'Valmis', rejected:'Hylätty' };
 
+let _actionView = 'kanban';
+
+function setActionView(v) {
+  _actionView = v;
+  document.getElementById('view-kanban-btn').classList.toggle('active', v === 'kanban');
+  document.getElementById('view-list-btn').classList.toggle('active', v === 'list');
+  document.getElementById('kanban-board').style.display = v === 'kanban' ? '' : 'none';
+  document.getElementById('action-list-wrap').style.display = v === 'list' ? '' : 'none';
+  filterActions();
+}
+
 function filterActions() {
-  renderActionCards();
-  const st  = document.getElementById('f-action-status').value;
   const cat = document.getElementById('f-action-cat').value;
   const pr  = document.getElementById('f-action-priority').value;
-
-  let actions = allActions.filter(a =>
+  const actions = allActions.filter(a =>
     (!activeCompanyId || a.company_id === activeCompanyId) &&
-    (!st  || a.status === st) &&
     (!cat || a.category === cat) &&
     (!pr  || a.priority === pr));
 
+  if (_actionView === 'kanban') renderKanban(actions);
+  else renderActionList(actions);
+
+  const completed = actions.filter(a => a.status==='completed');
+  const open      = actions.filter(a => a.status==='in_progress' || a.status==='open');
+  document.getElementById('savings-summary').innerHTML = `
+    <div class="savings-box"><label>Todennettuja säästöjä</label><div class="val accent">${completed.reduce((s,a)=>s+(a.actual_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
+    <div class="savings-box"><label>Arvioitu säästöpotentiaali</label><div class="val">${open.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
+    <div class="savings-box"><label>Investoinnit yhteensä</label><div class="val">${actions.reduce((s,a)=>s+(a.investment_eur||0),0).toLocaleString('fi-FI')} €</div></div>
+    <div class="savings-box"><label>Toimenpiteitä yhteensä</label><div class="val">${actions.length} kpl</div></div>`;
+}
+
+const _ACT_ICONS = { valaistus:'💡', lviv:'🌡️', prosessit:'⚙️', kuori:'🏠', uusiutuva:'☀️', kayttaytyminen:'👥' };
+
+function renderKanban(actions) {
+  const board = document.getElementById('kanban-board');
+  if (!board) return;
+  const COLS = [
+    { key:'open',        label:'Avoin',     color:'var(--orange,#ffb74d)' },
+    { key:'in_progress', label:'Käynnissä', color:'#64b5f6' },
+    { key:'completed',   label:'Valmis',    color:'var(--accent)' },
+  ];
+  const PORDER = { high:0, medium:1, low:2 };
+
+  board.innerHTML = COLS.map(col => {
+    const colCards = actions.filter(a => a.status === col.key)
+      .sort((a,b) => (PORDER[a.priority]||9) - (PORDER[b.priority]||9));
+    const totMwh = colCards.reduce((s,a) => s+(a.actual_savings_mwh||a.estimated_savings_mwh||0), 0);
+
+    return `<div class="kanban-col">
+      <div class="kanban-col-header" style="border-bottom-color:${col.color}">
+        <div class="kanban-col-title" style="color:${col.color}">${col.label}</div>
+        <div class="kanban-col-count">${colCards.length} · ${Math.round(totMwh).toLocaleString('fi-FI')} MWh</div>
+      </div>
+      ${colCards.length ? colCards.map(a => {
+        const hasSug = !!DEMO_ACTION_SUGGESTIONS[a.id];
+        return `<div class="kb-card" onclick="openActionModal('${a.id}')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px">
+            <div class="kb-card-title">${_ACT_ICONS[a.category]||'⚡'} ${escHtml(a.title)}</div>
+            <span class="badge badge-${a.priority}" style="flex-shrink:0;margin-top:1px">${PRIO_FI[a.priority]||a.priority}</span>
+          </div>
+          <div class="kb-card-meta">
+            <span>${CAT_LABELS[a.category]||a.category||'–'}</span>
+            ${a.responsible_person ? `<span>· ${escHtml(a.responsible_person)}</span>` : ''}
+          </div>
+          <div class="kb-card-stats">
+            ${(a.estimated_savings_mwh||a.actual_savings_mwh) ? `<span>⚡ ${(a.estimated_savings_mwh||a.actual_savings_mwh).toLocaleString('fi-FI')} MWh/v</span>` : ''}
+            ${a.estimated_savings_eur ? `<span>💶 ${a.estimated_savings_eur.toLocaleString('fi-FI')} €</span>` : ''}
+            ${a.payback_years ? `<span>📅 ${a.payback_years}v TMA</span>` : ''}
+          </div>
+          ${hasSug ? `<div class="kb-card-ai">✦ AI-ratkaisu saatavilla</div>` : ''}
+          ${a.due_date ? `<div style="font-size:10px;color:var(--text2);margin-top:4px">Eräpäivä: ${a.due_date}</div>` : ''}
+        </div>`;
+      }).join('') : `<div class="kb-empty">Ei toimenpiteitä</div>`}
+    </div>`;
+  }).join('');
+}
+
+function renderActionList(actions) {
   const tbody = document.getElementById('tbody-actions');
+  if (!tbody) return;
   tbody.innerHTML = actions.map(a => `
-    <tr>
-      <td><strong>${a.title}</strong>${a.responsible_person ? `<br><span style="color:var(--text2);font-size:11px">${a.responsible_person}</span>` : ''}</td>
-      <td>${CAT_LABELS[a.category] || a.category || '–'}</td>
+    <tr style="cursor:pointer" onclick="openActionModal('${a.id}')">
+      <td><strong>${escHtml(a.title)}</strong>${a.responsible_person ? `<br><span style="color:var(--text2);font-size:11px">${escHtml(a.responsible_person)}</span>` : ''}</td>
+      <td>${CAT_LABELS[a.category]||a.category||'–'}</td>
       <td><span class="badge badge-${a.priority}">${PRIO_FI[a.priority]||a.priority}</span></td>
       <td>${a.estimated_savings_mwh ? a.estimated_savings_mwh.toLocaleString('fi-FI') + ' MWh' : '–'}</td>
       <td>${a.estimated_savings_eur ? a.estimated_savings_eur.toLocaleString('fi-FI') + ' €' : '–'}</td>
@@ -1684,16 +2004,87 @@ function filterActions() {
       <td><span class="badge badge-${a.status}">${STATUS_FI[a.status]||a.status}</span></td>
       <td style="color:var(--text2)">${a.due_date || '–'}</td>
     </tr>`).join('') || '<tr><td colspan="9" class="empty">Ei toimenpiteitä.</td></tr>';
+}
 
-  // Savings summary
-  const completed = actions.filter(a=>a.status==='completed');
-  const inProg    = actions.filter(a=>a.status==='in_progress'||a.status==='open');
-  document.getElementById('savings-summary').innerHTML = `
-    <div class="savings-box"><label>Todennettuja säästöjä</label><div class="val accent">${completed.reduce((s,a)=>s+(a.actual_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
-    <div class="savings-box"><label>Arvioitu säästöpotentiaali</label><div class="val">${inProg.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
-    <div class="savings-box"><label>Investoinnit yhteensä</label><div class="val">${actions.reduce((s,a)=>s+(a.investment_eur||0),0).toLocaleString('fi-FI')} €</div></div>
-    <div class="savings-box"><label>Toimenpiteitä yhteensä</label><div class="val">${actions.length} kpl</div></div>
-  `;
+function openActionModal(id) {
+  const a = allActions.find(x => x.id === id);
+  if (!a) return;
+  const cId = activeCompanyId || companies[0]?.id;
+  const annual = calcAvg3yr(cId);
+  const impact = annual > 0 ? ((a.estimated_savings_mwh||0) / annual * 100).toFixed(1) : null;
+  const sug = DEMO_ACTION_SUGGESTIONS[a.id];
+
+  const kpiItems = [
+    a.estimated_savings_mwh ? { label:'Arv. säästö',    val:(a.estimated_savings_mwh).toLocaleString('fi-FI')+' MWh/v', accent:true } : null,
+    a.actual_savings_mwh    ? { label:'Tot. säästö',    val:(a.actual_savings_mwh).toLocaleString('fi-FI')+' MWh/v', accent:true } : null,
+    a.estimated_savings_eur ? { label:'Säästö €',       val:(a.estimated_savings_eur).toLocaleString('fi-FI')+' €/v' } : null,
+    a.investment_eur        ? { label:'Investointi',    val:(a.investment_eur).toLocaleString('fi-FI')+' €' } : null,
+    a.payback_years         ? { label:'Takaisinmaksu',  val:a.payback_years+' v' } : null,
+    impact                  ? { label:'Osuus kulutuksesta', val:impact+' %', accent:true } : null,
+  ].filter(Boolean);
+
+  const body = `
+    <div style="padding:22px 24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px">
+        <div>
+          <div style="font-size:15px;font-weight:700;line-height:1.45;margin-bottom:8px">${_ACT_ICONS[a.category]||'⚡'} ${escHtml(a.title)}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="badge badge-${a.priority}">${PRIO_FI[a.priority]||a.priority}</span>
+            <span class="badge" style="background:var(--bg4,var(--bg3));color:var(--text2);border:1px solid var(--border)">${CAT_LABELS[a.category]||a.category}</span>
+            <span class="badge badge-${a.status}">${STATUS_FI[a.status]||a.status}</span>
+          </div>
+        </div>
+        <button onclick="closeActionModal()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;flex-shrink:0;line-height:1;padding:0">✕</button>
+      </div>
+
+      ${(a.responsible_person||a.due_date||a.completed_date) ? `
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        ${a.responsible_person ? `<span>👤 ${escHtml(a.responsible_person)}</span>` : ''}
+        ${a.due_date ? `<span>📅 Eräpäivä: ${a.due_date}</span>` : ''}
+        ${a.completed_date ? `<span>✅ Valmistui: ${a.completed_date}</span>` : ''}
+      </div>` : ''}
+
+      <div class="amodal-kpi">
+        ${kpiItems.map(k=>`<div class="amodal-kpi-box">
+          <span class="amodal-kpi-label">${k.label}</span>
+          <div class="amodal-kpi-val" style="${k.accent?'color:var(--accent)':''}">${k.val}</div>
+        </div>`).join('')}
+      </div>
+
+      ${sug ? `
+      <div style="background:rgba(76,175,80,.05);border:1px solid rgba(76,175,80,.2);border-radius:8px;padding:16px;margin-bottom:16px">
+        <div class="pcard-ai-badge" style="margin-bottom:10px">✦ AI-ratkaisu</div>
+        <div class="pcard-ai-text">${escHtml(sug.solution)}</div>
+        <div class="pcard-products">${sug.products.map(p=>`
+          <div class="pcard-product">
+            <span class="pcard-product-type">${escHtml(p.type)}</span>
+            <div class="pcard-product-body">
+              <div class="pcard-product-name">${escHtml(p.name)}</div>
+              <div class="pcard-product-provider">${escHtml(p.provider)}</div>
+            </div>
+          </div>`).join('')}
+        </div>
+        <div class="pcard-impl">
+          <div class="pcard-impl-item">
+            <div class="pcard-impl-label">Omatoiminen</div>
+            <div class="pcard-impl-text">${escHtml(sug.diy)}</div>
+          </div>
+          <div class="pcard-impl-item">
+            <div class="pcard-impl-label">Ulkoistettu</div>
+            <div class="pcard-impl-text">${escHtml(sug.outsource)}</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="openQuoteRequest('${a.id}');closeActionModal()">📋 Pyydä tarjous Sparalta</button>
+      ` : `<p style="color:var(--text2);font-size:13px;text-align:center;padding:8px 0">AI-ratkaisu ei ole saatavilla.</p>`}
+    </div>`;
+
+  document.getElementById('action-modal-body').innerHTML = body;
+  document.getElementById('action-modal').style.display = 'flex';
+}
+
+function closeActionModal() {
+  document.getElementById('action-modal').style.display = 'none';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2210,18 +2601,6 @@ function renderSavingsWidget() {
     </div>`;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Toimenpidekortti — avattavat kortit top 3 toimenpiteelle
-// ═══════════════════════════════════════════════════════════════════════════
-function togglePcard(id) {
-  const detail = document.getElementById('pcd-' + id);
-  const hint   = document.getElementById('pch-' + id);
-  if (!detail) return;
-  const open = detail.style.display === 'none';
-  detail.style.display = open ? '' : 'none';
-  if (hint) hint.innerHTML = open ? '▲ Piilota ratkaisu' : '▼ Näytä AI-ratkaisu &amp; tarjous';
-}
-
 function openQuoteRequest(actionId) {
   const a = (allActions||[]).find(x => x.id === actionId);
   const cId = activeCompanyId || (companies[0]?.id);
@@ -2230,84 +2609,6 @@ function openQuoteRequest(actionId) {
     ? `Tarjouspyyntö lähetetty: "${a.title}" — ${c.name}. Sparan asiantuntija ottaa yhteyttä 24h kuluessa.`
     : 'Tarjouspyyntö lähetetty. Olemme yhteydessä pian.';
   showToast(msg);
-}
-
-function renderActionCards() {
-  const el = document.getElementById('action-cards-wrap');
-  if (!el) return;
-  const cId = activeCompanyId || (companies[0]?.id);
-  if (!cId) { el.innerHTML = ''; return; }
-
-  const annual = calcAvg3yr(cId);
-  const ICONS  = { valaistus:'💡', lviv:'🌡️', prosessit:'⚙️', kuori:'🏠', uusiutuva:'☀️', kayttaytyminen:'👥' };
-  const SBADGE = { open:'<span class="badge badge-orange">Avoin</span>', in_progress:'<span class="badge badge-blue">Käynnissä</span>' };
-  const PORDER = { high:0, medium:1, low:2 };
-  const SORDER = { in_progress:0, open:1, completed:2 };
-
-  const top = (allActions || [])
-    .filter(a => a.company_id === cId && a.status !== 'completed')
-    .sort((a,b) => PORDER[a.priority]-PORDER[b.priority] || SORDER[a.status]-SORDER[b.status])
-    .slice(0, 3);
-
-  if (!top.length) { el.innerHTML = ''; return; }
-  const totMwh = top.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0);
-  const totEur = top.reduce((s,a)=>s+(a.estimated_savings_eur||0),0);
-
-  el.innerHTML = `
-    <div style="margin-bottom:20px">
-      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px">
-        <div class="section-title" style="margin-bottom:0">Tärkeimmät toimenpiteet</div>
-        <span style="font-size:12px;color:var(--text2)">Yhdessä ${totMwh.toLocaleString('fi-FI')} MWh · ${totEur.toLocaleString('fi-FI')} €/v</span>
-      </div>
-      <div class="pcard-grid">
-        ${top.map(a => {
-          const impact  = annual > 0 ? (a.estimated_savings_mwh / annual * 100).toFixed(1) : '–';
-          const sug     = DEMO_ACTION_SUGGESTIONS[a.id];
-          const detailHtml = sug ? `
-            <div class="pcard-detail" id="pcd-${a.id}" style="display:none">
-              <div class="pcard-ai-badge">✦ AI-ratkaisu</div>
-              <div class="pcard-ai-text">${escHtml(sug.solution)}</div>
-              <div class="pcard-products">
-                ${sug.products.map(p=>`
-                  <div class="pcard-product">
-                    <span class="pcard-product-type">${escHtml(p.type)}</span>
-                    <div class="pcard-product-body">
-                      <div class="pcard-product-name">${escHtml(p.name)}</div>
-                      <div class="pcard-product-provider">${escHtml(p.provider)}</div>
-                    </div>
-                  </div>`).join('')}
-              </div>
-              <div class="pcard-impl">
-                <div class="pcard-impl-item">
-                  <div class="pcard-impl-label">Omatoiminen</div>
-                  <div class="pcard-impl-text">${escHtml(sug.diy)}</div>
-                </div>
-                <div class="pcard-impl-item">
-                  <div class="pcard-impl-label">Ulkoistettu</div>
-                  <div class="pcard-impl-text">${escHtml(sug.outsource)}</div>
-                </div>
-              </div>
-              <button class="btn btn-primary btn-sm" style="width:100%" onclick="openQuoteRequest('${a.id}')">📋 Pyydä tarjous Sparalta</button>
-            </div>` : '';
-          return `<div class="pcard">
-            <div class="pcard-head">
-              <div>
-                <div class="pcard-title">${ICONS[a.category]||'⚡'} ${escHtml(a.title)}</div>
-                <div class="pcard-stats">
-                  <span>⚡ ${(a.estimated_savings_mwh||0).toLocaleString('fi-FI')} MWh/v</span>
-                  <span>💶 ${(a.estimated_savings_eur||0).toLocaleString('fi-FI')} €/v</span>
-                  <span>📅 TMA ${a.payback_years||'–'}v</span>
-                </div>
-                <div class="pcard-impact">↑ ${impact}% vuositavoitteesta</div>
-              </div>
-              ${SBADGE[a.status]||''}
-            </div>
-            ${sug ? `<div class="pcard-expand-hint" id="pch-${a.id}" onclick="togglePcard('${a.id}')">▼ Näytä AI-ratkaisu &amp; tarjous</div>` : ''}
-            ${detailHtml}
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2735,6 +3036,268 @@ function saveNewCompany() {
   renderComplianceTab(); updateSummaryBar(); renderKpiSummary(); renderSavingsWidget();
   closeAddCompany();
   showToast('Yritys lisätty: ' + newCo.name);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+// Data import modal
+// ═══════════════════════════════════════════════════════════════════════════
+let _importParsed = null;   // { years:{yr:[12]}, rowCount, energyType, unit }
+let _invoiceParsed = null;  // [{label, energyType, mwh, eur, month, year}]
+
+function openImportModal() {
+  _importParsed = null;
+  _invoiceParsed = null;
+  document.getElementById('csv-preview').style.display = 'none';
+  document.getElementById('csv-import-footer').style.display = 'none';
+  document.getElementById('inv-result').style.display = 'none';
+  document.getElementById('inv-status').textContent = '';
+  document.getElementById('dh-result').innerHTML = '<em>Oikea Datahub-integraatio vaatii OIDC-kirjautumisen ja jakeluverkkoyhtiön valtuutuksen. Paina "Hae Datahubista (demo)" nähdäksesi demotulosteen.</em>';
+  document.getElementById('import-modal').style.display = 'flex';
+}
+
+function closeImportModal() {
+  document.getElementById('import-modal').style.display = 'none';
+}
+
+function switchImportTab(tab) {
+  ['csv','datahub','invoice'].forEach(t => {
+    document.getElementById('itab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('import-tab-' + t).style.display = t === tab ? '' : 'none';
+  });
+}
+
+// ── CSV import ────────────────────────────────────────────────────────────
+
+function handleCsvDrop(files) { handleCsvFile(files); }
+function handleCsvFile(files) {
+  if (!files || !files[0]) return;
+  const file = files[0];
+  const reader = new FileReader();
+  reader.onload = e => { _parseCsvText(e.target.result, file.name); };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function _parseCsvText(text, filename) {
+  // Auto-detect delimiter: count ; vs ,
+  const firstLine = text.split('\n')[0] || '';
+  const delim = (firstLine.split(';').length > firstLine.split(',').length) ? ';' : ',';
+  const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { _showCsvError('Tiedosto on tyhjä tai liian lyhyt.'); return; }
+
+  const rawHeaders = lines[0].split(delim).map(h => h.trim().replace(/^"|"$/g,''));
+  const rows = lines.slice(1).map(l => l.split(delim).map(v => v.trim().replace(/^"|"$/g,'')));
+
+  // Detect column indices
+  const dateIdx = rawHeaders.findIndex(h => /alkuaika|aika|date|päivä|month|kuukausi/i.test(h));
+  const valIdx  = rawHeaders.findIndex(h => /kulutus|kwh|mwh|arvo|value|consumption|energi/i.test(h));
+
+  if (dateIdx < 0 || valIdx < 0) {
+    // Try positional: first col = date-ish, second = number
+    const firstVal = parseFloat((rows[0]?.[1]||'').replace(',','.'));
+    if (rows[0] && !isNaN(firstVal)) {
+      _processCsvRows(rawHeaders, rows, 0, 1, filename);
+    } else {
+      _showCsvError('Sarakeotsikoita ei tunnistettu. Tiedostossa tulee olla päivämäärä- ja kulutusluvutsarakkeet.');
+    }
+    return;
+  }
+  _processCsvRows(rawHeaders, rows, dateIdx, valIdx, filename);
+}
+
+function _processCsvRows(headers, rows, dateIdx, valIdx, filename) {
+  const isKwh = /kwh/i.test(headers[valIdx]);
+  const monthly = {};  // { 'YYYY-MM': total }
+
+  rows.forEach(r => {
+    const raw = (r[valIdx]||'').replace(',','.').replace(/[^\d.-]/g,'');
+    const val = parseFloat(raw) || 0;
+    const dateStr = r[dateIdx] || '';
+    // Try to extract YYYY-MM
+    let ym = dateStr.match(/^(\d{4})[.\-/](\d{1,2})/);
+    if (!ym) {
+      // Finnish month names
+      const moNames = ['tammi','helmi','maalis','huhti','touko','kesä','heinä','elo','syys','loka','marras','joulu'];
+      const mIdx = moNames.findIndex(m => dateStr.toLowerCase().includes(m));
+      const yrM  = dateStr.match(/(\d{4})/);
+      if (mIdx >= 0 && yrM) ym = [null, yrM[1], String(mIdx+1)];
+    }
+    if (!ym) return;
+    const key = `${ym[1]}-${String(+ym[2]).padStart(2,'0')}`;
+    monthly[key] = (monthly[key] || 0) + val;
+  });
+
+  const years = [...new Set(Object.keys(monthly).map(k => k.slice(0,4)))].sort();
+  if (!years.length) { _showCsvError('Yhtään ajanjaksoa ei tunnistettu. Tarkista CSV:n muoto.'); return; }
+
+  const parsed = { years:{}, rowCount:rows.length, isKwh, filename };
+  years.forEach(yr => {
+    parsed.years[yr] = Array(12).fill(0);
+    for (let m=1; m<=12; m++) {
+      const raw = monthly[`${yr}-${String(m).padStart(2,'0')}`] || 0;
+      parsed.years[yr][m-1] = isKwh ? +(raw/1000).toFixed(2) : +raw.toFixed(2);
+    }
+  });
+  _importParsed = parsed;
+
+  // Auto-select year
+  const yearSel = document.getElementById('import-year');
+  if (years.length === 1) { yearSel.value = years[0] in {2023:1,2024:1,2025:1,2026:1} ? years[0] : 'auto'; }
+
+  _renderCsvPreview(parsed);
+}
+
+function _showCsvError(msg) {
+  const preview = document.getElementById('csv-preview');
+  preview.style.display = '';
+  preview.innerHTML = `<div style="color:#ef5350;font-size:13px;padding:12px;background:rgba(239,83,80,.1);border-radius:6px">⚠ ${escHtml(msg)}</div>`;
+  document.getElementById('csv-import-footer').style.display = 'none';
+}
+
+const _MONTH_SHORT_FI = ['Tam','Hel','Maa','Huh','Tou','Kes','Hei','Elo','Syy','Lok','Mar','Jou'];
+
+function _renderCsvPreview(parsed) {
+  const preview = document.getElementById('csv-preview');
+  const years = Object.keys(parsed.years).sort();
+  const unit = parsed.isKwh ? 'MWh (muunnettu kWh→MWh)' : 'MWh';
+
+  let html = `<div class="import-preview">
+    <table>
+      <thead><tr><th>Kuukausi</th>${years.map(y=>`<th>${y}</th>`).join('')}</tr></thead>
+      <tbody>
+        ${Array(12).fill(0).map((_,i) => {
+          const anyVal = years.some(y => parsed.years[y][i] > 0);
+          return `<tr${!anyVal?' style="opacity:.4"':''}>
+            <td>${_MONTH_SHORT_FI[i]}</td>
+            ${years.map(y => `<td style="text-align:right">${parsed.years[y][i] > 0 ? parsed.years[y][i].toLocaleString('fi-FI') : '–'}</td>`).join('')}
+          </tr>`;
+        }).join('')}
+        <tr style="font-weight:700;border-top:2px solid var(--border)">
+          <td>Vuosi yht.</td>
+          ${years.map(y=>`<td style="text-align:right;color:var(--accent)">${parsed.years[y].reduce((s,v)=>s+v,0).toFixed(0).toLocaleString()}</td>`).join('')}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="font-size:11px;color:var(--text2);margin-top:6px">${parsed.rowCount.toLocaleString()} rivi(ä) luettu · Yksikkö: ${unit}</div>`;
+
+  preview.innerHTML = html;
+  preview.style.display = '';
+
+  const footer = document.getElementById('csv-import-footer');
+  footer.style.display = 'flex';
+  const totMwh = Object.values(parsed.years).flat().reduce((s,v)=>s+v,0);
+  document.getElementById('csv-import-stats').innerHTML =
+    `<strong>${years.length} vuosi${years.length===1?'':'tta'}</strong> · ${totMwh.toFixed(0)} MWh yhteensä`;
+}
+
+function importCsvData() {
+  if (!_importParsed) return;
+  const cId = activeCompanyId || companies.find(c=>!c.parent_id)?.id || companies[0]?.id;
+  const energyType = document.getElementById('import-energy-type').value;
+  const yearOverride = document.getElementById('import-year').value;
+  const years = yearOverride === 'auto' ? Object.keys(_importParsed.years) : [yearOverride];
+  let imported = 0;
+
+  years.forEach(yr => {
+    const values = _importParsed.years[yr];
+    if (!values) return;
+    _setEnergyMonthlyType(cId, +yr, energyType, values);
+    // Also clear cached energy monthly so stacked chart rebuilds
+    if (DEMO_ENERGY_MONTHLY[cId]) delete DEMO_ENERGY_MONTHLY[cId][+yr];
+    DEMO_ENERGY_MONTHLY[cId] = DEMO_ENERGY_MONTHLY[cId] || {};
+    _getEnergyMonthly(cId, +yr)[energyType] = values;
+    _setEnergyMonthlyType(cId, +yr, energyType, values);
+    imported++;
+  });
+
+  closeImportModal();
+  renderConsumptionTab(); renderKpiGrid(); renderSavingsWidget(); updateSummaryBar();
+  showToast(`Tuotu ${ENERGY_COLORS[energyType]?.label||energyType}-data ${imported} vuodelle. Pylväskaavio päivitetty.`);
+}
+
+// ── Datahub demo ──────────────────────────────────────────────────────────
+
+function runDatahubDemo() {
+  const gsrn = document.getElementById('dh-gsrn').value.trim() || '246700000012345678';
+  const el = document.getElementById('dh-result');
+  el.innerHTML = '<div style="color:var(--text2);font-size:12px">Haetaan dataa… (demo)</div>';
+  setTimeout(() => {
+    const yr = 2025;
+    const cId = activeCompanyId || companies[0]?.id;
+    const total = DEMO_MONTHLY[cId]?.[yr]?.reduce((s,v)=>s+v,0)||3385;
+    const monthly = DEMO_MONTHLY[cId]?.[yr] || [348,315,295,268,242,225,230,238,262,292,318,352];
+    const rows = monthly.map((v,i) => `<tr><td>${_MONTH_SHORT_FI[i]} ${yr}</td><td style="text-align:right">${v.toFixed(1)}</td></tr>`).join('');
+    el.innerHTML = `
+      <div style="background:rgba(66,165,245,.08);border:1px solid rgba(66,165,245,.2);border-radius:8px;padding:14px;font-size:12px">
+        <div style="color:#42A5F5;font-weight:600;margin-bottom:8px">✓ Demo: GSRN ${gsrn} — sähkönkulutusdata haettu</div>
+        <div style="color:var(--text2);margin-bottom:10px">Vuosi ${yr} · Yhteensä <strong style="color:var(--text)">${total.toFixed(0)} MWh</strong></div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+          <tr><th style="text-align:left;font-size:11px;color:var(--text2);padding:3px 0">Kuukausi</th><th style="text-align:right;font-size:11px;color:var(--text2);padding:3px 0">MWh</th></tr>
+          ${rows}
+        </table>
+        <div style="color:var(--text2)">Oikea integraatio hakee 3 vuoden historian automaattisesti jakeluverk­koyhtiön valtuutuksella.</div>
+      </div>`;
+  }, 900);
+}
+
+// ── Invoice / AI demo ─────────────────────────────────────────────────────
+
+const _DEMO_INVOICE_ITEMS = [
+  { label:'Helen Oy – Sähkölasku 01/2025',    energyType:'electricity', mwh:192.4, eur:28860, month:1, year:2025 },
+  { label:'Helen Oy – Sähkölasku 02/2025',    energyType:'electricity', mwh:174.6, eur:26190, month:2, year:2025 },
+  { label:'Fortum Heat – Kaukolämpö 01/2025', energyType:'heat',        mwh:111.2, eur:8896,  month:1, year:2025 },
+  { label:'Fortum Heat – Kaukolämpö 02/2025', energyType:'heat',        mwh:100.8, eur:8064,  month:2, year:2025 },
+  { label:'Gasum – Maakaasulasku Q1/2025',    energyType:'gas',         mwh:83.6,  eur:5852,  month:1, year:2025 },
+];
+
+function handleInvoiceFile(files) {
+  if (!files || !files.length) return;
+  const names = Array.from(files).map(f => f.name).join(', ');
+  document.getElementById('inv-status').innerHTML =
+    `<span style="color:var(--text2)">Ladattu: <strong style="color:var(--text)">${escHtml(names)}</strong> — AI tunnistaa rivit…</span>`;
+  setTimeout(() => {
+    _invoiceParsed = _DEMO_INVOICE_ITEMS;
+    _renderInvoiceResult(_invoiceParsed);
+  }, 1200);
+}
+
+function _renderInvoiceResult(items) {
+  const el = document.getElementById('inv-result-rows');
+  el.innerHTML = items.map(it => `
+    <div class="invoice-row">
+      <span class="invoice-badge ib-${it.energyType}">${ENERGY_COLORS[it.energyType]?.label||it.energyType}</span>
+      <span style="flex:1;color:var(--text)">${escHtml(it.label)}</span>
+      <span style="color:var(--accent);font-weight:600;white-space:nowrap">${it.mwh.toFixed(1)} MWh</span>
+      <span style="color:var(--text2);white-space:nowrap;margin-left:8px">${it.eur.toLocaleString('fi-FI')} €</span>
+    </div>`).join('');
+  const totMwh = items.reduce((s,i)=>s+i.mwh,0);
+  const totEur = items.reduce((s,i)=>s+i.eur,0);
+  document.getElementById('inv-import-total').textContent =
+    `${totMwh.toFixed(1)} MWh · ${totEur.toLocaleString('fi-FI')} €`;
+  document.getElementById('inv-result').style.display = '';
+  document.getElementById('inv-status').textContent = '';
+}
+
+function importInvoiceData() {
+  if (!_invoiceParsed?.length) return;
+  const cId = activeCompanyId || companies.find(c=>!c.parent_id)?.id || companies[0]?.id;
+  // Group by energyType × year
+  const byTypeYear = {};
+  _invoiceParsed.forEach(it => {
+    const k = `${it.energyType}::${it.year}`;
+    if (!byTypeYear[k]) byTypeYear[k] = { energyType:it.energyType, year:it.year, values:Array(12).fill(0) };
+    byTypeYear[k].values[it.month-1] += it.mwh;
+  });
+  Object.values(byTypeYear).forEach(g => {
+    _setEnergyMonthlyType(cId, g.year, g.energyType, g.values);
+    if (DEMO_ENERGY_MONTHLY[cId]) delete DEMO_ENERGY_MONTHLY[cId][g.year];
+    _getEnergyMonthly(cId, g.year)[g.energyType] = g.values;
+    _setEnergyMonthlyType(cId, g.year, g.energyType, g.values);
+  });
+  closeImportModal();
+  renderConsumptionTab(); renderKpiGrid(); renderSavingsWidget(); updateSummaryBar();
+  showToast(`Tuotu ${_invoiceParsed.length} laskuriviä. Kulutuskaavio päivitetty.`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
