@@ -523,7 +523,13 @@
 </div>
 
 <header>
-  <div class="header-wordmark">SPARA<span>Energianhallinta</span></div>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="7" fill="#4CAF50"/>
+      <path d="M19 4L10 19h6.5L14 28l9-15h-6.5z" fill="white"/>
+    </svg>
+    <div class="header-wordmark">SPARA<span>Energianhallinta</span></div>
+  </div>
   <div class="header-right">
     <a class="back-link" href="index.html">← Kiinteistörekisteri</a>
     <div id="user-info" style="display:none;align-items:center;gap:8px">
@@ -561,6 +567,7 @@
   <div class="tab" data-tab="toimenpiteet">Toimenpiteet</div>
   <div class="tab" data-tab="raportit">Raportit</div>
   <div class="tab" data-tab="hallinta" id="tab-hallinta-btn" style="display:none">Hallinta</div>
+  <div class="tab" data-tab="asetukset" id="tab-asetukset-btn" style="display:none;margin-left:auto">Asetukset</div>
 </div>
 
 <main>
@@ -816,6 +823,55 @@
   </div>
 </div>
 
+<!-- ══ Tab 7: Asetukset ══ -->
+<div class="tab-content" id="tab-asetukset">
+  <div style="max-width:560px">
+
+    <div class="section-title">Omat tiedot</div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px">
+      <div class="form-group">
+        <label>Nimi</label>
+        <input type="text" id="set-name" placeholder="Etunimi Sukunimi">
+      </div>
+      <div class="form-group">
+        <label>Sähköposti</label>
+        <input type="email" id="set-email" placeholder="kayttaja@yritys.fi" readonly style="color:var(--text2)">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Puhelinnumero</label>
+        <input type="tel" id="set-phone" placeholder="+358 40 000 0000">
+      </div>
+      <div id="set-profile-status" style="min-height:16px;font-size:12px;margin:10px 0 0"></div>
+      <button class="btn btn-primary" style="margin-top:4px" onclick="saveProfileSettings()">Tallenna tiedot</button>
+    </div>
+
+    <div class="section-title">Vaihda salasana</div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px">
+      <div class="form-group">
+        <label>Uusi salasana</label>
+        <input type="password" id="set-pass-new" placeholder="Vähintään 8 merkkiä">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Vahvista salasana</label>
+        <input type="password" id="set-pass-confirm" placeholder="Toista salasana">
+      </div>
+      <div id="set-pass-status" style="min-height:16px;font-size:12px;margin:10px 0 0"></div>
+      <button class="btn btn-primary" style="margin-top:4px" onclick="changePassword()">Vaihda salasana</button>
+    </div>
+
+    <div class="section-title">Tietokantayhteys</div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span id="db-dot" style="width:10px;height:10px;border-radius:50%;background:var(--text2);flex-shrink:0;transition:background .3s"></span>
+        <span id="db-status-text" style="font-size:13px;font-weight:600">Tarkastetaan…</span>
+      </div>
+      <div id="db-status-detail" style="font-size:12px;color:var(--text2);line-height:1.5"></div>
+      <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="checkDbStatus()">Testaa yhteys</button>
+    </div>
+
+  </div>
+</div>
+
 </main>
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
@@ -852,6 +908,40 @@
       <button class="btn btn-primary" onclick="saveCompanyDetail()" style="flex:1">Tallenna muutokset</button>
       <button class="btn btn-secondary" onclick="closeCompanyDetail()">Sulje</button>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- Create user modal -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="create-user-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:min(440px,95vw)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h2 style="font-size:16px">Luo käyttäjätunnus</h2>
+      <button onclick="closeCreateUserModal()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Sähköposti</label>
+      <input type="email" id="cu-email" placeholder="kayttaja@yritys.fi">
+    </div>
+    <div class="form-group">
+      <label>Nimi</label>
+      <input type="text" id="cu-name" placeholder="Etunimi Sukunimi">
+    </div>
+    <div class="form-group">
+      <label>Käyttäjätaso</label>
+      <select id="cu-role" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius);font-size:14px;font-family:inherit;outline:none">
+        <option value="customer">Yritys</option>
+        <option value="municipality">Kaupunki</option>
+        <option value="spara_admin">SparaAdmin</option>
+      </select>
+    </div>
+    <div id="cu-status" style="min-height:18px;font-size:12px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="createUser()" style="flex:1">Luo käyttäjä &amp; lähetä kutsu</button>
+      <button class="btn btn-secondary" onclick="closeCreateUserModal()">Peruuta</button>
+    </div>
+    <p style="font-size:11px;color:var(--text2);margin-top:14px;line-height:1.6">Käyttäjälle lähetetään sähköposti kirjautumislinkin kanssa. Kirjauduttaessa salasana tulee vaihtaa.</p>
   </div>
 </div>
 
@@ -1466,8 +1556,8 @@ function showUserInfo() {
   badge.textContent = roleLabels[role] || role;
   badge.className = 'role-badge ' + (roleClasses[role] || 'role-customer');
   document.getElementById('user-info').style.display = 'flex';
-  // Show admin tab only for spara_admin
   document.getElementById('tab-hallinta-btn').style.display = role === 'spara_admin' ? '' : 'none';
+  document.getElementById('tab-asetukset-btn').style.display = '';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2696,15 +2786,23 @@ const COMPANY_FIELDS = [
 ];
 
 function buildCompanyForm(containerId, data, readonly) {
+  const isAddco = containerId === 'addco-fields';
   const c = document.getElementById(containerId);
-  c.innerHTML = COMPANY_FIELDS.map(f => `
-    <div class="detail-field${f.full?' detail-full':''}">
-      <label>${f.label}</label>
-      ${f.type === 'textarea'
-        ? `<textarea id="${f.id}" rows="3" ${readonly||f.readonly?'readonly':''}>${String(data[f.id]||'')}</textarea>`
-        : `<input type="text" id="${f.id}" value="${String(data[f.id]||'').replace(/"/g,'&quot;')}" ${readonly||f.readonly?'readonly':''}>`
-      }
-    </div>`).join('');
+  c.innerHTML = COMPANY_FIELDS.map(f => {
+    let input;
+    if (f.type === 'textarea') {
+      input = `<textarea id="${f.id}" rows="3" ${readonly||f.readonly?'readonly':''}>${String(data[f.id]||'')}</textarea>`;
+    } else if (f.id === 'cf_email' && isAddco && !readonly) {
+      const val = String(data[f.id]||'').replace(/"/g,'&quot;');
+      input = `<div style="display:flex;gap:6px;align-items:center">
+        <input type="text" id="${f.id}" value="${val}" style="flex:1;min-width:0;width:auto">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="openCreateUserModal()" style="white-space:nowrap;flex-shrink:0">+ Luo käyttäjä</button>
+      </div>`;
+    } else {
+      input = `<input type="text" id="${f.id}" value="${String(data[f.id]||'').replace(/"/g,'&quot;')}" ${readonly||f.readonly?'readonly':''}>`;
+    }
+    return `<div class="detail-field${f.full?' detail-full':''}"><label>${f.label}</label>${input}</div>`;
+  }).join('');
 }
 
 function companyToFormData(c) {
@@ -3515,8 +3613,145 @@ document.querySelectorAll('.tab').forEach(tab => {
     if (t === 'toimenpiteet') filterActions();
     if (t === 'raportit')     { renderMgmtReportMeta(); renderTagReport(); }
     if (t === 'hallinta')     renderHallintaTab();
+    if (t === 'asetukset')    openSettingsTab();
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Create user modal
+// ═══════════════════════════════════════════════════════════════════════════
+function openCreateUserModal() {
+  const emailVal = document.getElementById('cf_email')?.value?.trim() || '';
+  document.getElementById('cu-email').value = emailVal;
+  document.getElementById('cu-name').value  = '';
+  document.getElementById('cu-role').value  = 'customer';
+  document.getElementById('cu-status').textContent = '';
+  document.getElementById('create-user-modal').style.display = 'flex';
+}
+
+function closeCreateUserModal() {
+  document.getElementById('create-user-modal').style.display = 'none';
+}
+
+async function createUser() {
+  const email = document.getElementById('cu-email').value.trim();
+  const name  = document.getElementById('cu-name').value.trim();
+  const role  = document.getElementById('cu-role').value;
+  const st    = document.getElementById('cu-status');
+
+  if (!email) { st.style.color = 'var(--red)'; st.textContent = 'Sähköposti on pakollinen.'; return; }
+
+  st.style.color = 'var(--text2)'; st.textContent = 'Luodaan käyttäjää…';
+
+  if (DEMO_MODE) {
+    await new Promise(r => setTimeout(r, 900));
+    st.style.color = 'var(--accent)';
+    st.textContent = `Demo: kutsu lähetettäisiin → ${email}`;
+    setTimeout(() => { closeCreateUserModal(); showToast('Demo: käyttäjätunnus luotu – ' + email); }, 1400);
+    return;
+  }
+
+  // Production: call Supabase Edge Function (service_role required for admin.createUser)
+  try {
+    const { data, error } = await db.functions.invoke('create-etj-user', {
+      body: { email, display_name: name || email, role }
+    });
+    if (error) throw error;
+    st.style.color = 'var(--accent)';
+    st.textContent = 'Käyttäjä luotu. Kutsu lähetetty: ' + email;
+    setTimeout(() => { closeCreateUserModal(); showToast('Käyttäjä luotu ja kutsu lähetetty.'); }, 1500);
+  } catch (e) {
+    st.style.color = 'var(--red)';
+    st.textContent = 'Virhe: ' + (e.message || JSON.stringify(e));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Settings tab
+// ═══════════════════════════════════════════════════════════════════════════
+function openSettingsTab() {
+  document.getElementById('set-name').value  = currentProfile?.display_name || currentUser?.email || '';
+  document.getElementById('set-email').value = currentUser?.email || '';
+  document.getElementById('set-phone').value = currentProfile?.phone || '';
+  document.getElementById('set-profile-status').textContent = '';
+  document.getElementById('set-pass-status').textContent    = '';
+  document.getElementById('set-pass-new').value             = '';
+  document.getElementById('set-pass-confirm').value         = '';
+  checkDbStatus();
+}
+
+async function checkDbStatus() {
+  const dot    = document.getElementById('db-dot');
+  const text   = document.getElementById('db-status-text');
+  const detail = document.getElementById('db-status-detail');
+
+  if (DEMO_MODE) {
+    dot.style.background = 'var(--orange)';
+    text.textContent     = 'Demo-tila — ei live-yhteyttä';
+    detail.textContent   = 'Kirjaudu oikeilla tunnuksilla yhdistääksesi Supabase-tietokantaan.';
+    return;
+  }
+
+  dot.style.background = 'var(--text2)'; text.textContent = 'Tarkastetaan…';
+  try {
+    const t0 = Date.now();
+    const { error } = await db.from('etj_companies').select('id').limit(1);
+    if (error) throw error;
+    const ms = Date.now() - t0;
+    dot.style.background = 'var(--green)';
+    text.textContent     = 'Yhteys toimii (' + ms + ' ms)';
+    detail.textContent   = 'Supabase: ' + SUPABASE_URL;
+  } catch (e) {
+    dot.style.background = 'var(--red)';
+    text.textContent     = 'Yhteysvirhe';
+    detail.textContent   = e.message || JSON.stringify(e);
+  }
+}
+
+async function saveProfileSettings() {
+  const name  = document.getElementById('set-name').value.trim();
+  const phone = document.getElementById('set-phone').value.trim();
+  const st    = document.getElementById('set-profile-status');
+
+  if (currentProfile) { currentProfile.display_name = name; currentProfile.phone = phone; }
+  showUserInfo();
+
+  if (!DEMO_MODE && currentUser?.id) {
+    try {
+      const { error } = await db.from('etj_user_profiles').upsert({ id: currentUser.id, display_name: name, phone });
+      if (error) throw error;
+    } catch (e) {
+      st.style.color = 'var(--red)'; st.textContent = 'Tallennus epäonnistui: ' + e.message; return;
+    }
+  }
+  st.style.color = 'var(--accent)'; st.textContent = 'Profiili tallennettu.';
+  setTimeout(() => { if (st) st.textContent = ''; }, 3000);
+}
+
+async function changePassword() {
+  const newPass     = document.getElementById('set-pass-new').value;
+  const confirmPass = document.getElementById('set-pass-confirm').value;
+  const st          = document.getElementById('set-pass-status');
+
+  if (!newPass) { st.style.color='var(--red)'; st.textContent='Syötä uusi salasana.'; return; }
+  if (newPass.length < 8) { st.style.color='var(--red)'; st.textContent='Vähintään 8 merkkiä.'; return; }
+  if (newPass !== confirmPass) { st.style.color='var(--red)'; st.textContent='Salasanat eivät täsmää.'; return; }
+
+  if (DEMO_MODE) {
+    st.style.color='var(--accent)'; st.textContent='Demo: salasana vaihdettaisiin oikeassa ympäristössä.';
+    return;
+  }
+
+  st.style.color='var(--text2)'; st.textContent='Vaihdetaan…';
+  const { error } = await db.auth.updateUser({ password: newPass });
+  if (error) {
+    st.style.color='var(--red)'; st.textContent='Virhe: ' + error.message;
+  } else {
+    st.style.color='var(--accent)'; st.textContent='Salasana vaihdettu onnistuneesti.';
+    document.getElementById('set-pass-new').value = '';
+    document.getElementById('set-pass-confirm').value = '';
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Init
