@@ -333,6 +333,12 @@
     .ytj-ok   { color:var(--accent); }
     .ytj-err  { color:var(--red); }
     .ytj-spin { color:var(--text2); }
+    .ytj-dropdown { position:absolute;left:0;right:0;top:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 6px 20px rgba(0,0,0,.45);z-index:2100;max-height:240px;overflow-y:auto;margin-top:2px; }
+    .ytj-dropdown-item { padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px; }
+    .ytj-dropdown-item:last-child { border-bottom:none; }
+    .ytj-dropdown-item:hover { background:var(--bg3); }
+    .ytj-item-name { font-weight:600; }
+    .ytj-item-meta { font-size:11px;color:var(--text2);margin-top:2px; }
     .modal-tabs { display:flex;gap:0;margin-bottom:18px;border-bottom:1px solid var(--border); }
     .modal-tab { padding:8px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;transition:color .2s,border-color .2s; }
     .modal-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
@@ -695,13 +701,17 @@
     </div>
 
     <!-- YTJ fetch row -->
-    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:18px">
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:18px;position:relative">
       <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Hae tiedot YTJ:stä (avoindata.prh.fi)</div>
       <div class="ytj-row">
-        <input type="text" id="detail-ytj-input" placeholder="Y-tunnus, esim. 1234567-8">
-        <button class="btn btn-secondary btn-sm" onclick="fetchAndFillYTJ('detail')">Hae</button>
+        <input type="text" id="detail-ytj-input" placeholder="Y-tunnus tai yrityksen nimi" autocomplete="off"
+          oninput="ytjInputChanged('detail')"
+          onkeydown="if(event.key==='Enter'){fetchAndFillYTJ('detail');hideYtjDropdown('detail')}"
+          onblur="setTimeout(()=>hideYtjDropdown('detail'),200)">
+        <button class="btn btn-secondary btn-sm" onclick="fetchAndFillYTJ('detail');hideYtjDropdown('detail')">Hae</button>
       </div>
       <div class="ytj-status" id="detail-ytj-status"></div>
+      <div id="detail-ytj-dropdown" class="ytj-dropdown" style="display:none"></div>
     </div>
 
     <div class="detail-grid" id="company-detail-fields">
@@ -731,13 +741,17 @@
 
     <!-- YTJ search panel -->
     <div id="addco-ytj-panel">
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px;position:relative">
         <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Hae yritystiedot PRH:n avoimesta rekisteristä (avoindata.prh.fi)</div>
         <div class="ytj-row">
-          <input type="text" id="addco-ytj-input" placeholder="Y-tunnus, esim. 1234567-8" onkeydown="if(event.key==='Enter')fetchAndFillYTJ('addco')">
-          <button class="btn btn-primary btn-sm" onclick="fetchAndFillYTJ('addco')">Hae</button>
+          <input type="text" id="addco-ytj-input" placeholder="Y-tunnus tai yrityksen nimi" autocomplete="off"
+            oninput="ytjInputChanged('addco')"
+            onkeydown="if(event.key==='Enter'){fetchAndFillYTJ('addco');hideYtjDropdown('addco')}"
+            onblur="setTimeout(()=>hideYtjDropdown('addco'),200)">
+          <button class="btn btn-primary btn-sm" onclick="fetchAndFillYTJ('addco');hideYtjDropdown('addco')">Hae</button>
         </div>
         <div class="ytj-status" id="addco-ytj-status"></div>
+        <div id="addco-ytj-dropdown" class="ytj-dropdown" style="display:none"></div>
       </div>
     </div>
 
@@ -1984,25 +1998,20 @@ function saveCompanyDetail() {
   showToast('Yrityksen tiedot tallennettu.');
 }
 
-// ─── YTJ / PRH open data ─────────────────────────────────────────────────────
-async function fetchYTJ(ytunnus) {
-  const clean = ytunnus.trim().replace(/\s/g,'');
-  const r = await fetch(`https://avoindata.prh.fi/bis/v1/${encodeURIComponent(clean)}`);
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const data = await r.json();
-  const res  = data.results?.[0];
-  if (!res) throw new Error('Ei löydy');
-  // Pick the current (most recent, non-ended) address
+// ─── YTJ / PRH open data v3 ──────────────────────────────────────────────────
+const PRH_V3 = 'https://avoindata.prh.fi/opendata-ytj-api/v3/companies';
+const _ytjDebounce = {};
+
+function _prhToForm(res) {
   const addr = (res.addresses || [])
     .filter(a => !a.endDate)
     .sort((a,b) => (b.registrationDate||'').localeCompare(a.registrationDate||''))[0] || {};
-  // Pick current business line
   const bline = (res.businessLines || [])
     .filter(b => !b.endDate)
     .sort((a,b) => (b.registrationDate||'').localeCompare(a.registrationDate||''))[0] || {};
   return {
     cf_name:        res.name || '',
-    cf_ytunnus:     res.businessId || clean,
+    cf_ytunnus:     res.businessId || '',
     cf_sector:      bline.name || '',
     cf_companyForm: res.companyForm || '',
     cf_address:     addr.street || '',
@@ -2015,26 +2024,111 @@ async function fetchYTJ(ytunnus) {
   };
 }
 
-async function fetchAndFillYTJ(context) {
-  const inputId  = context === 'detail' ? 'detail-ytj-input' : 'addco-ytj-input';
-  const statusId = context === 'detail' ? 'detail-ytj-status' : 'addco-ytj-status';
+async function prhFetchByBusinessId(id) {
+  const r = await fetch(`${PRH_V3}?businessId=${encodeURIComponent(id.trim())}`);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const data = await r.json();
+  const res = (data.companies || [])[0];
+  if (!res) throw new Error('Ei löydy Y-tunnuksella ' + id.trim());
+  return _prhToForm(res);
+}
+
+async function prhSearchByName(name) {
+  const r = await fetch(`${PRH_V3}?name=${encodeURIComponent(name.trim())}&maxResults=10`);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const data = await r.json();
+  return (data.companies || []).map(res => ({ ...res, _form: _prhToForm(res) }));
+}
+
+function hideYtjDropdown(context) {
+  const el = document.getElementById(context + '-ytj-dropdown');
+  if (el) el.style.display = 'none';
+}
+
+function showYtjSuggestions(context, results) {
+  const el = document.getElementById(context + '-ytj-dropdown');
+  if (!el || !results.length) { if (el) el.style.display = 'none'; return; }
+  el.innerHTML = results.map((r, i) => {
+    const meta = [r.businessId, r.companyForm, r._form.cf_city].filter(Boolean).join(' · ');
+    return `<div class="ytj-dropdown-item" onmousedown="selectYtjSuggestion('${context}',${i})">
+      <div class="ytj-item-name">${escHtml(r.name || r.businessId)}</div>
+      <div class="ytj-item-meta">${escHtml(meta)}</div>
+    </div>`;
+  }).join('');
+  el._results = results;
+  el.style.display = '';
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function selectYtjSuggestion(context, idx) {
+  const el = document.getElementById(context + '-ytj-dropdown');
+  const r = el?._results?.[idx];
+  if (!r) return;
+  hideYtjDropdown(context);
   const formId   = context === 'detail' ? 'company-detail-fields' : 'addco-fields';
-  const ytunnus  = document.getElementById(inputId).value.trim();
+  const statusId = context + '-ytj-status';
+  document.getElementById(context + '-ytj-input').value = r.businessId || '';
+  if (context === 'detail' && !_companyEditMode) {
+    _companyEditMode = true;
+    document.getElementById('company-edit-btn').textContent = 'Peruuta muokkaus';
+    document.getElementById('company-save-row').style.display = 'flex';
+  }
+  buildCompanyForm(formId, r._form, false);
+  const st = document.getElementById(statusId);
+  st.className = 'ytj-status ytj-ok';
+  st.textContent = '✓ Tiedot haettu: ' + r._form.cf_name + (r._form.cf_city ? ', ' + r._form.cf_city : '');
+}
+
+function ytjInputChanged(context) {
+  const val = (document.getElementById(context + '-ytj-input').value || '').trim();
+  clearTimeout(_ytjDebounce[context]);
+  if (!val || val.length < 3) { hideYtjDropdown(context); return; }
+  if (/^\d{7}-\d$/.test(val)) { hideYtjDropdown(context); return; }
+  _ytjDebounce[context] = setTimeout(async () => {
+    try {
+      const results = await prhSearchByName(val);
+      showYtjSuggestions(context, results);
+    } catch(e) { hideYtjDropdown(context); }
+  }, 350);
+}
+
+async function fetchAndFillYTJ(context) {
+  const inputId  = context + '-ytj-input';
+  const statusId = context + '-ytj-status';
+  const formId   = context === 'detail' ? 'company-detail-fields' : 'addco-fields';
+  const val      = (document.getElementById(inputId).value || '').trim();
   const st       = document.getElementById(statusId);
-  if (!ytunnus) { st.className='ytj-status ytj-err'; st.textContent='Syötä Y-tunnus.'; return; }
+  if (!val) { st.className='ytj-status ytj-err'; st.textContent='Syötä Y-tunnus tai yrityksen nimi.'; return; }
   st.className='ytj-status ytj-spin'; st.textContent='Haetaan…';
   try {
-    const data = await fetchYTJ(ytunnus);
-    if (context === 'detail') {
-      // If in edit mode, fill editable fields; otherwise enable edit mode first
-      if (!_companyEditMode) { _companyEditMode=true; document.getElementById('company-edit-btn').textContent='Peruuta muokkaus'; document.getElementById('company-save-row').style.display='flex'; }
-      buildCompanyForm(formId, data, false);
+    let formData;
+    if (/^\d{7}-\d$/.test(val)) {
+      formData = await prhFetchByBusinessId(val);
     } else {
-      buildCompanyForm(formId, data, false);
+      const results = await prhSearchByName(val);
+      if (!results.length) throw new Error('Ei tuloksia haulle "' + val + '"');
+      if (results.length === 1) {
+        formData = results[0]._form;
+        document.getElementById(inputId).value = results[0].businessId || '';
+      } else {
+        showYtjSuggestions(context, results);
+        st.className = 'ytj-status ytj-ok';
+        st.textContent = results.length + ' hakutulosta – valitse alta.';
+        return;
+      }
     }
-    st.className='ytj-status ytj-ok'; st.textContent='✓ Tiedot haettu: ' + data.cf_name + (data.cf_city ? ', ' + data.cf_city : '');
+    if (context === 'detail' && !_companyEditMode) {
+      _companyEditMode = true;
+      document.getElementById('company-edit-btn').textContent = 'Peruuta muokkaus';
+      document.getElementById('company-save-row').style.display = 'flex';
+    }
+    buildCompanyForm(formId, formData, false);
+    st.className = 'ytj-status ytj-ok';
+    st.textContent = '✓ Tiedot haettu: ' + formData.cf_name + (formData.cf_city ? ', ' + formData.cf_city : '');
   } catch(e) {
-    st.className='ytj-status ytj-err'; st.textContent='Haku epäonnistui: ' + e.message + '. Tarkista Y-tunnus.';
+    st.className = 'ytj-status ytj-err';
+    st.textContent = 'Haku epäonnistui: ' + e.message;
   }
 }
 
@@ -2045,6 +2139,7 @@ function openAddCompany() {
   _addCoTab = 'ytj';
   document.getElementById('addco-ytj-input').value = '';
   document.getElementById('addco-ytj-status').textContent = '';
+  hideYtjDropdown('addco');
   buildCompanyForm('addco-fields', {}, false);
   switchAddCoTab('ytj');
   document.getElementById('addco-modal').style.display = 'flex';
