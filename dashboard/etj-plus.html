@@ -1086,6 +1086,31 @@
       </div>
     </div>
 
+    <!-- User account section — visible to spara_admin only -->
+    <div id="addco-user-section" style="display:none;margin-top:16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+      <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:12px">Käyttäjätunnus yhteyshenkilölle</div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label>Käyttöoikeustaso</label>
+        <select id="addco-user-level" onchange="toggleAddcoUserFields()"
+          style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius);font-size:14px;font-family:inherit;outline:none">
+          <option value="">1. Ei käyttöoikeuksia</option>
+          <option value="customer">2. Yrityskäyttäjä</option>
+          <option value="municipality">3. Kaupunki / Kunta</option>
+          <option value="spara_admin">4. Spara-admin</option>
+        </select>
+      </div>
+      <div id="addco-user-pass-wrap" style="display:none">
+        <p style="font-size:12px;color:var(--text2);margin:0 0 10px;line-height:1.5">
+          Jätä salasana tyhjäksi lähettääksesi kutsulinkin sähköpostilla. Aseta salasana jos haluat luoda tunnuksen suoraan.
+        </p>
+        <div class="form-group" style="margin-bottom:8px">
+          <label>Salasana (valinnainen)</label>
+          <input type="password" id="addco-user-pass" placeholder="Vähintään 8 merkkiä tai jätä tyhjäksi">
+        </div>
+        <div id="addco-user-status" style="font-size:12px;min-height:16px;margin-top:4px"></div>
+      </div>
+    </div>
+
     <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn btn-primary" onclick="saveNewCompany()" style="flex:1">Lisää järjestelmään</button>
       <button class="btn btn-secondary" onclick="closeAddCompany()">Peruuta</button>
@@ -3410,11 +3435,23 @@ function openAddCompany() {
   document.getElementById('addco-ytj-status').textContent = '';
   hideYtjDropdown('addco');
   buildCompanyForm('addco-fields', {}, false);
-  // Reset energy type selections
   document.querySelectorAll('.energy-main-cb').forEach(cb => { cb.checked = false; });
   document.getElementById('addco-subcats').style.display = 'none';
+  // Reset user section
+  document.getElementById('addco-user-level').value = '';
+  document.getElementById('addco-user-pass').value  = '';
+  document.getElementById('addco-user-pass-wrap').style.display = 'none';
+  document.getElementById('addco-user-status').textContent = '';
+  document.getElementById('addco-user-section').style.display =
+    currentProfile?.role === 'spara_admin' ? '' : 'none';
   switchAddCoTab('ytj');
   document.getElementById('addco-modal').style.display = 'flex';
+}
+
+function toggleAddcoUserFields() {
+  const level = document.getElementById('addco-user-level').value;
+  document.getElementById('addco-user-pass-wrap').style.display = level ? '' : 'none';
+  if (!level) document.getElementById('addco-user-status').textContent = '';
 }
 
 function closeAddCompany() { document.getElementById('addco-modal').style.display = 'none'; }
@@ -3426,10 +3463,14 @@ function switchAddCoTab(tab) {
   document.getElementById('addco-ytj-panel').style.display = tab==='ytj' ? '' : 'none';
 }
 
-function saveNewCompany() {
+async function saveNewCompany() {
   const name    = document.getElementById('cf_name')?.value.trim();
   const ytunnus = document.getElementById('cf_ytunnus')?.value.trim();
   if (!name) { showToast('Yrityksen nimi on pakollinen.'); return; }
+
+  // Read user fields before closing modal
+  const userLevel = document.getElementById('addco-user-level')?.value || '';
+  const userPass  = document.getElementById('addco-user-pass')?.value  || '';
 
   const newCo = {
     id:               'c_' + Date.now(),
@@ -3451,11 +3492,13 @@ function saveNewCompany() {
   companies.push(newCo);
   DEMO_MONTHLY[newCo.id] = {};
 
+  // In live mode: await insert so we get the real Supabase UUID needed for user linking
+  let realCompanyId = newCo.id;
   if (!DEMO_MODE) {
-    const { id, ...rest } = newCo;
-    db.from('etj_companies').insert(rest).then(({ error }) => {
-      if (error) showToast('Tallennus epäonnistui: ' + error.message);
-    });
+    const { id: _tmp, ...rest } = newCo;
+    const { data: inserted, error } = await db.from('etj_companies').insert(rest).select().single();
+    if (error) { showToast('Yrityksen tallennus epäonnistui: ' + error.message); return; }
+    if (inserted?.id) { realCompanyId = inserted.id; newCo.id = realCompanyId; }
   }
 
   // Collect selected subcategories for pre-population
@@ -3464,13 +3507,24 @@ function saveNewCompany() {
     subcatRows.push({ energy_type: cb.dataset.type, tag_name: cb.value });
   });
 
-  // Refresh selector and compliance table
+  // Refresh selector and close modal
   const sel = document.getElementById('company-selector');
   sel.innerHTML = '<option value="">Kaikki yritykset</option>';
   initCompanySelector();
   renderComplianceTab(); updateSummaryBar(); renderKpiSummary(); renderSavingsWidget();
   closeAddCompany();
   showToast('Yritys lisätty: ' + newCo.name);
+
+  // Create and link user account if a level was chosen
+  if (userLevel && newCo.contact_email) {
+    createUserAndLink(
+      realCompanyId,
+      newCo.contact_email,
+      newCo.contact_name || newCo.contact_email,
+      userLevel,
+      userPass
+    );
+  }
 
   // If energy categories were selected, open data entry pre-filled
   if (subcatRows.length > 0) {
@@ -3485,6 +3539,56 @@ function saveNewCompany() {
       showToast('Täytä kulutusluvut avautuneeseen taulukkoon.');
     }, 200);
   }
+}
+
+async function createUserAndLink(companyId, email, displayName, role, password) {
+  if (DEMO_MODE) {
+    await new Promise(r => setTimeout(r, 700));
+    showToast('Demo: käyttäjä "' + email + '" linkitetty yritykseen (' + { customer:'Yrityskäyttäjä', municipality:'Kaupunki', spara_admin:'Spara-admin' }[role] + ').');
+    return;
+  }
+
+  let userId = null;
+  try {
+    // Try Edge Function first — handles both invite-link and password-set
+    const { data, error } = await db.functions.invoke('create-etj-user', {
+      body: { email, display_name: displayName, role, ...(password ? { password } : {}) }
+    });
+    if (error) throw error;
+    userId = data?.user_id;
+  } catch (efErr) {
+    // Fallback: signUp (requires password; invite not possible without Edge Function)
+    if (!password) {
+      showToast('Kutsulinkin lähetys vaatii Edge Functionin. Anna salasana tai deployaa create-etj-user.');
+      return;
+    }
+    try {
+      const { data: sd, error: sErr } = await db.auth.signUp({
+        email, password,
+        options: { data: { display_name: displayName, role } },
+      });
+      if (sErr) throw sErr;
+      userId = sd?.user?.id;
+      if (userId) {
+        await db.from('etj_user_profiles')
+          .upsert({ id: userId, role, display_name: displayName })
+          .throwOnError().catch(() => {});
+      }
+    } catch (fbErr) {
+      showToast('Käyttäjän luonti epäonnistui: ' + fbErr.message);
+      return;
+    }
+  }
+
+  // Link user to company in etj_user_company_access
+  if (userId && companyId && !String(companyId).startsWith('c_')) {
+    const { error: lErr } = await db.from('etj_user_company_access')
+      .upsert({ user_id: userId, company_id: companyId, access_level: 'write' });
+    if (lErr) console.error('Linkitysvirhe (ei-kriittinen):', lErr.message);
+  }
+
+  const modeStr = password ? 'Salasana asetettu.' : 'Kutsu lähetetty sähköpostilla.';
+  showToast('Käyttäjä luotu: ' + email + ' — ' + modeStr);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

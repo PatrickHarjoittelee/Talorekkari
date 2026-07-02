@@ -1,8 +1,10 @@
 // Supabase Edge Function: create-etj-user
-// Deploy: supabase functions deploy create-etj-user
+// Deploy: supabase functions deploy create-etj-user --project-ref yywoyzysgjkhhwveroeb
 //
-// Called by spara_admin users to invite new users.
-// Uses SUPABASE_SERVICE_ROLE_KEY (injected automatically by Supabase runtime).
+// Called by spara_admin users to create new users.
+// Supports two modes:
+//   - password provided → auth.admin.createUser (account active immediately)
+//   - no password       → auth.admin.inviteUserByEmail (magic-link email sent)
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -16,10 +18,11 @@ serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
   try {
-    const { email, display_name, role } = await req.json() as {
+    const { email, display_name, role, password } = await req.json() as {
       email: string
       display_name?: string
       role?: string
+      password?: string
     }
 
     if (!email) throw new Error('email on pakollinen')
@@ -53,26 +56,41 @@ serve(async (req: Request) => {
       throw new Error('Vain spara_admin voi luoda käyttäjätunnuksia')
     }
 
-    // Invite user — sends a magic-link email; user sets own password on first login
-    const siteUrl = Deno.env.get('SITE_URL') ??
-      'https://patrickharjoittelee.github.io/Talorekkari/dashboard/etj-plus.html'
+    const meta = { display_name: display_name || email, role: userRole }
+    let userId: string
 
-    const { data: invited, error: invErr } = await adminClient.auth.admin.inviteUserByEmail(email, {
-      data: { display_name: display_name || email, role: userRole },
-      redirectTo: siteUrl,
-    })
-    if (invErr) throw invErr
+    if (password && password.length >= 8) {
+      // Create account with set password — active immediately, no email required
+      const { data: created, error: cErr } = await adminClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: meta,
+      })
+      if (cErr) throw cErr
+      userId = created.user.id
+    } else {
+      // Send magic-link invite — user sets own password on first login
+      const siteUrl = Deno.env.get('SITE_URL') ??
+        'https://patrickharjoittelee.github.io/Talorekkari/dashboard/etj-plus.html'
+      const { data: invited, error: invErr } = await adminClient.auth.admin.inviteUserByEmail(email, {
+        data: meta,
+        redirectTo: siteUrl,
+      })
+      if (invErr) throw invErr
+      userId = invited.user.id
+    }
 
-    // Create profile row immediately (user ID is known even before they accept)
+    // Upsert profile row (available even before user accepts invite)
     const { error: profErr } = await adminClient.from('etj_user_profiles').upsert({
-      id:           invited.user.id,
+      id:           userId,
       role:         userRole,
       display_name: display_name || email,
     })
     if (profErr) console.error('Profile upsert error (non-fatal):', profErr.message)
 
     return new Response(
-      JSON.stringify({ success: true, user_id: invited.user.id }),
+      JSON.stringify({ success: true, user_id: userId }),
       { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } },
     )
   } catch (err: unknown) {
