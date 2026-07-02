@@ -3895,7 +3895,7 @@ async function createUser() {
     return;
   }
 
-  // Production: call Supabase Edge Function (service_role required for admin.createUser)
+  // Production: call Supabase Edge Function (service_role required for admin.inviteUserByEmail)
   try {
     const { data, error } = await db.functions.invoke('create-etj-user', {
       body: { email, display_name: name || email, role }
@@ -3904,9 +3904,31 @@ async function createUser() {
     st.style.color = 'var(--accent)';
     st.textContent = 'Käyttäjä luotu. Kutsu lähetetty: ' + email;
     setTimeout(() => { closeCreateUserModal(); showToast('Käyttäjä luotu ja kutsu lähetetty.'); }, 1500);
-  } catch (e) {
-    st.style.color = 'var(--red)';
-    st.textContent = 'Virhe: ' + (e.message || JSON.stringify(e));
+  } catch (efErr) {
+    // Fallback when edge function is not yet deployed: create via signUp with a random temp password
+    try {
+      const tempPass = Array.from(crypto.getRandomValues(new Uint8Array(12)))
+        .map(b => (b % 36).toString(36)).join('');
+      const { data: sd, error: sErr } = await db.auth.signUp({
+        email,
+        password: tempPass,
+        options: { data: { display_name: name || email, role } },
+      });
+      if (sErr) throw sErr;
+      // Best-effort profile row — non-fatal if it fails
+      if (sd?.user?.id) {
+        await db.from('etj_user_profiles')
+          .upsert({ id: sd.user.id, role, display_name: name || email })
+          .throwOnError().catch(() => {});
+      }
+      st.style.color = 'var(--orange)';
+      st.innerHTML = `Käyttäjä luotu (väliaikainen salasana):<br>
+        <code style="user-select:all;font-size:13px">${tempPass}</code><br>
+        <span style="font-size:12px">Lähetä tämä salasana käyttäjälle. Kutsupostiominaisuus on käytössä kun Edge Function on deployattu.</span>`;
+    } catch (fallbackErr) {
+      st.style.color = 'var(--red)';
+      st.textContent = 'Virhe: ' + (fallbackErr.message || JSON.stringify(fallbackErr));
+    }
   }
 }
 
@@ -3916,7 +3938,7 @@ async function createUser() {
 function openSettingsTab() {
   document.getElementById('set-name').value  = currentProfile?.display_name || currentUser?.email || '';
   document.getElementById('set-email').value = currentUser?.email || '';
-  document.getElementById('set-phone').value = currentProfile?.phone || '';
+  document.getElementById('set-phone').value = currentProfile?.phone || currentUser?.user_metadata?.phone || '';
   document.getElementById('set-profile-status').textContent = '';
   document.getElementById('set-pass-status').textContent    = '';
   document.getElementById('set-pass-new').value             = '';
@@ -3962,8 +3984,15 @@ async function saveProfileSettings() {
 
   if (!DEMO_MODE && currentUser?.id) {
     try {
-      const { error } = await db.from('etj_user_profiles').upsert({ id: currentUser.id, display_name: name, phone });
-      if (error) throw error;
+      // display_name → etj_user_profiles (has the column)
+      const { error: pErr } = await db.from('etj_user_profiles')
+        .upsert({ id: currentUser.id, display_name: name });
+      if (pErr) throw pErr;
+      // phone → auth user_metadata (etj_user_profiles has no phone column)
+      if (phone !== (currentUser.user_metadata?.phone ?? '')) {
+        const { error: mErr } = await db.auth.updateUser({ data: { phone } });
+        if (mErr) throw mErr;
+      }
     } catch (e) {
       st.style.color = 'var(--red)'; st.textContent = 'Tallennus epäonnistui: ' + e.message; return;
     }

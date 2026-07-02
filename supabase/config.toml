@@ -1,0 +1,5 @@
+# Supabase project config
+# Deploy Edge Functions: supabase functions deploy create-etj-user --project-ref yywoyzysgjkhhwveroeb
+
+[api]
+project_id = "yywoyzysgjkhhwveroeb"
