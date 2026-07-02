@@ -465,6 +465,43 @@
     .modal-tabs { display:flex;gap:0;margin-bottom:18px;border-bottom:1px solid var(--border); }
     .modal-tab { padding:8px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;transition:color .2s,border-color .2s; }
     .modal-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+
+    /* ── Energy type checkboxes (company wizard) ── */
+    .energy-check-label {
+      display:inline-flex;align-items:center;gap:6px;
+      background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+      padding:7px 12px;cursor:pointer;font-size:13px;transition:border-color .15s,background .15s;user-select:none;
+    }
+    .energy-check-label:hover { border-color:var(--accent);background:var(--bg4); }
+    .energy-check-label input[type=checkbox] { accent-color:var(--accent);width:14px;height:14px; }
+    .energy-check-label.checked { border-color:var(--accent);background:rgba(76,175,80,.1); }
+    .subcat-check-label {
+      display:inline-flex;align-items:center;gap:5px;
+      background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+      padding:5px 10px;cursor:pointer;font-size:12px;transition:border-color .15s;user-select:none;
+    }
+    .subcat-check-label:hover { border-color:var(--accent); }
+    .subcat-check-label input[type=checkbox] { accent-color:var(--accent);width:12px;height:12px; }
+
+    /* ── Add-row wizard panel ── */
+    .addrow-wizard {
+      background:var(--bg4);border:1px solid var(--accent);border-radius:8px;
+      padding:14px 16px;margin-bottom:4px;
+    }
+    .wiz-label { font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px; }
+    .wiz-select, .wiz-input {
+      background:var(--bg2);border:1px solid var(--border);color:var(--text);
+      padding:6px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;
+    }
+    .wiz-select:focus, .wiz-input:focus { border-color:var(--accent); }
+    .wiz-mode-btn {
+      background:none;border:none;color:var(--text2);padding:6px 12px;font-size:12px;
+      cursor:pointer;font-family:inherit;transition:background .15s,color .15s;
+    }
+    .wiz-mode-btn.active { background:var(--accent);color:#fff; }
+
+    /* ── Fixed chart containers ── */
+    .chart-fixed { position:relative; }
   </style>
 </head>
 <body>
@@ -654,7 +691,11 @@
   <div class="section-row">
     <div class="chart-wrap" style="flex:1">
       <h3>Vuosittainen kulutus &amp; tavoite</h3>
-      <canvas id="chart-annual" height="200"></canvas>
+      <div class="chart-fixed" style="height:210px"><canvas id="chart-annual"></canvas></div>
+    </div>
+    <div class="chart-wrap" style="flex:1">
+      <h3>Kulutus kategorioittain (MWh)</h3>
+      <div class="chart-fixed" id="chart-cats-wrap" style="height:210px"><canvas id="chart-cats"></canvas></div>
     </div>
   </div>
 
@@ -729,10 +770,10 @@
 <!-- ══ Tab 5: Raportit ══ -->
 <div class="tab-content" id="tab-raportit">
 
-  <!-- Tägi-raportti -->
+  <!-- Kategoriaraportti -->
   <div class="report-card">
-    <h3>🏷️ Tägiraportti – kulutus käyttökohteittain</h3>
-    <p>Energiankulutus jaoteltuna tägien (käyttökohteiden / prosessien) mukaan. Tägitykset syötetään <em>Lisää kulutusdata</em> -lomakkeella.</p>
+    <h3>📁 Kategoriaraportti – kulutus käyttökohteittain</h3>
+    <p>Energiankulutus jaoteltuna kategorioiden (käyttökohteiden / prosessien) mukaan. Kategoriat syötetään <em>Lisää kulutusdata</em> -lomakkeella.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
       <select id="tag-report-year" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none" onchange="renderTagReport()">
         <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
@@ -794,11 +835,11 @@
     </table>
   </div>
 
-  <div class="section-title" style="margin-top:28px">Tägit</div>
+  <div class="section-title" style="margin-top:28px">Kategoriat</div>
   <div id="admin-tags-wrap" style="margin-bottom:24px">
     <div class="table-wrap" style="margin-bottom:10px">
       <table>
-        <thead><tr><th>Tägi</th><th>Yritys</th><th>Kuvaus</th><th>Luotu</th></tr></thead>
+        <thead><tr><th>Kategoria</th><th>Yritys</th><th>Kuvaus</th><th>Luotu</th></tr></thead>
         <tbody id="tbody-tags"><tr><td colspan="4" class="empty">Ladataan…</td></tr></tbody>
       </table>
     </div>
@@ -981,7 +1022,25 @@
       <!-- populated by JS -->
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:8px">
+    <!-- Energy type selection -->
+    <div style="margin-top:16px">
+      <div class="modal-section" style="margin-top:0">Energianlähteet</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Syntyykö yritykselle laskuja näistä energiamuodoista?</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px" id="addco-energy-types">
+        <label class="energy-check-label"><input type="checkbox" class="energy-main-cb" value="electricity" onchange="updateAddcoSubcats()"> ⚡ Sähkö</label>
+        <label class="energy-check-label"><input type="checkbox" class="energy-main-cb" value="heat" onchange="updateAddcoSubcats()"> 🌡️ Kaukolämpö</label>
+        <label class="energy-check-label"><input type="checkbox" class="energy-main-cb" value="gas" onchange="updateAddcoSubcats()"> 🔥 Kaasu</label>
+        <label class="energy-check-label"><input type="checkbox" class="energy-main-cb" value="oil" onchange="updateAddcoSubcats()"> ⛽ Öljy / Diesel / Polttoaineet</label>
+        <label class="energy-check-label"><input type="checkbox" class="energy-main-cb" value="other" onchange="updateAddcoSubcats()"> ♻️ Muu</label>
+      </div>
+      <div id="addco-subcats" style="display:none">
+        <div class="modal-section">Käyttökohteet / kategoriat</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Valitse yrityksen relevantit käyttökohteet:</p>
+        <div id="addco-subcat-list" style="display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn btn-primary" onclick="saveNewCompany()" style="flex:1">Lisää järjestelmään</button>
       <button class="btn btn-secondary" onclick="closeAddCompany()">Peruuta</button>
     </div>
@@ -1012,7 +1071,7 @@
         <thead>
           <tr class="at-head">
             <th class="at-sticky-0" style="min-width:116px;text-align:left">Energialähde</th>
-            <th class="at-sticky-1" style="min-width:150px;text-align:left">Tägi</th>
+            <th class="at-sticky-1" style="min-width:150px;text-align:left">Kategoria</th>
             <th class="at-mo at-total-h">Yht.</th>
             <th class="at-mo">Tam</th><th class="at-mo">Hel</th><th class="at-mo">Maa</th>
             <th class="at-mo">Huh</th><th class="at-mo">Tou</th><th class="at-mo">Kes</th>
@@ -1025,9 +1084,42 @@
       </table>
     </div>
 
+    <!-- Add-row wizard -->
+    <div id="add-row-wizard" class="addrow-wizard" style="display:none;flex-shrink:0">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+        <div>
+          <span class="wiz-label">1. Energialähde</span>
+          <select id="wiz-energy" class="wiz-select">
+            <option value="electricity">⚡ Sähkö</option>
+            <option value="heat">🌡️ Kaukolämpö</option>
+            <option value="gas">🔥 Kaasu</option>
+            <option value="oil">⛽ Öljy / Diesel</option>
+            <option value="other">♻️ Muu energia</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px">
+          <span class="wiz-label">2. Kategoria</span>
+          <input type="text" id="wiz-cat" list="tag-datalist-annual" class="wiz-input" style="width:100%" placeholder="Valitse tai kirjoita uusi…">
+        </div>
+        <div>
+          <span class="wiz-label">3. Syöttötapa</span>
+          <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+            <button id="wiz-btn-monthly" class="wiz-mode-btn active" onclick="setWizMode('monthly')">Kuukausittain</button>
+            <button id="wiz-btn-annual" class="wiz-mode-btn" onclick="setWizMode('annual')">Vuositotal</button>
+          </div>
+        </div>
+        <div id="wiz-annual-wrap" style="display:none">
+          <span class="wiz-label">Vuosikulutus (MWh)</span>
+          <input type="number" id="wiz-annual-val" class="wiz-input" style="width:110px" min="0" step="0.1" placeholder="0">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="commitWizardRow()">Lisää taulukkoon</button>
+        <button onclick="closeAddRowWizard()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;line-height:1;flex-shrink:0">✕</button>
+      </div>
+    </div>
+
     <!-- Footer row -->
     <div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-      <button class="btn btn-secondary btn-sm" onclick="addAnnualRow()">+ Lisää rivi</button>
+      <button class="btn btn-secondary btn-sm" onclick="openAddRowWizard()">+ Lisää rivi</button>
       <div style="display:flex;gap:10px">
         <button class="btn btn-secondary" onclick="closeDataEntry()">Peruuta</button>
         <button class="btn btn-primary" onclick="saveAnnualEntry()">Tallenna kaikki</button>
@@ -1924,8 +2016,40 @@ function renderConsumptionTab() {
         { label:'Tavoite (MWh)',    data:[target,Math.round(target*0.97),Math.round(target*0.94)], type:'line', borderColor:'#FFA726', borderWidth:2, pointBackgroundColor:'#FFA726', fill:false, tension:.3 }
       ]
     },
-    options:{ plugins:{legend:{labels:{color:'#9BAAC5',font:{size:12}}}}, scales:{ x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}}, y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}} }, responsive:true }
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#9BAAC5',font:{size:12}}}}, scales:{ x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}}, y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BAAC5'}} } }
   });
+
+  // Category chart
+  const catsData = getTagReportData(activeYear, [c.id]);
+  if (charts.cats) { charts.cats.destroy(); charts.cats = null; }
+  const catsWrap = document.getElementById('chart-cats-wrap');
+  const catsCanvas = document.getElementById('chart-cats');
+  if (catsWrap && catsCanvas) {
+    if (catsData.length) {
+      const catColors = { electricity:'rgba(66,165,245,.8)', heat:'rgba(255,167,38,.8)', gas:'rgba(171,71,188,.8)', oil:'rgba(239,83,80,.8)', other:'rgba(120,144,156,.75)' };
+      charts.cats = new Chart(catsCanvas, {
+        type:'bar',
+        data:{
+          labels: catsData.map(r => r.tag_name),
+          datasets:[{ label:'MWh', data: catsData.map(r => Math.round(r.months.reduce((s,v)=>s+v,0)*10)/10),
+            backgroundColor: catsData.map(r => catColors[r.energy_type]||'rgba(120,144,156,.75)'), borderRadius:4 }]
+        },
+        options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed.x.toLocaleString('fi-FI')} MWh` } } },
+          scales:{
+            x:{ grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ color:'#9BAAC5', font:{ size:11 }, callback: v => v.toLocaleString('fi-FI') } },
+            y:{ grid:{ color:'rgba(255,255,255,.03)' }, ticks:{ color:'#9BAAC5', font:{ size:11 } } }
+          }
+        }
+      });
+      if (!document.getElementById('chart-cats')) {
+        // recreate canvas if it was replaced
+        const c2 = document.createElement('canvas'); c2.id = 'chart-cats'; catsWrap.innerHTML = ''; catsWrap.appendChild(c2);
+      }
+    } else {
+      catsWrap.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:12px;text-align:center;padding:16px">Lisää kategorioita<br>kulutusdata-lomakkeella</div>';
+    }
+  }
 
   renderForecast();
 }
@@ -2452,7 +2576,7 @@ function renderAnnualTable() {
           </td>
           <td class="at-sticky-1">
             <input type="text" list="tag-datalist-annual" value="${row.tag_name.replace(/"/g,'&quot;')}"
-              oninput="updateAnnualRowField(${row.id},'tag_name',this.value)" placeholder="Tägi…">
+              oninput="updateAnnualRowField(${row.id},'tag_name',this.value)" placeholder="Kategoria…">
           </td>
           <td class="at-total-cell">${rTotal > 0 ? Math.round(rTotal).toLocaleString('fi-FI') : ''}</td>
           ${row.months.map((v,i) =>
@@ -2501,6 +2625,60 @@ function addAnnualRow(type) {
   _annualRows.push({ id: ++_annualRowId, energy_type: defaultType, tag_name: '', months: Array(12).fill(0) });
   if (_annualCollapsed.has(defaultType)) _annualCollapsed.delete(defaultType);
   renderAnnualTable();
+  setTimeout(() => {
+    const tbody = document.getElementById('annual-tbody');
+    const last = tbody && tbody.querySelector(`tr[data-rowid="${_annualRowId}"]`);
+    if (last) last.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }, 60);
+}
+
+// ── Add-row wizard ──────────────────────────────────────────────────────────
+let _wizMode = 'monthly';
+const _SEASONAL_PROFILE = [1.20,1.08,1.02,0.92,0.82,0.74,0.75,0.80,0.90,1.02,1.10,1.22];
+const _SEASONAL_SUM = _SEASONAL_PROFILE.reduce((a,b)=>a+b,0);
+
+function openAddRowWizard() {
+  _wizMode = 'monthly';
+  document.getElementById('wiz-energy').value = 'electricity';
+  document.getElementById('wiz-cat').value = '';
+  const annVal = document.getElementById('wiz-annual-val');
+  if (annVal) annVal.value = '';
+  setWizMode('monthly');
+  document.getElementById('add-row-wizard').style.display = '';
+  document.getElementById('wiz-cat').focus();
+}
+
+function closeAddRowWizard() {
+  document.getElementById('add-row-wizard').style.display = 'none';
+}
+
+function setWizMode(mode) {
+  _wizMode = mode;
+  const isMonthly = mode === 'monthly';
+  const mBtn = document.getElementById('wiz-btn-monthly');
+  const aBtn = document.getElementById('wiz-btn-annual');
+  if (mBtn) { mBtn.classList.toggle('active', isMonthly); }
+  if (aBtn) { aBtn.classList.toggle('active', !isMonthly); }
+  const wrap = document.getElementById('wiz-annual-wrap');
+  if (wrap) wrap.style.display = isMonthly ? 'none' : '';
+}
+
+function commitWizardRow() {
+  const energyType = document.getElementById('wiz-energy').value;
+  const catName    = document.getElementById('wiz-cat').value.trim();
+  let months = Array(12).fill(0);
+
+  if (_wizMode === 'annual') {
+    const total = parseFloat(document.getElementById('wiz-annual-val').value) || 0;
+    if (total > 0) {
+      months = _SEASONAL_PROFILE.map(f => parseFloat((total * f / _SEASONAL_SUM).toFixed(2)));
+    }
+  }
+
+  _annualRows.push({ id: ++_annualRowId, energy_type: energyType, tag_name: catName, months });
+  if (_annualCollapsed.has(energyType)) _annualCollapsed.delete(energyType);
+  renderAnnualTable();
+  closeAddRowWizard();
   setTimeout(() => {
     const tbody = document.getElementById('annual-tbody');
     const last = tbody && tbody.querySelector(`tr[data-rowid="${_annualRowId}"]`);
@@ -3076,12 +3254,45 @@ async function fetchAndFillYTJ(context) {
 // ─── Add company modal ────────────────────────────────────────────────────────
 let _addCoTab = 'ytj';
 
+const ENERGY_SUBCATS = {
+  electricity: ['Toimitila','Varastotila','Tuotantolinja','Toimistot','Valaistus','Palvelimet / IT','Sulattamo','Hitsauslaitteet'],
+  heat:        ['Tilojen lämmitys','Prosessilämpö','Käyttövesi','Varasto','Tuotantotilat'],
+  gas:         ['Prosessit','Hitsauskaasut','Lämmityskaasu','Tuotanto'],
+  oil:         ['Työsuhdeajoneuvot','Yrityksen ajoneuvot','Maansiirtokoneet','Kuorma-autot','Lämmitysöljy'],
+  other:       ['Aurinkopaneelit','Biomassa','Muu uusiutuva'],
+};
+
+const ENERGY_ICONS = { electricity:'⚡', heat:'🌡️', gas:'🔥', oil:'⛽', other:'♻️' };
+const ENERGY_LABELS_UI = { electricity:'Sähkö', heat:'Kaukolämpö', gas:'Kaasu', oil:'Öljy / Polttoaineet', other:'Muu' };
+
+function updateAddcoSubcats() {
+  const checked = [...document.querySelectorAll('.energy-main-cb:checked')].map(cb => cb.value);
+  const wrap = document.getElementById('addco-subcats');
+  const list = document.getElementById('addco-subcat-list');
+  if (!checked.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  list.innerHTML = checked.map(type => {
+    const cats = ENERGY_SUBCATS[type] || [];
+    return `<div>
+      <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${ENERGY_ICONS[type]} ${ENERGY_LABELS_UI[type]}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${cats.map(cat => `<label class="subcat-check-label">
+          <input type="checkbox" class="subcat-cb" data-type="${type}" value="${cat}" checked> ${cat}
+        </label>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function openAddCompany() {
   _addCoTab = 'ytj';
   document.getElementById('addco-ytj-input').value = '';
   document.getElementById('addco-ytj-status').textContent = '';
   hideYtjDropdown('addco');
   buildCompanyForm('addco-fields', {}, false);
+  // Reset energy type selections
+  document.querySelectorAll('.energy-main-cb').forEach(cb => { cb.checked = false; });
+  document.getElementById('addco-subcats').style.display = 'none';
   switchAddCoTab('ytj');
   document.getElementById('addco-modal').style.display = 'flex';
 }
@@ -3127,6 +3338,12 @@ function saveNewCompany() {
     });
   }
 
+  // Collect selected subcategories for pre-population
+  const subcatRows = [];
+  document.querySelectorAll('.subcat-cb:checked').forEach(cb => {
+    subcatRows.push({ energy_type: cb.dataset.type, tag_name: cb.value });
+  });
+
   // Refresh selector and compliance table
   const sel = document.getElementById('company-selector');
   sel.innerHTML = '<option value="">Kaikki yritykset</option>';
@@ -3134,6 +3351,20 @@ function saveNewCompany() {
   renderComplianceTab(); updateSummaryBar(); renderKpiSummary(); renderSavingsWidget();
   closeAddCompany();
   showToast('Yritys lisätty: ' + newCo.name);
+
+  // If energy categories were selected, open data entry pre-filled
+  if (subcatRows.length > 0) {
+    sel.value = newCo.id;
+    selectCompany(newCo.id);
+    setTimeout(() => {
+      openDataEntry();
+      subcatRows.forEach(r => {
+        _annualRows.push({ id: ++_annualRowId, energy_type: r.energy_type, tag_name: r.tag_name, months: Array(12).fill(0) });
+      });
+      renderAnnualTable();
+      showToast('Täytä kulutusluvut avautuneeseen taulukkoon.');
+    }, 200);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -3463,26 +3694,30 @@ function renderTagReport() {
   const el    = document.getElementById('tag-report-content');
 
   if (!rows.length) {
-    el.innerHTML = '<p style="color:var(--text2);font-size:13px;padding:12px 0">Ei tägityksiä tälle vuodelle. Lisää tägityksiä kulutusdata-lomakkeella.</p>';
+    el.innerHTML = '<p style="color:var(--text2);font-size:13px;padding:12px 0">Ei kategorioita tälle vuodelle. Lisää kategorioita kulutusdata-lomakkeella.</p>';
     return;
   }
 
   const totalRow = Array(12).fill(0);
   rows.forEach(r => r.months.forEach((v,i) => totalRow[i] += v));
+  const grandTotal = totalRow.reduce((a,b)=>a+b,0);
 
   const html = `
     <table class="tag-report-table" style="width:100%;border-collapse:collapse;font-size:12px">
       <thead>
         <tr style="background:var(--bg3);border-bottom:1px solid var(--border)">
-          <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--text2)">Tägi</th>
+          <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--text2)">Kategoria</th>
           <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--text2)">Energialähde</th>
           ${MONTH_ABBR.map(m=>`<th style="padding:8px 6px;text-align:right;font-size:11px;color:var(--text2)">${m}</th>`).join('')}
           <th style="padding:8px 10px;text-align:right;font-size:11px;color:var(--text2)">Yhteensä</th>
+          <th style="padding:8px 8px;text-align:right;font-size:11px;color:var(--text2)">Osuus</th>
         </tr>
       </thead>
       <tbody>
         ${rows.map(r => {
           const tot = r.months.reduce((a,b)=>a+b,0);
+          const pct = grandTotal > 0 ? (tot/grandTotal*100).toFixed(1) : '0.0';
+          const barW = grandTotal > 0 ? Math.round(tot/grandTotal*60) : 0;
           return `<tr style="border-bottom:1px solid var(--border)">
             <td style="padding:7px 10px">
               <span class="tag-pill"><span class="tag-dot" style="background:${r.tag_color}"></span>${r.tag_name}</span>
@@ -3490,12 +3725,21 @@ function renderTagReport() {
             <td style="padding:7px 10px;color:var(--text2)">${ENERGY_LABELS[r.energy_type]||r.energy_type}</td>
             ${r.months.map(v=>`<td style="padding:7px 6px;text-align:right;color:var(--text2)">${v>0?v.toLocaleString('fi-FI'):''}</td>`).join('')}
             <td style="padding:7px 10px;text-align:right;font-weight:700;color:var(--accent)">${Math.round(tot).toLocaleString('fi-FI')}</td>
+            <td style="padding:7px 8px;white-space:nowrap;min-width:80px">
+              <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+                <div style="width:60px;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0">
+                  <div style="width:${barW}px;height:6px;background:var(--accent);border-radius:3px"></div>
+                </div>
+                <span style="font-size:11px;color:var(--text2);width:38px;text-align:right">${pct}%</span>
+              </div>
+            </td>
           </tr>`;
         }).join('')}
         <tr style="background:var(--bg3);border-top:2px solid var(--border)">
-          <td colspan="2" style="padding:8px 10px;font-weight:700">Kaikki tägit yhteensä</td>
+          <td colspan="2" style="padding:8px 10px;font-weight:700">Kaikki kategoriat yhteensä</td>
           ${totalRow.map(v=>`<td style="padding:8px 6px;text-align:right;font-weight:700;color:var(--accent)">${v>0?Math.round(v).toLocaleString('fi-FI'):''}</td>`).join('')}
-          <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--accent)">${Math.round(totalRow.reduce((a,b)=>a+b,0)).toLocaleString('fi-FI')}</td>
+          <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--accent)">${Math.round(grandTotal).toLocaleString('fi-FI')}</td>
+          <td style="padding:8px 8px;text-align:right;font-weight:700;color:var(--accent)">100%</td>
         </tr>
       </tbody>
     </table>`;
@@ -3507,19 +3751,19 @@ function exportTagReport() {
   const vis   = getVisibleCompanies();
   const cIds  = vis.map(c => c.id);
   const rows  = getTagReportData(year, cIds);
-  const header = ['Tägi','Energialähde',...MONTH_ABBR,'Yhteensä (MWh)'];
+  const header = ['Kategoria','Energialähde',...MONTH_ABBR,'Yhteensä (MWh)','Osuus (%)'];
+  const grandTot = rows.reduce((s,r)=>s+r.months.reduce((a,b)=>a+b,0),0);
   const data   = rows.map(r => {
     const tot = r.months.reduce((a,b)=>a+b,0);
-    return [r.tag_name, ENERGY_LABELS[r.energy_type]||r.energy_type, ...r.months, Math.round(tot)];
+    return [r.tag_name, ENERGY_LABELS[r.energy_type]||r.energy_type, ...r.months, Math.round(tot), grandTot>0?(tot/grandTot*100).toFixed(1):'0.0'];
   });
-  // Add summary section below
   csvDownload(
-    [['Tägiraportti ' + year], [], header, ...data,
-     [], ['KULUTUS YHTEENSÄ (kaikki tägit)'],
+    [['Kategoriaraportti ' + year], [], header, ...data,
+     [], ['KULUTUS YHTEENSÄ (kaikki kategoriat)'],
      ['','',...MONTH_ABBR.map((_,i)=>Math.round(rows.reduce((s,r)=>s+r.months[i],0))),
-       Math.round(rows.reduce((s,r)=>s+r.months.reduce((a,b)=>a+b,0),0))]
+       Math.round(grandTot), '100.0']
     ],
-    `tagiraportti_${year}.csv`
+    `kategoriaraportti_${year}.csv`
   );
 }
 
