@@ -655,6 +655,9 @@
     <div class="year-btns" id="year-btns"></div>
     <button class="btn btn-secondary btn-sm" onclick="openDataEntry()">+ Lisää kulutusdata</button>
     <button class="btn btn-secondary btn-sm" onclick="openImportModal()" style="border-color:var(--accent);color:var(--accent)">↑ Tuo data</button>
+    <button class="btn btn-secondary btn-sm" id="spara-link-btn" onclick="openSparaModal()" style="border-color:#4CAF50;color:#4CAF50;margin-left:auto">
+      <svg width="13" height="13" viewBox="0 0 32 32" fill="none" style="vertical-align:middle;margin-right:4px"><rect width="32" height="32" rx="7" fill="#4CAF50"/><path d="M19 4L10 19h6.5L14 28l9-15h-6.5z" fill="white"/></svg>Spara-yhteys
+    </button>
   </div>
 
   <div class="threshold-wrap" id="threshold-meter">
@@ -983,6 +986,49 @@
       <button class="btn btn-secondary" onclick="closeCreateUserModal()">Peruuta</button>
     </div>
     <p style="font-size:11px;color:var(--text2);margin-top:14px;line-height:1.6">Käyttäjälle lähetetään sähköposti kirjautumislinkin kanssa. Kirjauduttaessa salasana tulee vaihtaa.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- Spara integration modal -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="spara-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:min(560px,95vw);max-height:88vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#4CAF50"/><path d="M19 4L10 19h6.5L14 28l9-15h-6.5z" fill="white"/></svg>
+        <h2 style="font-size:16px">Spara-integraatio</h2>
+      </div>
+      <button onclick="closeSparaModal()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div id="spara-company-label" style="font-size:12px;color:var(--text2);margin-bottom:16px;padding-left:32px"></div>
+
+    <!-- Connection status -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px">
+      <span id="spara-dot" style="width:10px;height:10px;border-radius:50%;background:var(--text2);flex-shrink:0;margin-top:3px;transition:background .3s"></span>
+      <div>
+        <div id="spara-status-text" style="font-size:13px;font-weight:600">Ei yhdistetty</div>
+        <div id="spara-status-detail" style="font-size:12px;color:var(--text2);margin-top:2px">Lisää Spara-tunniste käyttöpaikalle aktivoidaksesi automaattisen tiedonhaun.</div>
+      </div>
+    </div>
+
+    <!-- Sites list -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600">Käyttöpaikat</div>
+      <button class="btn btn-secondary btn-sm" onclick="addSparaSite()">+ Lisää käyttöpaikka</button>
+    </div>
+    <div id="spara-sites-list" style="margin-bottom:18px"></div>
+
+    <!-- Fetch data -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">Hae kulutustiedot suoraan Spara-järjestelmästä käyttöpaikkojen tunnisteiden avulla. Tiedot tuodaan automaattisesti Kulutus-välilehteen.</div>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="fetchSparaData()">
+          <svg width="13" height="13" viewBox="0 0 32 32" fill="none" style="vertical-align:middle;margin-right:5px"><rect width="32" height="32" rx="7" fill="#fff" fill-opacity=".25"/><path d="M19 4L10 19h6.5L14 28l9-15h-6.5z" fill="white"/></svg>Hae kulutustiedot Sparasta
+        </button>
+        <span id="spara-fetch-status" style="font-size:12px"></span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2972,9 +3018,12 @@ function buildCompanyForm(containerId, data, readonly) {
       input = `<textarea id="${f.id}" rows="3" ${readonly||f.readonly?'readonly':''}>${String(data[f.id]||'')}</textarea>`;
     } else if (f.id === 'cf_email' && isAddco && !readonly) {
       const val = String(data[f.id]||'').replace(/"/g,'&quot;');
+      const createBtn = currentProfile?.role === 'spara_admin'
+        ? `<button type="button" class="btn btn-secondary btn-sm" onclick="openCreateUserModal()" style="white-space:nowrap;flex-shrink:0">+ Luo käyttäjä</button>`
+        : '';
       input = `<div style="display:flex;gap:6px;align-items:center">
         <input type="text" id="${f.id}" value="${val}" style="flex:1;min-width:0;width:auto">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="openCreateUserModal()" style="white-space:nowrap;flex-shrink:0">+ Luo käyttäjä</button>
+        ${createBtn}
       </div>`;
     } else {
       input = `<input type="text" id="${f.id}" value="${String(data[f.id]||'').replace(/"/g,'&quot;')}" ${readonly||f.readonly?'readonly':''}>`;
@@ -4024,6 +4073,149 @@ async function changePassword() {
     document.getElementById('set-pass-new').value = '';
     document.getElementById('set-pass-confirm').value = '';
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Spara integration modal
+// ═══════════════════════════════════════════════════════════════════════════
+let _sparaSites = [];
+
+function openSparaModal() {
+  if (!activeCompanyId) { showToast('Valitse ensin yritys yläkulman valitsimesta.'); return; }
+  const c = companies.find(x => x.id === activeCompanyId);
+  document.getElementById('spara-company-label').textContent = c ? c.name : '';
+  document.getElementById('spara-fetch-status').textContent = '';
+  loadSparaSites(activeCompanyId);
+  document.getElementById('spara-modal').style.display = 'flex';
+}
+
+function closeSparaModal() {
+  document.getElementById('spara-modal').style.display = 'none';
+}
+
+async function loadSparaSites(companyId) {
+  if (DEMO_MODE) {
+    _sparaSites = [
+      { id:'demo-s1', name:'Pääkonttori',  address:'Esimerkkitie 1, Helsinki',  spara_usage_point_id:'FI100007365542000000000000000124', company_id:companyId },
+      { id:'demo-s2', name:'Varasto A',    address:'Teollisuustie 5, Vantaa',   spara_usage_point_id:'',                                  company_id:companyId },
+    ];
+  } else {
+    const { data, error } = await db.from('etj_sites').select('*').eq('company_id', companyId).order('name');
+    if (error) { showToast('Käyttöpaikkojen lataus epäonnistui: ' + error.message); return; }
+    _sparaSites = data || [];
+  }
+  renderSparaSitesList();
+  updateSparaConnectionStatus();
+}
+
+function updateSparaConnectionStatus() {
+  const linked = _sparaSites.filter(s => s.spara_usage_point_id);
+  const dot    = document.getElementById('spara-dot');
+  const text   = document.getElementById('spara-status-text');
+  const detail = document.getElementById('spara-status-detail');
+  if (linked.length > 0) {
+    dot.style.background = 'var(--green)';
+    text.textContent = 'Yhdistetty – ' + linked.length + ' käyttöpaikka' + (linked.length > 1 ? 'a' : '') + ' linkitetty';
+    detail.textContent  = 'Spara-tunnisteet asetettu. Voit hakea kulutustiedot alla.';
+  } else {
+    dot.style.background = 'var(--text2)';
+    text.textContent = 'Ei yhdistetty';
+    detail.textContent  = 'Lisää Spara-tunniste käyttöpaikalle aktivoidaksesi automaattisen tiedonhaun.';
+  }
+}
+
+function renderSparaSitesList() {
+  const list = document.getElementById('spara-sites-list');
+  if (_sparaSites.length === 0) {
+    list.innerHTML = '<p style="font-size:13px;color:var(--text2);text-align:center;padding:16px 0">Ei käyttöpaikkoja. Lisää käyttöpaikka yllä.</p>';
+    return;
+  }
+  list.innerHTML = _sparaSites.map((s, i) => `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px">
+        <div style="flex:1;min-width:0">
+          <input type="text" value="${s.name.replace(/"/g,'&quot;')}" placeholder="Käyttöpaikan nimi"
+            style="font-weight:600;font-size:13px;background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:2px 0;width:100%;color:var(--text)"
+            onblur="updateSparaSiteField(${i},'name',this.value)">
+          <input type="text" value="${(s.address||'').replace(/"/g,'&quot;')}" placeholder="Osoite (valinnainen)"
+            style="font-size:12px;color:var(--text2);background:transparent;border:none;border-bottom:1px solid transparent;border-radius:0;padding:2px 0;width:100%;margin-top:2px"
+            onblur="updateSparaSiteField(${i},'address',this.value)">
+        </div>
+        <button onclick="removeSparaSite(${i})" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:16px;padding:2px;flex-shrink:0" title="Poista käyttöpaikka">✕</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:11px;color:var(--text2);white-space:nowrap;flex-shrink:0">Spara-tunniste:</span>
+        <input type="text" value="${s.spara_usage_point_id||''}"
+          placeholder="FI100007365542000000000000000124"
+          style="flex:1;font-size:12px;font-family:monospace;min-width:0"
+          oninput="_sparaSites[${i}].spara_usage_point_id=this.value;updateSparaConnectionStatus()"
+          onblur="saveSparaSiteId('${s.id}',this.value)">
+        <span style="font-size:14px" title="${s.spara_usage_point_id?'Tunniste asetettu':'Ei tunnistetta'}">${s.spara_usage_point_id?'🟢':'⚪'}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function updateSparaSiteField(idx, field, value) {
+  const site = _sparaSites[idx];
+  if (!site) return;
+  site[field] = value;
+  if (!DEMO_MODE && !site.id.startsWith('new-')) {
+    const { error } = await db.from('etj_sites').update({ [field]: value }).eq('id', site.id);
+    if (error) showToast('Tallennus epäonnistui: ' + error.message);
+  }
+}
+
+function addSparaSite() {
+  const newSite = { id:'new-'+Date.now(), name:'Uusi käyttöpaikka', address:'', spara_usage_point_id:'', company_id:activeCompanyId };
+  _sparaSites.push(newSite);
+  renderSparaSitesList();
+  updateSparaConnectionStatus();
+  if (!DEMO_MODE) {
+    db.from('etj_sites').insert({ company_id:activeCompanyId, name:newSite.name })
+      .select().single()
+      .then(({ data, error }) => { if (!error && data?.id) newSite.id = data.id; });
+  }
+}
+
+async function removeSparaSite(idx) {
+  const site = _sparaSites[idx];
+  if (!site) return;
+  if (!confirm('Poistetaanko käyttöpaikka "' + site.name + '"?')) return;
+  if (!DEMO_MODE && !site.id.startsWith('new-')) {
+    await db.from('etj_sites').delete().eq('id', site.id);
+  }
+  _sparaSites.splice(idx, 1);
+  renderSparaSitesList();
+  updateSparaConnectionStatus();
+}
+
+async function saveSparaSiteId(siteId, usagePointId) {
+  if (DEMO_MODE || siteId.startsWith('new-')) return;
+  const { error } = await db.from('etj_sites')
+    .update({ spara_usage_point_id: usagePointId || null })
+    .eq('id', siteId);
+  if (error) showToast('Tunnisteen tallennus epäonnistui: ' + error.message);
+}
+
+async function fetchSparaData() {
+  const st = document.getElementById('spara-fetch-status');
+  const linked = _sparaSites.filter(s => s.spara_usage_point_id);
+  if (linked.length === 0) {
+    st.style.color = 'var(--red)';
+    st.textContent = 'Lisää ensin Spara-tunniste vähintään yhdelle käyttöpaikalle.';
+    return;
+  }
+  st.style.color = 'var(--text2)'; st.textContent = 'Haetaan…';
+  if (DEMO_MODE) {
+    await new Promise(r => setTimeout(r, 1400));
+    st.style.color = 'var(--accent)';
+    st.textContent = '✓ Demo: ' + linked.length + ' käyttöpaikan kulutustiedot haettu (12 kk). Päivitetään Kulutus-välilehteä…';
+    return;
+  }
+  // Real: call Spara API endpoint via Supabase Edge Function
+  st.style.color = 'var(--orange)';
+  st.textContent = 'Spara API -yhteys aktivoituu kun SPARA_API_KEY on konfiguroitu Edge Functionissa.';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
