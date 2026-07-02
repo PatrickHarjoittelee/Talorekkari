@@ -2227,6 +2227,21 @@ function renderKanban(actions) {
       </div>
       ${colCards.length ? colCards.map(a => {
         const hasSug = !!DEMO_ACTION_SUGGESTIONS[a.id];
+        const _nextSt = { open:'in_progress', in_progress:'completed' };
+        const _nextLbl = { open:'Käynnissä', in_progress:'Valmis' };
+        const nextKey = _nextSt[a.status];
+        const advBtn = nextKey
+          ? `<button onclick="event.stopPropagation();updateActionStatus('${a.id}','${nextKey}')"
+              title="Etene: ${_nextLbl[a.status]}"
+              style="display:block;width:100%;margin-top:8px;padding:4px 8px;font-size:11px;font-family:inherit;
+                cursor:pointer;border:1px solid var(--border);border-radius:4px;
+                background:var(--bg4,var(--bg3));color:var(--text2);text-align:center;
+                transition:border-color .15s,color .15s"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
+              → ${_nextLbl[a.status]}
+            </button>`
+          : '';
         return `<div class="kb-card" onclick="openActionModal('${a.id}')">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px">
             <div class="kb-card-title">${_ACT_ICONS[a.category]||'⚡'} ${escHtml(a.title)}</div>
@@ -2243,6 +2258,7 @@ function renderKanban(actions) {
           </div>
           ${hasSug ? `<div class="kb-card-ai">✦ AI-ratkaisu saatavilla</div>` : ''}
           ${a.due_date ? `<div style="font-size:10px;color:var(--text2);margin-top:4px">Eräpäivä: ${a.due_date}</div>` : ''}
+          ${advBtn}
         </div>`;
       }).join('') : `<div class="kb-empty">Ei toimenpiteitä</div>`}
     </div>`;
@@ -2261,7 +2277,14 @@ function renderActionList(actions) {
       <td>${a.estimated_savings_eur ? a.estimated_savings_eur.toLocaleString('fi-FI') + ' €' : '–'}</td>
       <td>${a.investment_eur ? a.investment_eur.toLocaleString('fi-FI') + ' €' : '–'}</td>
       <td>${a.payback_years ? a.payback_years + ' v' : '–'}</td>
-      <td><span class="badge badge-${a.status}">${STATUS_FI[a.status]||a.status}</span></td>
+      <td>
+        <select onchange="updateActionStatus('${a.id}',this.value);this.blur()"
+          onclick="event.stopPropagation()"
+          style="background:transparent;border:1px solid var(--border);color:var(--text);
+            padding:3px 6px;border-radius:4px;font-size:12px;font-family:inherit;cursor:pointer;outline:none">
+          ${['open','in_progress','completed'].map(s=>`<option value="${s}"${a.status===s?' selected':''}>${STATUS_FI[s]}</option>`).join('')}
+        </select>
+      </td>
       <td style="color:var(--text2)">${a.due_date || '–'}</td>
     </tr>`).join('') || '<tr><td colspan="9" class="empty">Ei toimenpiteitä.</td></tr>';
 }
@@ -2283,6 +2306,19 @@ function openActionModal(id) {
     impact                  ? { label:'Osuus kulutuksesta', val:impact+' %', accent:true } : null,
   ].filter(Boolean);
 
+  const STATUS_SEG_COLOR = { open:'#ffb74d', in_progress:'#64b5f6', completed:'var(--accent)' };
+  const STATUS_SEG_BG    = { open:'rgba(255,183,77,.15)', in_progress:'rgba(100,181,246,.15)', completed:'rgba(76,175,80,.15)' };
+  const statusBtns = ['open','in_progress','completed'].map((s, i) => {
+    const active = a.status === s;
+    return `<button onclick="updateActionStatus('${a.id}','${s}')"
+      style="flex:1;padding:8px 6px;font-size:12px;font-family:inherit;cursor:pointer;
+        border:none;${i < 2 ? 'border-right:1px solid var(--border);' : ''}
+        background:${active ? STATUS_SEG_BG[s] : 'transparent'};
+        color:${active ? STATUS_SEG_COLOR[s] : 'var(--text2)'};
+        font-weight:${active ? '700' : '400'};transition:background .15s,color .15s"
+    >${STATUS_FI[s]}</button>`;
+  }).join('');
+
   const body = `
     <div style="padding:22px 24px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px">
@@ -2291,17 +2327,24 @@ function openActionModal(id) {
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <span class="badge badge-${a.priority}">${PRIO_FI[a.priority]||a.priority}</span>
             <span class="badge" style="background:var(--bg4,var(--bg3));color:var(--text2);border:1px solid var(--border)">${CAT_LABELS[a.category]||a.category}</span>
-            <span class="badge badge-${a.status}">${STATUS_FI[a.status]||a.status}</span>
           </div>
         </div>
         <button onclick="closeActionModal()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;flex-shrink:0;line-height:1;padding:0">✕</button>
       </div>
 
-      ${(a.responsible_person||a.due_date||a.completed_date) ? `
+      <!-- Status selector -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Status</div>
+        <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+          ${statusBtns}
+        </div>
+        ${a.completed_date ? `<div style="font-size:11px;color:var(--text2);margin-top:6px">✅ Valmistui: ${a.completed_date}</div>` : ''}
+      </div>
+
+      ${(a.responsible_person||a.due_date) ? `
       <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
         ${a.responsible_person ? `<span>👤 ${escHtml(a.responsible_person)}</span>` : ''}
         ${a.due_date ? `<span>📅 Eräpäivä: ${a.due_date}</span>` : ''}
-        ${a.completed_date ? `<span>✅ Valmistui: ${a.completed_date}</span>` : ''}
       </div>` : ''}
 
       <div class="amodal-kpi">
@@ -2341,6 +2384,34 @@ function openActionModal(id) {
 
   document.getElementById('action-modal-body').innerHTML = body;
   document.getElementById('action-modal').style.display = 'flex';
+}
+
+async function updateActionStatus(id, newStatus) {
+  const a = allActions.find(x => x.id === id);
+  if (!a || a.status === newStatus) return;
+
+  const prev = a.status;
+  a.status = newStatus;
+  if (newStatus === 'completed') {
+    a.completed_date = a.completed_date || new Date().toISOString().slice(0, 10);
+  } else {
+    a.completed_date = null;
+  }
+
+  if (!DEMO_MODE) {
+    const { error } = await db.from('etj_actions')
+      .update({ status: newStatus, completed_date: a.completed_date })
+      .eq('id', id);
+    if (error) {
+      a.status = prev; a.completed_date = null;
+      showToast('Tallennus epäonnistui: ' + error.message);
+      return;
+    }
+  }
+
+  filterActions();
+  updateSummaryBar();
+  openActionModal(id);
 }
 
 function closeActionModal() {
