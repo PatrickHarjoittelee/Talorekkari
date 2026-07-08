@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="fi" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spara ETJ-testi – Selvitä energiatehokkuusvelvoitteesi</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #080F1C;
+  --surface:   #0E1B2F;
+  --surface2:  #122237;
+  --surface3:  #16293F;
+  --border:    #1C3554;
+  --border2:   #234068;
+  --accent:    #2CE879;
+  --accent-d:  #1CB85A;
+  --accent-bg: rgba(44,232,121,.07);
+  --warn:      #F5A623;
+  --warn-bg:   rgba(245,166,35,.08);
+  --danger:    #E5484D;
+  --danger-bg: rgba(229,72,77,.08);
+  --ok-bg:     rgba(44,232,121,.07);
+  --text:      #E8F3FF;
+  --text2:     #5B8BAC;
+  --text3:     #34567A;
+  --radius:    10px;
+  --radius-lg: 16px;
+}
+
+html { font-size: 16px; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(44,232,121,.06) 1px, transparent 0);
+  background-size: 28px 28px;
+}
+
+/* ── HEADER ─────────────────────────────────── */
+header {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(8,15,28,.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex; align-items: center; gap: 14px;
+}
+
+.logo {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.logo svg { display: block; }
+
+.header-text { flex: 1; }
+.header-brand { font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text); }
+.header-sub   { font-size: 11px; color: var(--text2); }
+
+.back-link {
+  font-size: 12px; color: var(--text2); text-decoration: none;
+  padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+}
+.back-link:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── MAIN ────────────────────────────────────── */
+main {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+/* ── INTRO ───────────────────────────────────── */
+.intro {
+  text-align: center;
+  margin-bottom: 44px;
+}
+.intro-eyebrow {
+  display: inline-block;
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid rgba(44,232,121,.2);
+  border-radius: 100px;
+  padding: 4px 12px;
+  margin-bottom: 14px;
+}
+.intro h1 {
+  font-size: clamp(24px,5vw,34px);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.15;
+  text-wrap: balance;
+  margin-bottom: 12px;
+}
+.intro h1 span { color: var(--accent); }
+.intro p {
+  font-size: 15px; color: var(--text2); line-height: 1.6;
+  max-width: 460px; margin: 0 auto;
+  text-wrap: balance;
+}
+
+/* ── PROGRESS ────────────────────────────────── */
+.progress-section { margin-bottom: 32px; }
+
+.progress-track {
+  display: flex; align-items: center;
+  margin-bottom: 12px;
+}
+.p-node {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 2px solid var(--border2);
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 700;
+  color: var(--text3);
+  flex-shrink: 0;
+  transition: all .35s;
+  position: relative;
+}
+.p-node.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(44,232,121,.12);
+}
+.p-node.done {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+}
+.p-node.done::after {
+  content: '';
+  position: absolute;
+  width: 10px; height: 6px;
+  border-left: 2px solid #000;
+  border-bottom: 2px solid #000;
+  transform: rotate(-45deg) translate(1px,-1px);
+}
+.p-line {
+  flex: 1; height: 2px;
+  background: var(--border);
+  margin: 0 4px;
+  transition: background .35s;
+  position: relative;
+  overflow: hidden;
+}
+.p-line::after {
+  content: '';
+  position: absolute;
+  left: -100%; top: 0;
+  width: 100%; height: 100%;
+  background: var(--accent);
+  transition: left .5s ease;
+}
+.p-line.done::after { left: 0; }
+
+.progress-meta {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--text3);
+}
+.progress-step-name { color: var(--accent); font-weight: 600; }
+
+/* ── CARD ────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  animation: slideIn .28s cubic-bezier(.22,.68,0,1.1);
+}
+.card.back { animation: slideInBack .28s cubic-bezier(.22,.68,0,1.1); }
+
+@keyframes slideIn     { from { opacity:0; transform:translateX(22px) } to { opacity:1; transform:none } }
+@keyframes slideInBack { from { opacity:0; transform:translateX(-22px) } to { opacity:1; transform:none } }
+
+.card-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text2);
+  margin-bottom: 6px;
+}
+.card h2 {
+  font-size: 20px; font-weight: 800; letter-spacing: -.015em;
+  margin-bottom: 6px;
+  text-wrap: balance;
+}
+.card-desc {
+  font-size: 13px; color: var(--text2); line-height: 1.55;
+  margin-bottom: 28px;
+}
+
+/* ── FORM ────────────────────────────────────── */
+.field { margin-bottom: 20px; }
+.field label {
+  display: block; font-size: 12px; font-weight: 700;
+  letter-spacing: .02em; text-transform: uppercase;
+  color: var(--text2); margin-bottom: 8px;
+}
+.req { color: var(--accent); }
+
+input[type="text"], input[type="email"], input[type="tel"], select {
+  width: 100%; padding: 11px 14px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius); color: var(--text);
+  font-size: 14px; font-family: inherit; outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  -webkit-appearance: none;
+}
+input::placeholder { color: var(--text3); }
+input:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(44,232,121,.12);
+}
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235B8BAC' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; cursor: pointer; }
+
+/* ── RADIO OPTIONS ───────────────────────────── */
+.opt-group { display: flex; flex-direction: column; gap: 8px; }
+
+.opt {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 16px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: var(--radius); cursor: pointer;
+  transition: border-color .2s, background .2s;
+  user-select: none;
+}
+.opt:hover { border-color: var(--border2); }
+.opt.sel  { border-color: var(--accent); background: var(--accent-bg); }
+
+.opt-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--border2);
+  flex-shrink: 0; position: relative;
+  transition: all .2s;
+}
+.opt.sel .opt-dot {
+  border-color: var(--accent); background: var(--accent);
+}
+.opt.sel .opt-dot::after {
+  content: '';
+  position: absolute;
+  width: 6px; height: 6px; border-radius: 50%; background: #000;
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+}
+.opt-check {
+  width: 18px; height: 18px; border-radius: 4px;
+  border: 2px solid var(--border2);
+  flex-shrink: 0; display: grid; place-items: center;
+  transition: all .2s; font-size: 11px; color: #000;
+}
+.opt.sel .opt-check { border-color: var(--accent); background: var(--accent); }
+
+.opt-text { flex: 1; min-width: 0; }
+.opt-label { font-size: 14px; font-weight: 500; line-height: 1.3; }
+.opt-sub   { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+/* ── ERRORS ──────────────────────────────────── */
+.err-msg {
+  display: none; color: var(--danger);
+  font-size: 12px; font-weight: 600;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--danger-bg);
+  border: 1px solid rgba(229,72,77,.2);
+  border-radius: 6px;
+}
+
+/* ── BUTTONS ─────────────────────────────────── */
+.btn-row { display: flex; gap: 10px; margin-top: 28px; }
+.btn {
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  border: none; border-radius: var(--radius);
+  padding: 12px 22px; cursor: pointer;
+  transition: all .2s; outline: none;
+}
+.btn:focus-visible { box-shadow: 0 0 0 3px rgba(44,232,121,.35); }
+.btn-primary {
+  background: var(--accent); color: #000; flex: 1;
+}
+.btn-primary:hover { background: #3fff8a; }
+.btn-secondary {
+  background: var(--surface2); color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.btn-secondary:hover { color: var(--text); border-color: var(--text2); }
+
+/* ── RESULT ──────────────────────────────────── */
+.result-card {
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  border: 1px solid;
+  animation: slideIn .35s cubic-bezier(.22,.68,0,1.1);
+}
+.result-card.ok     { background: rgba(44,232,121,.05);  border-color: rgba(44,232,121,.25);  border-left: 4px solid var(--accent); }
+.result-card.warn   { background: rgba(245,166,35,.05);  border-color: rgba(245,166,35,.25);  border-left: 4px solid var(--warn);   }
+.result-card.danger { background: rgba(229,72,77,.05);   border-color: rgba(229,72,77,.25);   border-left: 4px solid var(--danger); }
+
+.result-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 14px; border-radius: 100px;
+  font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.result-badge.ok     { background: rgba(44,232,121,.15); color: var(--accent); }
+.result-badge.warn   { background: rgba(245,166,35,.15); color: var(--warn);   }
+.result-badge.danger { background: rgba(229,72,77,.15);  color: var(--danger); }
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.result-card h2 {
+  font-size: 22px; font-weight: 800; letter-spacing: -.015em;
+  margin-bottom: 8px; text-wrap: balance;
+}
+.result-sub {
+  font-size: 14px; color: var(--text2); line-height: 1.6;
+  margin-bottom: 24px; text-wrap: balance;
+}
+
+.action-list { list-style: none; margin-bottom: 24px; }
+.action-list li {
+  display: flex; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px; line-height: 1.4;
+}
+.action-list li:last-child { border-bottom: none; }
+.action-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+.result-summary {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  font-size: 12px; color: var(--text2); line-height: 1.6;
+  margin-bottom: 24px;
+}
+.result-summary strong { color: var(--text); }
+
+.cta-stack { display: flex; flex-direction: column; gap: 8px; }
+
+.btn-cta {
+  display: block; width: 100%;
+  padding: 13px 20px; border-radius: var(--radius);
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  text-align: center; text-decoration: none; cursor: pointer;
+  border: none; outline: none; transition: all .2s;
+}
+.btn-cta:focus-visible { box-shadow: 0 0 0 3px rgba(44,232,121,.35); }
+.btn-cta-ok     { background: var(--accent); color: #000; }
+.btn-cta-ok:hover { background: #3fff8a; }
+.btn-cta-warn   { background: var(--warn);   color: #000; }
+.btn-cta-warn:hover { filter: brightness(1.1); }
+.btn-cta-danger { background: var(--danger);  color: #fff; }
+.btn-cta-danger:hover { filter: brightness(1.1); }
+.btn-cta-outline {
+  background: transparent; color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.btn-cta-outline:hover { color: var(--text); border-color: var(--text2); }
+
+.disclaimer {
+  font-size: 11px; color: var(--text3); line-height: 1.6;
+  text-align: center; margin-top: 16px;
+}
+
+/* ── RESPONSIVE ──────────────────────────────── */
+@media (max-width:480px) {
+  main { padding: 28px 16px 64px; }
+  .card { padding: 24px 20px; }
+  .result-card { padding: 28px 20px; }
+  .intro { margin-bottom: 32px; }
+  .p-node { width: 28px; height: 28px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card, .result-card { animation: none; }
+  * { transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M4 14l4-8 4 4 4-8" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="header-text">
+    <div class="header-brand">Spara ETJ-testi</div>
+    <div class="header-sub">Energiatehokkuuslain velvoitearvio</div>
+  </div>
+  <a href="etj-plus.html" class="back-link">← ETJ+ kirjautuminen</a>
+</header>
+
+<main>
+  <div class="intro">
+    <div class="intro-eyebrow">Maksuton arvio • 5 min</div>
+    <h1>Koskeeko <span>energiatehokkuuslaki</span> yritystäsi?</h1>
+    <p>Selvitä nopeasti onko yrityksesi ETJ-velvoitteen piirissä ja mitä toimenpiteitä laki edellyttää. Saat tuloksen heti.</p>
+  </div>
+
+  <div class="progress-section" id="progressSection">
+    <div class="progress-track" id="progressTrack"></div>
+    <div class="progress-meta">
+      <span id="progressStepName" class="progress-step-name"></span>
+      <span id="progressCounter"></span>
+    </div>
+  </div>
+
+  <div id="formWrap"></div>
+</main>
+
+<script>
+const SUPABASE_URL  = 'https://ggkuodyaddngzskpgvlt.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3VvZHlhZGRuZ3pza3Bndmx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4OTAzMTksImV4cCI6MjA5ODQ2NjMxOX0.Zq_33WUts-Io07HLeHuktACTxKenyuRY--ZHOXZoVlw';
+
+const STEPS = [
+  { id:'company', name:'Yritys' },
+  { id:'size',    name:'Koko' },
+  { id:'energy',  name:'Energia' },
+  { id:'status',  name:'ETJ-tila' },
+  { id:'contact', name:'Yhteystiedot' },
+];
+
+const A = {
+  company_name:'', y_tunnus:'', sector:'', city:'',
+  employees:'', revenue:'', is_group:'',
+  consumption:'', energy_sources:[], consumption_trend:'',
+  has_audit:'', has_ems:'', has_agreement:'', reported_to_ev:'',
+  contact_name:'', contact_email:'', contact_phone:'', contact_title:'',
+  wants_contact:false, wants_newsletter:false,
+};
+
+let step = 0;
+let goingBack = false;
+
+/* ── PROGRESS ──────────────────────────────────── */
+function renderProgress() {
+  const track = document.getElementById('progressTrack');
+  track.innerHTML = STEPS.map((s,i) => {
+    const cls = i < step ? 'done' : i === step ? 'active' : '';
+    const line = i < STEPS.length-1
+      ? `<div class="p-line ${i < step ? 'done' : ''}"></div>` : '';
+    return `<div class="p-node ${cls}">${i<step?'':i+1}</div>${line}`;
+  }).join('');
+  document.getElementById('progressStepName').textContent = STEPS[step].name;
+  document.getElementById('progressCounter').textContent  = `${step+1} / ${STEPS.length}`;
+}
+
+/* ── RADIO / CHECKBOX BUILDERS ─────────────────── */
+function radio(field, options) {
+  return `<div class="opt-group">${options.map(o => `
+    <div class="opt${A[field]===o.v?' sel':''}" onclick="pick('${field}','${o.v}',this)">
+      <div class="opt-dot"></div>
+      <div class="opt-text">
+        <div class="opt-label">${o.l}</div>
+        ${o.s?`<div class="opt-sub">${o.s}</div>`:''}
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function checks(field, options) {
+  return `<div class="opt-group">${options.map(o => `
+    <div class="opt${A[field].includes(o.v)?' sel':''}" onclick="toggle('${field}','${o.v}',this)">
+      <div class="opt-check">${A[field].includes(o.v)?'✓':''}</div>
+      <div class="opt-text"><div class="opt-label">${o.l}</div></div>
+    </div>`).join('')}</div>`;
+}
+
+function pick(field, val, el) {
+  A[field] = val;
+  el.closest('.opt-group').querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function toggle(field, val, el) {
+  const arr = A[field], i = arr.indexOf(val);
+  if (i>=0) { arr.splice(i,1); el.classList.remove('sel'); el.querySelector('.opt-check').textContent=''; }
+  else       { arr.push(val);   el.classList.add('sel');    el.querySelector('.opt-check').textContent='✓'; }
+}
+
+function toggleBool(field, el) {
+  A[field] = !A[field];
+  el.classList.toggle('sel', A[field]);
+  el.querySelector('.opt-check').textContent = A[field]?'✓':'';
+}
+
+/* ── STEP CONTENT ──────────────────────────────── */
+const SECTORS = [
+  ['','Valitse toimiala…'],['teollisuus','Teollisuus ja valmistus'],
+  ['kauppa','Kauppa ja vähittäiskauppa'],['palvelut','Palvelut ja toimistotyö'],
+  ['kiinteisto','Kiinteistö ja rakentaminen'],['logistiikka','Kuljetus ja logistiikka'],
+  ['energia','Energia ja utilities'],['julkinen','Julkinen sektori'],
+  ['hotelli','Hotelli, ravintola ja matkailu'],['terveys','Terveys- ja sosiaalipalvelut'],
+  ['muu','Muu toimiala'],
+];
+
+function buildStep() {
+  const s = STEPS[step].id;
+  const back = step > 0 ? `<button class="btn btn-secondary" onclick="nav(-1)">← Takaisin</button>` : '';
+  const next = s==='contact'
+    ? `<button class="btn btn-primary" onclick="submit()">Näytä tulos →</button>`
+    : `<button class="btn btn-primary" onclick="nav(1)">Seuraava →</button>`;
+
+  const bodies = {
+    company: `
+      <div class="card-eyebrow">Vaihe 1 / 5</div>
+      <h2>Yrityksen perustiedot</h2>
+      <div class="card-desc">Aloitetaan perusasioista. Näitä tietoja käytetään velvoitearvion ja mahdollisen yhteydenoton pohjaksi.</div>
+      <div class="field"><label>Yrityksen nimi <span class="req">*</span></label>
+        <input type="text" id="f_name" value="${esc(A.company_name)}" placeholder="Oy Esimerkki Ab"></div>
+      <div class="field"><label>Y-tunnus</label>
+        <input type="text" id="f_ytunnus" value="${esc(A.y_tunnus)}" placeholder="1234567-8"></div>
+      <div class="field"><label>Toimiala <span class="req">*</span></label>
+        <select id="f_sector">${SECTORS.map(([v,l])=>`<option value="${v}"${A.sector===v?' selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="field"><label>Toimipaikka / kaupunki <span class="req">*</span></label>
+        <input type="text" id="f_city" value="${esc(A.city)}" placeholder="Helsinki"></div>`,
+
+    size: `
+      <div class="card-eyebrow">Vaihe 2 / 5</div>
+      <h2>Yrityksen koko ja rakenne</h2>
+      <div class="card-desc">Yrityksen koko vaikuttaa siihen, soveltuuko ETJ-laki. Mikroyrityksille velvoitetta ei yleensä ole.</div>
+      <div class="field"><label>Henkilöstömäärä <span class="req">*</span></label>
+        ${radio('employees',[
+          {v:'<10',   l:'Alle 10 henkilöä',   s:'Mikroyritys'},
+          {v:'10-49', l:'10–49 henkilöä',      s:'Pieni yritys'},
+          {v:'50-249',l:'50–249 henkilöä',     s:'Keskisuuri yritys'},
+          {v:'250+',  l:'250 tai yli',          s:'Suuri yritys'},
+        ])}</div>
+      <div class="field"><label>Vuotuinen liikevaihto <span class="req">*</span></label>
+        ${radio('revenue',[
+          {v:'<2M',  l:'Alle 2 M€'},
+          {v:'2-10M',l:'2–10 M€'},
+          {v:'10-50M',l:'10–50 M€'},
+          {v:'50M+', l:'Yli 50 M€'},
+        ])}</div>
+      <div class="field"><label>Konsernirakenne <span class="req">*</span></label>
+        ${radio('is_group',[
+          {v:'no', l:'Itsenäinen yritys'},
+          {v:'yes',l:'Osa suurempaa konsernia', s:'ETJ-velvoite voi koskea koko konsernia'},
+        ])}</div>`,
+
+    energy: `
+      <div class="card-eyebrow">Vaihe 3 / 5</div>
+      <h2>Energiankulutus</h2>
+      <div class="card-desc">Velvoiteraja on 2 700 MWh/vuosi (3 vuoden keskiarvo). Tarkka arvo ei ole tarpeen — arvio riittää.</div>
+      <div class="field"><label>Arvioitu vuotuinen kokonaiskulutus <span class="req">*</span></label>
+        ${radio('consumption',[
+          {v:'<500',      l:'Alle 500 MWh / vuosi',         s:'Todennäköisesti velvoiterajan alapuolella'},
+          {v:'500-2700',  l:'500–2 700 MWh / vuosi',        s:'Lähestyy rajaa — seuranta suositeltavaa'},
+          {v:'2700-5000', l:'2 700–5 000 MWh / vuosi',      s:'Ylittää velvoiterajan'},
+          {v:'5000-23600',l:'5 000–23 600 MWh / vuosi',     s:'Selvästi velvoiterajojen yläpuolella'},
+          {v:'23600+',    l:'Yli 23 600 MWh / vuosi',       s:'EMS-velvoite — energianhallintajärjestelmä vaaditaan'},
+          {v:'unknown',   l:'En osaa arvioida',              s:'Autamme selvittämään kulutuksen'},
+        ])}</div>
+      <div class="field"><label>Merkittävimmät energialähteet <span class="req">*</span></label>
+        ${checks('energy_sources',[
+          {v:'electricity',l:'Sähkö'},
+          {v:'heat',       l:'Kaukolämpö'},
+          {v:'gas',        l:'Maakaasu'},
+          {v:'oil',        l:'Öljy / polttoaineet'},
+          {v:'other',      l:'Muu (biomassa, prosessihöyry, tms.)'},
+        ])}</div>
+      <div class="field"><label>Kulutuksen kehityssuunta</label>
+        ${radio('consumption_trend',[
+          {v:'growing',   l:'Kasvava'},
+          {v:'stable',    l:'Tasainen'},
+          {v:'decreasing',l:'Laskeva'},
+          {v:'unknown',   l:'En tiedä'},
+        ])}</div>`,
+
+    status: `
+      <div class="card-eyebrow">Vaihe 4 / 5</div>
+      <h2>ETJ-nykytila</h2>
+      <div class="card-desc">Tieto nykyisistä toimenpiteistä tarkentaa arviota. Esim. sertifioitu EMS korvaa katselmusvaatimuksen.</div>
+      <div class="field"><label>Energiakatselmus tehty viimeisen 4 vuoden aikana? <span class="req">*</span></label>
+        ${radio('has_audit',[
+          {v:'yes',    l:'Kyllä, on tehty'},
+          {v:'planned',l:'Suunnitteilla tai käynnissä'},
+          {v:'no',     l:'Ei'},
+          {v:'unknown',l:'En tiedä'},
+        ])}</div>
+      <div class="field"><label>ISO 50001 tai muu energianhallintajärjestelmä? <span class="req">*</span></label>
+        ${radio('has_ems',[
+          {v:'yes',    l:'Kyllä, sertifioitu EMS', s:'Korvaa katselmusvelvoitteen'},
+          {v:'partial',l:'Osittainen / vastaava käytäntö'},
+          {v:'no',     l:'Ei'},
+          {v:'unknown',l:'En tiedä'},
+        ])}</div>
+      <div class="field"><label>Energiatehokkuussopimus (ETJ-sopimus tai ET-sopimus)? <span class="req">*</span></label>
+        ${radio('has_agreement',[
+          {v:'yes',    l:'Kyllä', s:'ET-sopimus voi vapauttaa katselmusvelvoitteesta'},
+          {v:'no',     l:'Ei'},
+          {v:'unknown',l:'En tiedä'},
+        ])}</div>
+      <div class="field"><label>Ilmoitettu Energiavirastolle ETJ-velvoitteesta? <span class="req">*</span></label>
+        ${radio('reported_to_ev',[
+          {v:'yes',    l:'Kyllä, olemme ilmoittaneet'},
+          {v:'no',     l:'Ei'},
+          {v:'unknown',l:'Ei ole selvitetty'},
+        ])}</div>`,
+
+    contact: `
+      <div class="card-eyebrow">Vaihe 5 / 5</div>
+      <h2>Yhteystiedot</h2>
+      <div class="card-desc">Lähetämme sinulle kirjallisen yhteenvedon ja voimme tarvittaessa olla yhteydessä seuraavien askeleista.</div>
+      <div class="field"><label>Nimi <span class="req">*</span></label>
+        <input type="text" id="f_cname" value="${esc(A.contact_name)}" placeholder="Etunimi Sukunimi"></div>
+      <div class="field"><label>Sähköposti <span class="req">*</span></label>
+        <input type="email" id="f_cemail" value="${esc(A.contact_email)}" placeholder="etunimi@yritys.fi"></div>
+      <div class="field"><label>Puhelin</label>
+        <input type="tel" id="f_cphone" value="${esc(A.contact_phone)}" placeholder="+358 40 000 0000"></div>
+      <div class="field"><label>Tehtävänimike</label>
+        <input type="text" id="f_ctitle" value="${esc(A.contact_title)}" placeholder="Toimitusjohtaja, Energiapäällikkö…"></div>
+      <div class="opt-group" style="margin-top:4px">
+        <div class="opt${A.wants_contact?' sel':''}" onclick="toggleBool('wants_contact',this)">
+          <div class="opt-check">${A.wants_contact?'✓':''}</div>
+          <div class="opt-text"><div class="opt-label">Haluan Sparan ottavan minuun yhteyttä ETJ-palveluista</div></div>
+        </div>
+        <div class="opt${A.wants_newsletter?' sel':''}" onclick="toggleBool('wants_newsletter',this)">
+          <div class="opt-check">${A.wants_newsletter?'✓':''}</div>
+          <div class="opt-text"><div class="opt-label">Haluan tilata Sparan energiauutiskirjeen</div></div>
+        </div>
+      </div>`,
+  };
+
+  return `<div class="card${goingBack?' back':''}">
+    ${bodies[STEPS[step].id]}
+    <div class="err-msg" id="errMsg">Täytä kaikki pakolliset kentät.</div>
+    <div class="btn-row">${back}${next}</div>
+  </div>`;
+}
+
+function esc(s){ return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+/* ── SAVE TEXT FIELDS ──────────────────────────── */
+function saveTexts() {
+  const g = id => document.getElementById(id)?.value ?? '';
+  if (STEPS[step].id === 'company') {
+    A.company_name = g('f_name').trim();
+    A.y_tunnus     = g('f_ytunnus').trim();
+    A.sector       = g('f_sector');
+    A.city         = g('f_city').trim();
+  }
+  if (STEPS[step].id === 'contact') {
+    A.contact_name  = g('f_cname').trim();
+    A.contact_email = g('f_cemail').trim();
+    A.contact_phone = g('f_cphone').trim();
+    A.contact_title = g('f_ctitle').trim();
+  }
+}
+
+/* ── VALIDATE ──────────────────────────────────── */
+function validate() {
+  const err = document.getElementById('errMsg');
+  err.style.display = 'none'; err.textContent = 'Täytä kaikki pakolliset kentät.';
+  const s = STEPS[step].id;
+  if (s==='company' && (!A.company_name || !A.sector || !A.city))              { err.style.display='block'; return false; }
+  if (s==='size'    && (!A.employees || !A.revenue || !A.is_group))             { err.style.display='block'; return false; }
+  if (s==='energy'  && (!A.consumption || !A.energy_sources.length))            { err.style.display='block'; return false; }
+  if (s==='status'  && (!A.has_audit || !A.has_ems || !A.has_agreement || !A.reported_to_ev)) { err.style.display='block'; return false; }
+  if (s==='contact') {
+    if (!A.contact_name || !A.contact_email) { err.style.display='block'; return false; }
+    if (!A.contact_email.includes('@')) { err.textContent='Tarkista sähköpostiosoite.'; err.style.display='block'; return false; }
+  }
+  return true;
+}
+
+/* ── NAVIGATION ────────────────────────────────── */
+function nav(dir) {
+  saveTexts();
+  if (dir > 0 && !validate()) return;
+  goingBack = dir < 0;
+  step = Math.max(0, Math.min(STEPS.length-1, step+dir));
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function render() {
+  renderProgress();
+  document.getElementById('formWrap').innerHTML = buildStep();
+}
+
+/* ── SUBMIT ────────────────────────────────────── */
+async function submit() {
+  saveTexts();
+  if (!validate()) return;
+  const result = calcResult();
+  await storeLead(result.level);
+  showResult(result);
+}
+
+async function storeLead(level) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/etj_leads`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        company_name:      A.company_name,
+        y_tunnus:          A.y_tunnus,
+        sector:            A.sector,
+        city:              A.city,
+        employees:         A.employees,
+        revenue:           A.revenue,
+        is_group:          A.is_group==='yes',
+        consumption:       A.consumption,
+        energy_sources:    A.energy_sources,
+        consumption_trend: A.consumption_trend,
+        has_audit:         A.has_audit,
+        has_ems:           A.has_ems,
+        has_agreement:     A.has_agreement,
+        reported_to_ev:    A.reported_to_ev,
+        contact_name:      A.contact_name,
+        contact_email:     A.contact_email,
+        contact_phone:     A.contact_phone,
+        contact_title:     A.contact_title,
+        wants_contact:     A.wants_contact,
+        wants_newsletter:  A.wants_newsletter,
+        result_level:      level,
+      }),
+    });
+  } catch { /* non-fatal */ }
+}
+
+/* ── RESULT CALCULATION ────────────────────────── */
+function calcResult() {
+  const {employees, revenue, consumption, has_ems, has_audit, has_agreement} = A;
+
+  // Micro enterprise — typically exempt
+  if (employees==='<10' && (revenue==='<2M'))
+    return { level:'exempt_micro', cls:'ok', badge:'Todennäköisesti vapautettu',
+      title:'Mikroyritykselle ei yleensä velvoitetta',
+      sub:'Henkilöstömäärän ja liikevaihdon perusteella yritys kuuluu todennäköisesti mikroyrityksiin, joihin ETJ-lakia ei pääsääntöisesti sovelleta.',
+      actions:[
+        {i:'✅', t:'Mikroyritykset on rajattu ETJ-lain soveltamisalan ulkopuolelle'},
+        {i:'📈', t:'Jos kulutus tai koko kasvaa, tilannetta kannattaa seurata'},
+        {i:'💡', t:'Vapaaehtoiset energiatehokkuustoimet voivat silti tuoda merkittäviä säästöjä'},
+      ],
+      cta:'Pyydä maksuton energianeuvonta', ctaCls:'btn-cta-ok' };
+
+  // Unknown consumption
+  if (consumption==='unknown')
+    return { level:'uncertain', cls:'warn', badge:'Lisäselvitys tarpeen',
+      title:'Kulutus täytyy selvittää ensin',
+      sub:'ETJ-velvoitetta ei voida arvioida ilman tietoa energiankulutuksesta. Autamme selvittämään kulutuksen.',
+      actions:[
+        {i:'🔍', t:'Energiankulutuksen kartoitus on ensimmäinen askel'},
+        {i:'📊', t:'Tarvitaan 3 vuoden kulutushistoria luotettavan arvion tekemiseen'},
+        {i:'🤝', t:'Spara auttaa kulutustietojen keräämisessä ja analysoinnissa'},
+      ],
+      cta:'Ota yhteyttä — selvitämme yhdessä', ctaCls:'btn-cta-warn' };
+
+  // Below threshold
+  if (consumption==='<500' || consumption==='500-2700')
+    return { level:'no_obligation', cls:'ok', badge:'Ei velvoitetta',
+      title:'ETJ-velvoitetta ei todennäköisesti ole',
+      sub:'Arvioitu vuosikulutuksesi jää alle 2 700 MWh -velvoiterajan, joten ETJ-lain vaatimukset eivät todennäköisesti koske yritystäsi tällä hetkellä.',
+      actions:[
+        {i:'✅', t:'Kulutus alle 2 700 MWh/v velvoiterajan'},
+        {i:'⚠️', t:consumption==='500-2700'?'Kulutus lähellä rajaa — kehitystä kannattaa seurata':'Tilanne hyvä — kulutus selvästi rajan alla'},
+        {i:'💡', t:'Energiatehokkuusinvestoinnit voivat olla kannattavia kulutuksesta riippumatta'},
+      ],
+      cta:'Kysy ilmaista energianeuvontaa', ctaCls:'btn-cta-ok' };
+
+  // Above 2700, EMS covers
+  if ((consumption==='2700-5000'||consumption==='5000-23600') && has_ems==='yes')
+    return { level:'obligation_ems', cls:'ok', badge:'Velvoite täytetty',
+      title:'EMS kattaa katselmusvelvoitteen',
+      sub:'Sertifioitu energianhallintajärjestelmä (ISO 50001) täyttää ETJ-lain katselmusvaatimuksen. Raportointivelvoite Energiavirastolle on silti voimassa.',
+      actions:[
+        {i:'✅', t:'ISO 50001 tai vastaava EMS korvaa katselmusvelvoitteen'},
+        {i:'📋', t:reported(A.reported_to_ev)},
+        {i:'🔄', t:'EMS-sertifikaatti on pidettävä voimassa jatkuvasti'},
+      ],
+      cta:'Tarkista raportointivelvoitteet', ctaCls:'btn-cta-ok' };
+
+  // Above 2700, needs audit/reporting
+  if (consumption==='2700-5000' || consumption==='5000-23600')
+    return { level:'obligation', cls:'warn', badge:'ETJ-velvoite',
+      title:'Yrityksellasi on ETJ-velvoite',
+      sub:'Kulutus ylittää 2 700 MWh -velvoiterajan. Tarvitset raportointivelvoitteen täyttämisen ja todennäköisesti energiakatselmuksen.',
+      actions:[
+        {i:'📋', t:reported(A.reported_to_ev)},
+        {i:'🔍', t:auditStatus(A.has_audit)},
+        {i:'📅', t:'Energiakatselmus uusittava 4 vuoden välein'},
+        {i:'💰', t:'Katselmus paljastaa tyypillisesti 10–25 % säästöpotentiaalin'},
+        has_agreement==='yes'?{i:'✅',t:'ET-sopimus voi vapauttaa katselmusvelvoitteesta — tarkista ehdot'}:null,
+      ].filter(Boolean),
+      cta:'Aloita ETJ-katselmus Sparan kanssa', ctaCls:'btn-cta-warn' };
+
+  // Above 23600 — full EMS obligation
+  if (consumption==='23600+')
+    return { level:'obligation_high', cls:'danger', badge:'Täysi ETJ-velvoite',
+      title:'EMS-velvoite — energianhallintajärjestelmä vaaditaan',
+      sub:'Yrityksesi kulutus ylittää 23 600 MWh -rajan. Laki edellyttää sertifioitua energianhallintajärjestelmää (ISO 50001 tai vastaava).',
+      actions:[
+        {i:'🏭', t:'Energianhallintajärjestelmä (ISO 50001) on pakollinen'},
+        {i:'📋', t:reported(A.reported_to_ev)},
+        {i:'🔍', t:auditStatus(A.has_audit)},
+        has_ems==='yes'?{i:'✅',t:'EMS on jo käytössä — varmista sertifioinnin voimassaolo'}:{i:'⚡',t:'EMS:n implementointi on kiireellinen toimenpide'},
+      ].filter(Boolean),
+      cta:'Aloita EMS-implementointi Sparan kanssa', ctaCls:'btn-cta-danger' };
+
+  return { level:'uncertain', cls:'warn', badge:'Lisäselvitys tarpeen',
+    title:'Tilanne vaatii tarkempaa arviota',
+    sub:'Sparan asiantuntija selvittää tilanteesi tarkemmin.',
+    actions:[{i:'📞',t:'Ota yhteyttä Sparan ETJ-asiantuntijaan'}],
+    cta:'Ota yhteyttä', ctaCls:'btn-cta-warn' };
+}
+
+function reported(v) {
+  if (v==='yes') return 'Ilmoitus Energiavirastolle on tehty ✓';
+  if (v==='no')  return 'Raportointivelvoite Energiavirastolle — ilmoitus tekemättä';
+  return 'Raportointivelvoite Energiavirastolle — tarkista onko ilmoitettu';
+}
+function auditStatus(v) {
+  if (v==='yes')    return 'Katselmus on tehty ✓ — muista uusia 4 v. välein';
+  if (v==='planned')return 'Katselmus suunnitteilla — hyvä, vie se loppuun';
+  if (v==='no')     return 'Energiakatselmus pitää tehdä tai tilata';
+  return 'Selvitä onko energiakatselmusta tehty';
+}
+
+const cLabel = {
+  '<500':'alle 500 MWh/v','500-2700':'500–2 700 MWh/v','2700-5000':'2 700–5 000 MWh/v',
+  '5000-23600':'5 000–23 600 MWh/v','23600+':'yli 23 600 MWh/v','unknown':'Ei arvioitu'
+};
+const secLabel = {
+  teollisuus:'Teollisuus',kauppa:'Kauppa',palvelut:'Palvelut',kiinteisto:'Kiinteistö',
+  logistiikka:'Logistiikka',energia:'Energia',julkinen:'Julkinen sektori',
+  hotelli:'Hotelli/ravintola',terveys:'Terveys',muu:'Muu'
+};
+
+/* ── SHOW RESULT ───────────────────────────────── */
+function showResult(r) {
+  document.getElementById('progressSection').style.display = 'none';
+  document.getElementById('formWrap').innerHTML = `
+    <div class="result-card ${r.cls}">
+      <div class="result-badge ${r.cls}"><span class="badge-dot"></span>${r.badge}</div>
+      <h2>${r.title}</h2>
+      <p class="result-sub">${r.sub}</p>
+      <ul class="action-list">
+        ${r.actions.map(a=>`<li><span class="action-icon">${a.i}</span><span>${a.t}</span></li>`).join('')}
+      </ul>
+      <div class="result-summary">
+        <strong>${A.company_name}</strong> · ${A.city}${A.sector?` · ${secLabel[A.sector]||A.sector}`:''}<br>
+        Kulutusarvio: ${cLabel[A.consumption]||A.consumption} ·
+        Katselmus: ${A.has_audit==='yes'?'tehty':A.has_audit==='planned'?'suunnitteilla':A.has_audit==='no'?'ei tehty':'ei tiedossa'} ·
+        EMS: ${A.has_ems==='yes'?'kyllä':'ei / ei tiedossa'}
+      </div>
+      <div class="cta-stack">
+        <a href="mailto:etj@sparaenergia.com?subject=ETJ-testi: ${encodeURIComponent(A.company_name)}&body=Yritys: ${encodeURIComponent(A.company_name)}%0ASähköposti: ${encodeURIComponent(A.contact_email)}%0ATulos: ${encodeURIComponent(r.badge)}%0AKulutus: ${encodeURIComponent(cLabel[A.consumption]||'')}%0A%0AHaluaisin lisätietoja ETJ-palveluistanne."
+           class="btn-cta ${r.ctaCls}">${r.cta}</a>
+        <a href="etj-plus.html" class="btn-cta btn-cta-outline">Kirjaudu ETJ+ -palveluun</a>
+        <button onclick="restart()" class="btn-cta btn-cta-outline">Tee testi uudelleen</button>
+      </div>
+      <p class="disclaimer">Tulos on suuntaa-antava arvio perustuen annettuihin tietoihin. Se ei ole oikeudellinen neuvo.<br>Sparan asiantuntija auttaa varmistamaan tilanteen ja seuraavat toimenpiteet.</p>
+    </div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function restart() {
+  Object.assign(A,{
+    company_name:'',y_tunnus:'',sector:'',city:'',
+    employees:'',revenue:'',is_group:'',
+    consumption:'',energy_sources:[],consumption_trend:'',
+    has_audit:'',has_ems:'',has_agreement:'',reported_to_ev:'',
+    contact_name:'',contact_email:'',contact_phone:'',contact_title:'',
+    wants_contact:false,wants_newsletter:false,
+  });
+  step=0; goingBack=false;
+  document.getElementById('progressSection').style.display='';
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+render();
+</script>
+</body>
+</html>
