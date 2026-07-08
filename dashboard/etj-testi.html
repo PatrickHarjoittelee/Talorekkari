@@ -433,15 +433,13 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 const STEPS = [
   { id:'company', name:'Yritys' },
-  { id:'size',    name:'Koko' },
   { id:'energy',  name:'Energia' },
   { id:'status',  name:'ETJ-tila' },
   { id:'contact', name:'Yhteystiedot' },
 ];
 
 const A = {
-  company_name:'', y_tunnus:'', sector:'', city:'',
-  employees:'', revenue:'', is_group:'',
+  company_name:'', y_tunnus:'', sector:'', city:'', is_group:'',
   heating_types:[], electricity_uses:[], vehicles:[], processes:'', direct_fuels:[],
   consumption:'', consumption_trend:'',
   has_audit:'', has_ems:'', has_agreement:'', reported_to_ev:'',
@@ -522,7 +520,7 @@ function buildStep() {
 
   const bodies = {
     company: `
-      <div class="card-eyebrow">Vaihe 1 / 5</div>
+      <div class="card-eyebrow">Vaihe 1 / 4</div>
       <h2>Yrityksen perustiedot</h2>
       <div class="card-desc">Aloitetaan perusasioista. Näitä tietoja käytetään velvoitearvion ja mahdollisen yhteydenoton pohjaksi.</div>
       <div class="field"><label>Yrityksen nimi <span class="req">*</span></label>
@@ -532,34 +530,15 @@ function buildStep() {
       <div class="field"><label>Toimiala <span class="req">*</span></label>
         <select id="f_sector">${SECTORS.map(([v,l])=>`<option value="${v}"${A.sector===v?' selected':''}>${l}</option>`).join('')}</select></div>
       <div class="field"><label>Toimipaikka / kaupunki <span class="req">*</span></label>
-        <input type="text" id="f_city" value="${esc(A.city)}" placeholder="Helsinki"></div>`,
-
-    size: `
-      <div class="card-eyebrow">Vaihe 2 / 5</div>
-      <h2>Yrityksen koko ja rakenne</h2>
-      <div class="card-desc">Yrityksen koko vaikuttaa siihen, soveltuuko ETJ-laki. Mikroyrityksille velvoitetta ei yleensä ole.</div>
-      <div class="field"><label>Henkilöstömäärä <span class="req">*</span></label>
-        ${radio('employees',[
-          {v:'<10',   l:'Alle 10 henkilöä',   s:'Mikroyritys'},
-          {v:'10-49', l:'10–49 henkilöä',      s:'Pieni yritys'},
-          {v:'50-249',l:'50–249 henkilöä',     s:'Keskisuuri yritys'},
-          {v:'250+',  l:'250 tai yli',          s:'Suuri yritys'},
-        ])}</div>
-      <div class="field"><label>Vuotuinen liikevaihto <span class="req">*</span></label>
-        ${radio('revenue',[
-          {v:'<2M',  l:'Alle 2 M€'},
-          {v:'2-10M',l:'2–10 M€'},
-          {v:'10-50M',l:'10–50 M€'},
-          {v:'50M+', l:'Yli 50 M€'},
-        ])}</div>
-      <div class="field"><label>Konsernirakenne <span class="req">*</span></label>
+        <input type="text" id="f_city" value="${esc(A.city)}" placeholder="Helsinki"></div>
+      <div class="field"><label>Konsernirakenne</label>
         ${radio('is_group',[
-          {v:'no', l:'Itsenäinen yritys'},
-          {v:'yes',l:'Osa suurempaa konsernia', s:'ETJ-velvoite voi koskea koko konsernia'},
+          {v:'no',  l:'Itsenäinen yritys'},
+          {v:'yes', l:'Osa suurempaa konsernia', s:'ETJ-velvoite voi koskea koko konsernia — ryhmän kulutus lasketaan yhteen'},
         ])}</div>`,
 
     energy: `
-      <div class="card-eyebrow">Vaihe 3 / 5</div>
+      <div class="card-eyebrow">Vaihe 2 / 4</div>
       <h2>Energia ja kulutus</h2>
       <div class="card-desc">Kerro mistä lähteistä energianne tulee ja mihin sitä kuluu. Tiedot auttavat arvioimaan ETJ-velvoitteen ja säästöpotentiaalin tarkasti.</div>
 
@@ -647,7 +626,7 @@ function buildStep() {
         ])}</div>`,
 
     status: `
-      <div class="card-eyebrow">Vaihe 4 / 5</div>
+      <div class="card-eyebrow">Vaihe 3 / 4</div>
       <h2>ETJ-nykytila</h2>
       <div class="card-desc">Tieto nykyisistä toimenpiteistä tarkentaa arviota. Esim. sertifioitu EMS korvaa katselmusvaatimuksen.</div>
       <div class="field"><label>Energiakatselmus tehty viimeisen 4 vuoden aikana? <span class="req">*</span></label>
@@ -678,7 +657,7 @@ function buildStep() {
         ])}</div>`,
 
     contact: `
-      <div class="card-eyebrow">Vaihe 5 / 5</div>
+      <div class="card-eyebrow">Vaihe 4 / 4</div>
       <h2>Yhteystiedot</h2>
       <div class="card-desc">Lähetämme sinulle kirjallisen yhteenvedon ja voimme tarvittaessa olla yhteydessä seuraavien askeleista.</div>
       <div class="field"><label>Nimi <span class="req">*</span></label>
@@ -733,7 +712,6 @@ function validate() {
   err.style.display = 'none'; err.textContent = 'Täytä kaikki pakolliset kentät.';
   const s = STEPS[step].id;
   if (s==='company' && (!A.company_name || !A.sector || !A.city))              { err.style.display='block'; return false; }
-  if (s==='size'    && (!A.employees || !A.revenue || !A.is_group))             { err.style.display='block'; return false; }
   if (s==='energy'  && (!A.heating_types.length || !A.consumption))             { err.style.display='block'; return false; }
   if (s==='status'  && (!A.has_audit || !A.has_ems || !A.has_agreement || !A.reported_to_ev)) { err.style.display='block'; return false; }
   if (s==='contact') {
@@ -782,8 +760,6 @@ async function storeLead(level) {
         y_tunnus:          A.y_tunnus,
         sector:            A.sector,
         city:              A.city,
-        employees:         A.employees,
-        revenue:           A.revenue,
         is_group:          A.is_group==='yes',
         heating_types:     A.heating_types,
         electricity_uses:  A.electricity_uses,
@@ -809,87 +785,95 @@ async function storeLead(level) {
 }
 
 /* ── RESULT CALCULATION ────────────────────────── */
+// Four categories mapped to Spara's commercial target:
+//   no_obligation  — alle 500 MWh, selvästi rajan alla
+//   lahella_rajaa  — 500–2700 MWh, lähestyy rajaa
+//   velvoite_kevyt — 2700–23600 MWh ← Sparan pääkohderyhmä (kevyt raportointi, ei ISO 50001)
+//   velvoite_raskas — yli 23600 MWh (ISO 50001 pakollinen)
 function calcResult() {
-  const {employees, revenue, consumption, has_ems, has_audit, has_agreement} = A;
+  const {consumption, has_ems, has_audit, has_agreement, reported_to_ev, is_group} = A;
+  const konserni = is_group==='yes' ? ' Konsernirakenteessa koko ryhmän kulutus lasketaan yhteen.' : '';
 
-  // Micro enterprise — typically exempt
-  if (employees==='<10' && (revenue==='<2M'))
-    return { level:'exempt_micro', cls:'ok', badge:'Todennäköisesti vapautettu',
-      title:'Mikroyritykselle ei yleensä velvoitetta',
-      sub:'Henkilöstömäärän ja liikevaihdon perusteella yritys kuuluu todennäköisesti mikroyrityksiin, joihin ETJ-lakia ei pääsääntöisesti sovelleta.',
-      actions:[
-        {i:'✅', t:'Mikroyritykset on rajattu ETJ-lain soveltamisalan ulkopuolelle'},
-        {i:'📈', t:'Jos kulutus tai koko kasvaa, tilannetta kannattaa seurata'},
-        {i:'💡', t:'Vapaaehtoiset energiatehokkuustoimet voivat silti tuoda merkittäviä säästöjä'},
-      ],
-      cta:'Pyydä maksuton energianeuvonta', ctaCls:'btn-cta-ok' };
-
-  // Unknown consumption
   if (consumption==='unknown')
     return { level:'uncertain', cls:'warn', badge:'Lisäselvitys tarpeen',
       title:'Kulutus täytyy selvittää ensin',
-      sub:'ETJ-velvoitetta ei voida arvioida ilman tietoa energiankulutuksesta. Autamme selvittämään kulutuksen.',
+      sub:'ETJ-velvoitetta ei voida arvioida ilman tietoa energiankulutuksesta. Autamme selvittämään kulutuksen nopeasti laskujen ja mittaritietojen pohjalta.' + konserni,
       actions:[
         {i:'🔍', t:'Energiankulutuksen kartoitus on ensimmäinen askel'},
-        {i:'📊', t:'Tarvitaan 3 vuoden kulutushistoria luotettavan arvion tekemiseen'},
-        {i:'🤝', t:'Spara auttaa kulutustietojen keräämisessä ja analysoinnissa'},
+        {i:'📊', t:'Tarvitaan 3 vuoden kulutushistoria — autamme keräämisessä'},
+        {i:'🤝', t:'Spara tekee kulutusselvityksen ilman pitkää sitoutumista'},
       ],
       cta:'Ota yhteyttä — selvitämme yhdessä', ctaCls:'btn-cta-warn' };
 
-  // Below threshold
-  if (consumption==='<500' || consumption==='500-2700')
+  // ── Selvästi alle rajan ──────────────────────────────────────────────
+  if (consumption==='<500')
     return { level:'no_obligation', cls:'ok', badge:'Ei velvoitetta',
-      title:'ETJ-velvoitetta ei todennäköisesti ole',
-      sub:'Arvioitu vuosikulutuksesi jää alle 2 700 MWh -velvoiterajan, joten ETJ-lain vaatimukset eivät todennäköisesti koske yritystäsi tällä hetkellä.',
+      title:'Kulutus selvästi alle velvoiterajan',
+      sub:'Arvioidulla kulutuksella ETJ-lain vaatimukset eivät koske yritystäsi. Velvoiteraja on 2 700 MWh/vuosi (3 vuoden keskiarvo).' + konserni,
       actions:[
-        {i:'✅', t:'Kulutus alle 2 700 MWh/v velvoiterajan'},
-        {i:'⚠️', t:consumption==='500-2700'?'Kulutus lähellä rajaa — kehitystä kannattaa seurata':'Tilanne hyvä — kulutus selvästi rajan alla'},
-        {i:'💡', t:'Energiatehokkuusinvestoinnit voivat olla kannattavia kulutuksesta riippumatta'},
+        {i:'✅', t:'Kulutus selvästi alle 2 700 MWh/v rajan'},
+        {i:'💡', t:'Energiatehokkuustoimet ovat silti kannattavia — säästöt suoraan tulokseen'},
+        {i:'📈', t:'Seuraa kulutuksen kehitystä — kasvu voi tuoda velvoitteen'},
       ],
       cta:'Kysy ilmaista energianeuvontaa', ctaCls:'btn-cta-ok' };
 
-  // Above 2700, EMS covers
-  if ((consumption==='2700-5000'||consumption==='5000-23600') && has_ems==='yes')
-    return { level:'obligation_ems', cls:'ok', badge:'Velvoite täytetty',
-      title:'EMS kattaa katselmusvelvoitteen',
-      sub:'Sertifioitu energianhallintajärjestelmä (ISO 50001) täyttää ETJ-lain katselmusvaatimuksen. Raportointivelvoite Energiavirastolle on silti voimassa.',
+  // ── Lähellä rajaa ────────────────────────────────────────────────────
+  if (consumption==='500-2700')
+    return { level:'lahella_rajaa', cls:'warn', badge:'Lähellä velvoiterajaa',
+      title:'Kulutus lähestyy 2 700 MWh rajaa — varaudu ajoissa',
+      sub:'3 vuoden kulutuskeskiarvo ratkaisee velvoitteen, ja raja voi jo ylittyä. Ennakoiva kartoitus on halvempi kuin kiireinen compliance.' + konserni,
       actions:[
-        {i:'✅', t:'ISO 50001 tai vastaava EMS korvaa katselmusvelvoitteen'},
-        {i:'📋', t:reported(A.reported_to_ev)},
-        {i:'🔄', t:'EMS-sertifikaatti on pidettävä voimassa jatkuvasti'},
-      ],
-      cta:'Tarkista raportointivelvoitteet', ctaCls:'btn-cta-ok' };
+        {i:'⚠️', t:'Raja 2 700 MWh/v — kulutus on haarukassa 500–2 700 MWh'},
+        {i:'📊', t:'3 vuoden keskiarvo lasketaan — yksittäinen piikkivuosi voi ratkaista'},
+        {i:'🔍', t:'Energiakartoitus kannattaa tehdä ennakoivasti ennen velvoitetta'},
+        {i:'💰', t:'Kartoitus paljastaa tyypillisesti 10–20 % säästöpotentiaalin'},
+        is_group==='yes'?{i:'🏢',t:'Konsernissa koko ryhmän kulutus lasketaan yhteen — tarkista tilanne'}:null,
+      ].filter(Boolean),
+      cta:'Pyydä ennakoiva energiakartoitus', ctaCls:'btn-cta-warn' };
 
-  // Above 2700, needs audit/reporting
-  if (consumption==='2700-5000' || consumption==='5000-23600')
-    return { level:'obligation', cls:'warn', badge:'ETJ-velvoite',
-      title:'Yrityksellasi on ETJ-velvoite',
-      sub:'Kulutus ylittää 2 700 MWh -velvoiterajan. Tarvitset raportointivelvoitteen täyttämisen ja todennäköisesti energiakatselmuksen.',
+  // ── Sparan kohderyhmä: 2700–23600 MWh — kevyt raportointi ───────────
+  if (consumption==='2700-5000' || consumption==='5000-23600') {
+    if (has_ems==='yes')
+      return { level:'velvoite_ems', cls:'ok', badge:'ETJ-velvoite — EMS kattaa katselmuksen',
+        title:'Sertifioitu EMS täyttää katselmusvelvoitteen',
+        sub:'ISO 50001 -sertifiointi korvaa energiakatselmuksen. Raportointivelvoite Energiavirastolle on silti voimassa vuosittain.' + konserni,
+        actions:[
+          {i:'✅', t:'ISO 50001 korvaa energiakatselmuksen — hyvä tilanne'},
+          {i:'📋', t:reported(reported_to_ev)},
+          {i:'🔄', t:'Pidä EMS-sertifikaatti voimassa — uusinta määräajoin'},
+          {i:'📊', t:'Spara auttaa Energiavirasto-raportoinnin valmistelussa'},
+        ],
+        cta:'Tarkista raportointivelvoitteet', ctaCls:'btn-cta-ok' };
+
+    return { level:'velvoite_kevyt', cls:'warn', badge:'ETJ-velvoite — kevyt raportointi',
+      title:'ETJ-velvoite on — ISO 50001 -sertifiointia ei vaadita',
+      sub:'Kulutuksesi asettuu 2 700–23 600 MWh välille. Velvoite tarkoittaa energiakatselmusta 4 vuoden välein ja raportointia Energiavirastolle — ei raskasta ISO 50001 -sertifiointia. Tähän segmenttiin Sparan ETJ-palvelu on suunniteltu.' + konserni,
       actions:[
-        {i:'📋', t:reported(A.reported_to_ev)},
-        {i:'🔍', t:auditStatus(A.has_audit)},
-        {i:'📅', t:'Energiakatselmus uusittava 4 vuoden välein'},
+        {i:'📋', t:reported(reported_to_ev)},
+        {i:'🔍', t:auditStatus(has_audit)},
+        {i:'📅', t:'Energiakatselmus 4 vuoden välein — ei ISO 50001 vaatimusta'},
         {i:'💰', t:'Katselmus paljastaa tyypillisesti 10–25 % säästöpotentiaalin'},
         has_agreement==='yes'?{i:'✅',t:'ET-sopimus voi vapauttaa katselmusvelvoitteesta — tarkista ehdot'}:null,
       ].filter(Boolean),
       cta:'Aloita ETJ-katselmus Sparan kanssa', ctaCls:'btn-cta-warn' };
+  }
 
-  // Above 23600 — full EMS obligation
+  // ── Raskas velvoite: yli 23600 MWh — ISO 50001 pakollinen ───────────
   if (consumption==='23600+')
-    return { level:'obligation_high', cls:'danger', badge:'Täysi ETJ-velvoite',
-      title:'EMS-velvoite — energianhallintajärjestelmä vaaditaan',
-      sub:'Yrityksesi kulutus ylittää 23 600 MWh -rajan. Laki edellyttää sertifioitua energianhallintajärjestelmää (ISO 50001 tai vastaava).',
+    return { level:'velvoite_raskas', cls:'danger', badge:'ETJ-velvoite — ISO 50001 pakollinen',
+      title:'Raskas ETJ-velvoite — ISO 50001 tai vastaava EMS vaaditaan',
+      sub:'Kulutuksesi ylittää 23 600 MWh -rajan. Laki edellyttää sertifioitua energianhallintajärjestelmää (ISO 50001 tai vastaava) — pelkkä katselmus ei riitä.' + konserni,
       actions:[
-        {i:'🏭', t:'Energianhallintajärjestelmä (ISO 50001) on pakollinen'},
-        {i:'📋', t:reported(A.reported_to_ev)},
-        {i:'🔍', t:auditStatus(A.has_audit)},
+        {i:'🏭', t:'ISO 50001 tai vastaava EMS pakollinen — kevyt raportointi ei riitä'},
+        {i:'📋', t:reported(reported_to_ev)},
+        {i:'🔍', t:auditStatus(has_audit)},
         has_ems==='yes'?{i:'✅',t:'EMS on jo käytössä — varmista sertifioinnin voimassaolo'}:{i:'⚡',t:'EMS:n implementointi on kiireellinen toimenpide'},
       ].filter(Boolean),
-      cta:'Aloita EMS-implementointi Sparan kanssa', ctaCls:'btn-cta-danger' };
+      cta:'Ota yhteyttä EMS-implementointia varten', ctaCls:'btn-cta-danger' };
 
   return { level:'uncertain', cls:'warn', badge:'Lisäselvitys tarpeen',
     title:'Tilanne vaatii tarkempaa arviota',
-    sub:'Sparan asiantuntija selvittää tilanteesi tarkemmin.',
+    sub:'Sparan asiantuntija selvittää tilanteesi.',
     actions:[{i:'📞',t:'Ota yhteyttä Sparan ETJ-asiantuntijaan'}],
     cta:'Ota yhteyttä', ctaCls:'btn-cta-warn' };
 }
@@ -946,8 +930,7 @@ function showResult(r) {
 
 function restart() {
   Object.assign(A,{
-    company_name:'',y_tunnus:'',sector:'',city:'',
-    employees:'',revenue:'',is_group:'',
+    company_name:'',y_tunnus:'',sector:'',city:'',is_group:'',
     heating_types:[],electricity_uses:[],vehicles:[],processes:'',direct_fuels:[],
     consumption:'',consumption_trend:'',
     has_audit:'',has_ems:'',has_agreement:'',reported_to_ev:'',
