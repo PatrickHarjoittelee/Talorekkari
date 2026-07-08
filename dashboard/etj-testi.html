@@ -205,6 +205,18 @@ main {
   letter-spacing: .02em; text-transform: uppercase;
   color: var(--text2); margin-bottom: 8px;
 }
+.field .section-label {
+  display: block; font-size: 13px; font-weight: 700;
+  letter-spacing: .01em; text-transform: none;
+  color: var(--text); margin-bottom: 4px;
+}
+.field-hint {
+  font-size: 11px; color: var(--text3); margin-bottom: 10px; margin-top: -2px;
+}
+.energy-section-divider {
+  border: none; border-top: 1px solid var(--border);
+  margin: 6px 0 18px;
+}
 .req { color: var(--accent); }
 
 input[type="text"], input[type="email"], input[type="tel"], select {
@@ -430,7 +442,8 @@ const STEPS = [
 const A = {
   company_name:'', y_tunnus:'', sector:'', city:'',
   employees:'', revenue:'', is_group:'',
-  consumption:'', energy_sources:[], consumption_trend:'',
+  heating_types:[], electricity_uses:[], vehicles:[], processes:'', direct_fuels:[],
+  consumption:'', consumption_trend:'',
   has_audit:'', has_ems:'', has_agreement:'', reported_to_ev:'',
   contact_name:'', contact_email:'', contact_phone:'', contact_title:'',
   wants_contact:false, wants_newsletter:false,
@@ -547,25 +560,84 @@ function buildStep() {
 
     energy: `
       <div class="card-eyebrow">Vaihe 3 / 5</div>
-      <h2>Energiankulutus</h2>
-      <div class="card-desc">Velvoiteraja on 2 700 MWh/vuosi (3 vuoden keskiarvo). Tarkka arvo ei ole tarpeen — arvio riittää.</div>
-      <div class="field"><label>Arvioitu vuotuinen kokonaiskulutus <span class="req">*</span></label>
+      <h2>Energia ja kulutus</h2>
+      <div class="card-desc">Kerro mistä lähteistä energianne tulee ja mihin sitä kuluu. Tiedot auttavat arvioimaan ETJ-velvoitteen ja säästöpotentiaalin tarkasti.</div>
+
+      <div class="field">
+        <label class="section-label">Kiinteistöjen lämmitys ja jäähdytys <span class="req">*</span></label>
+        <div class="field-hint">Valitse kaikki käytössä olevat muodot</div>
+        ${checks('heating_types',[
+          {v:'kaukolampo',       l:'Kaukolämpö'},
+          {v:'kaukokylma',       l:'Kaukoviilennys / kaukokylmä'},
+          {v:'sahkolampo',       l:'Sähkölämmitys (suora, lattia, patteri)'},
+          {v:'maalampopumppu',   l:'Maalämpö- tai ilmalämpöpumppu'},
+          {v:'oljylampo',        l:'Öljylämmitys'},
+          {v:'kaasulammitys',    l:'Kaasulämmitys (maakaasu, LNG)'},
+          {v:'biomassa',         l:'Biomassa, pelletti tai hake'},
+          {v:'ei_kiinteistoja',  l:'Ei omia tai hallittavia kiinteistöjä'},
+        ])}</div>
+
+      <hr class="energy-section-divider">
+      <div class="field">
+        <label class="section-label">Sähkönkäyttö — merkittävimmät kohteet</label>
+        <div class="field-hint">Valitse kaikki, joihin sähköä kuluu merkittävästi</div>
+        ${checks('electricity_uses',[
+          {v:'valaistus_lvias',  l:'Valaistus ja kiinteistötekniikka (LVI, ilmanvaihto)'},
+          {v:'tuotantokoneet',   l:'Tuotantokoneet ja teolliset prosessit'},
+          {v:'konesali',         l:'Konesali tai palvelinhuone / IT-infrastruktuuri'},
+          {v:'ev_lataus',        l:'Sähköajoneuvojen lataus'},
+          {v:'kylmalaitteet',    l:'Kylmälaitteet (kylmäketju, kylmävarasto, pakastus)'},
+          {v:'pumput',           l:'Pumput, kompressorit ja puhaltimet'},
+          {v:'muu_sahko',        l:'Muu sähkönkäyttö'},
+        ])}</div>
+
+      <hr class="energy-section-divider">
+      <div class="field">
+        <label class="section-label">Ajoneuvokalusto</label>
+        <div class="field-hint">Valitse kaikki yrityksenne hallinnoimat tai käyttämät</div>
+        ${checks('vehicles',[
+          {v:'ei_kalustoa',         l:'Ei omaa ajoneuvokantaa'},
+          {v:'henkiloautot',         l:'Henkilöautot (yritysautot)'},
+          {v:'pakettiautot',         l:'Paketti- tai jakeluautot'},
+          {v:'kuorma_autot',         l:'Kuorma-autot tai bussit'},
+          {v:'tyokoneet',            l:'Työkoneet (trukit, pyöräkuormaajat, mobiilityökoneet)'},
+          {v:'laivat_lentokoneet',   l:'Laivat, veneet tai lentokoneet'},
+        ])}</div>
+
+      <hr class="energy-section-divider">
+      <div class="field">
+        <label class="section-label">Teolliset prosessit ja tuotanto</label>
+        ${radio('processes',[
+          {v:'ei_prosesseja',      l:'Ei teollisia prosesseja',        s:'Palvelu-, toimisto- tai vähittäiskauppatoiminta'},
+          {v:'kevyt_tuotanto',     l:'Kevyt tuotanto tai kokoonpano',  s:'Metallintyöstö, elektroniikka, pakkaus tms.'},
+          {v:'energiaintensiivinen',l:'Energiaintensiivinen tuotanto', s:'Uunit, hitsaus, kuivaus, kompressorit, paineilma'},
+          {v:'raskas_prosessi',    l:'Raskas tai kemiallinen prosessi', s:'Sulatus, valimo, kemianteollisuus, paperi/sellu'},
+        ])}</div>
+
+      <hr class="energy-section-divider">
+      <div class="field">
+        <label class="section-label">Suora polttoaineiden käyttö</label>
+        <div class="field-hint">Polttoaineet, joita poltetaan suoraan kiinteistöissä tai prosesseissa (ei liikennepolttoaineet)</div>
+        ${checks('direct_fuels',[
+          {v:'ei_polttoaineita',  l:'Ei suoraa polttoainekäyttöä'},
+          {v:'maakaasu',          l:'Maakaasu tai LNG'},
+          {v:'kevyt_oljy',        l:'Kevyt polttoöljy (lämmitys tai prosessi)'},
+          {v:'raskas_oljy',       l:'Raskas polttoöljy tai bitumi'},
+          {v:'biopolttoaineet',   l:'Biopolttoaineet, bioöljy tai biopelletit (prosessipoltto)'},
+          {v:'propaani',          l:'Propaani, butaani tai nestekaasu'},
+        ])}</div>
+
+      <hr class="energy-section-divider">
+      <div class="field"><label>Arvioitu vuotuinen kokonaiskulutus — kaikki energiamuodot yhteensä <span class="req">*</span></label>
         ${radio('consumption',[
           {v:'<500',      l:'Alle 500 MWh / vuosi',         s:'Todennäköisesti velvoiterajan alapuolella'},
           {v:'500-2700',  l:'500–2 700 MWh / vuosi',        s:'Lähestyy rajaa — seuranta suositeltavaa'},
-          {v:'2700-5000', l:'2 700–5 000 MWh / vuosi',      s:'Ylittää velvoiterajan'},
+          {v:'2700-5000', l:'2 700–5 000 MWh / vuosi',      s:'Ylittää velvoiterajan — toimenpiteet tarpeen'},
           {v:'5000-23600',l:'5 000–23 600 MWh / vuosi',     s:'Selvästi velvoiterajojen yläpuolella'},
           {v:'23600+',    l:'Yli 23 600 MWh / vuosi',       s:'EMS-velvoite — energianhallintajärjestelmä vaaditaan'},
           {v:'unknown',   l:'En osaa arvioida',              s:'Autamme selvittämään kulutuksen'},
         ])}</div>
-      <div class="field"><label>Merkittävimmät energialähteet <span class="req">*</span></label>
-        ${checks('energy_sources',[
-          {v:'electricity',l:'Sähkö'},
-          {v:'heat',       l:'Kaukolämpö'},
-          {v:'gas',        l:'Maakaasu'},
-          {v:'oil',        l:'Öljy / polttoaineet'},
-          {v:'other',      l:'Muu (biomassa, prosessihöyry, tms.)'},
-        ])}</div>
+
       <div class="field"><label>Kulutuksen kehityssuunta</label>
         ${radio('consumption_trend',[
           {v:'growing',   l:'Kasvava'},
@@ -662,7 +734,7 @@ function validate() {
   const s = STEPS[step].id;
   if (s==='company' && (!A.company_name || !A.sector || !A.city))              { err.style.display='block'; return false; }
   if (s==='size'    && (!A.employees || !A.revenue || !A.is_group))             { err.style.display='block'; return false; }
-  if (s==='energy'  && (!A.consumption || !A.energy_sources.length))            { err.style.display='block'; return false; }
+  if (s==='energy'  && (!A.heating_types.length || !A.consumption))             { err.style.display='block'; return false; }
   if (s==='status'  && (!A.has_audit || !A.has_ems || !A.has_agreement || !A.reported_to_ev)) { err.style.display='block'; return false; }
   if (s==='contact') {
     if (!A.contact_name || !A.contact_email) { err.style.display='block'; return false; }
@@ -713,8 +785,12 @@ async function storeLead(level) {
         employees:         A.employees,
         revenue:           A.revenue,
         is_group:          A.is_group==='yes',
+        heating_types:     A.heating_types,
+        electricity_uses:  A.electricity_uses,
+        vehicles:          A.vehicles,
+        processes:         A.processes,
+        direct_fuels:      A.direct_fuels,
         consumption:       A.consumption,
-        energy_sources:    A.energy_sources,
         consumption_trend: A.consumption_trend,
         has_audit:         A.has_audit,
         has_ems:           A.has_ems,
@@ -872,7 +948,8 @@ function restart() {
   Object.assign(A,{
     company_name:'',y_tunnus:'',sector:'',city:'',
     employees:'',revenue:'',is_group:'',
-    consumption:'',energy_sources:[],consumption_trend:'',
+    heating_types:[],electricity_uses:[],vehicles:[],processes:'',direct_fuels:[],
+    consumption:'',consumption_trend:'',
     has_audit:'',has_ems:'',has_agreement:'',reported_to_ev:'',
     contact_name:'',contact_email:'',contact_phone:'',contact_title:'',
     wants_contact:false,wants_newsletter:false,
