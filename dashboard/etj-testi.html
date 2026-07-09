@@ -1026,6 +1026,23 @@ async function _prhFetch(url) {
   return d.companies || d.results || [];
 }
 
+function prhMapSector(r) {
+  const blines = (r.businessLines || []).filter(b => !b.endDate);
+  const bline  = blines.find(b => (b.language||'').toUpperCase()==='FI') || blines[0] || {};
+  const raw    = (_prhStr(bline.name) + ' ' + _prhStr(bline.code)).toLowerCase();
+  if (!raw.trim()) return '';
+  if (/teollisuus|valmistus|kaivos|metallurgia|kemia|muovi|puu|paperi|elintarvik|juoma/.test(raw)) return 'teollisuus';
+  if (/kuljetus|logistiikka|varastointi|huolinta|spedition/.test(raw))                              return 'logistiikka';
+  if (/tukku|vähittäis|kauppa|myynti|kaupanala/.test(raw))                                         return 'kauppa';
+  if (/kiinteistö|rakennus|rakentaminen|rakennuttaja|isännöinti/.test(raw))                         return 'kiinteisto';
+  if (/energia|sähkö|lämpö|kaukolämpö|vesi|jätehuolto|ympäristö/.test(raw))                        return 'energia';
+  if (/kunta|kaupunki|valtio|julkinen|yhteiskunnallinen|opetus|koulutus/.test(raw))                 return 'julkinen';
+  if (/hotelli|ravintola|matkailu|majoitus|catering/.test(raw))                                     return 'hotelli';
+  if (/terveys|sosiaali|lääke|hoito|sairaala|klinik/.test(raw))                                     return 'terveys';
+  if (/palvelu|toimisto|it |atk|tietotekniikka|ohjelmisto|konsultti|finanssi|vakuutus|pankki/.test(raw)) return 'palvelut';
+  return 'muu';
+}
+
 function setupCompanyStep() {
   const nameInput = document.getElementById('f_name');
   const ytInput   = document.getElementById('f_ytunnus');
@@ -1090,8 +1107,9 @@ async function prhSearch(q, drop, nameInput, ytInput, cityInput) {
         drop.style.display = 'none';
         nameInput.value = item.dataset.name;
         ytInput.value   = item.dataset.yt;
+        // Fill city from initial search result (may be empty if API omits it in list)
         if (item.dataset.city && !cityInput.value.trim()) cityInput.value = item.dataset.city;
-        // Haetaan täydet tiedot y-tunnuksella (parempi osoitetieto)
+        // Always fetch full details by businessId for complete address + toimiala
         if (item.dataset.yt) {
           try {
             const full = await _prhFetch(`${PRH_V3}?businessId=${encodeURIComponent(item.dataset.yt)}`);
@@ -1099,6 +1117,12 @@ async function prhSearch(q, drop, nameInput, ytInput, cityInput) {
               nameInput.value = _prhName(full[0]) || nameInput.value;
               const city = _prhCity(full[0]);
               if (city) cityInput.value = city;
+              // Auto-map toimiala from PRH businessLines
+              const sectorEl = document.getElementById('f_sector');
+              if (sectorEl && !sectorEl.value) {
+                const mapped = prhMapSector(full[0]);
+                if (mapped) sectorEl.value = mapped;
+              }
             }
           } catch {}
         }
