@@ -230,6 +230,14 @@
     }
     .appendix ul li { margin-bottom: 3px; }
 
+
+    /* ── PRH autocomplete ── */
+    .prh-item { padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--border); font-size:13px; transition:background .12s; }
+    .prh-item:last-child { border-bottom:none; border-radius:0 0 8px 8px; }
+    .prh-item:hover { background:var(--bg2); }
+    .prh-item-name { font-weight:600; color:var(--text); }
+    .prh-item-meta { color:var(--text3); font-size:11px; margin-top:2px; }
+
     /* ── Footer ── */
     .site-footer {
       background: var(--navy);
@@ -371,7 +379,11 @@
           <div class="of-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             <div class="of-field">
               <label class="of-label" for="of_yritys">Yrityksen virallinen nimi <span class="of-req">*</span></label>
-              <input class="of-input" type="text" id="of_yritys" placeholder="Oy Esimerkki Ab" autocomplete="organization" required>
+              <div style="position:relative" id="prh-wrap">
+                <input class="of-input" type="text" id="of_yritys" placeholder="Kirjoita yrityksen nimi tai Y-tunnus…" autocomplete="off" required>
+                <div id="prh-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border);border-top:none;border-radius:0 0 8px 8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;max-height:260px;overflow-y:auto"></div>
+              </div>
+              <div id="prh-hint" style="font-size:11px;color:var(--text3);margin-top:4px;display:none">Kirjoita 3 merkkiä hakuun — haetaan PRH:n yritysrekisteristä</div>
             </div>
             <div class="of-field">
               <label class="of-label" for="of_ytunnus">Y-tunnus</label>
@@ -583,7 +595,7 @@
       </div>
       <div>
         <dt>Minimisopimuskausi</dt>
-        <dd class="placeholder">[TÄYDENNETÄÄN — esim. 12 kk]</dd>
+        <dd>12 kuukautta (1 kk irtisanomisaika)</dd>
       </div>
     </div>
 
@@ -618,7 +630,7 @@
     <div class="clause-num">§ 1</div>
     <h3>Osapuolet</h3>
     <p><strong>Palveluntarjoaja:</strong> Spara Energia Oy (jäljempänä "Spara"),
-       Y-tunnus <span class="ph">[TÄYDENNETÄÄN]</span>,
+       Y-tunnus <strong>3449571-8</strong>,
        osoite <span class="ph">[TÄYDENNETÄÄN]</span>.</p>
     <p><strong>Tilaaja / Asiakas:</strong> <span class="ph">[TÄYDENNETÄÄN — yrityksen virallinen nimi]</span>
        (jäljempänä "Asiakas"),
@@ -641,7 +653,9 @@
       <li>Energiankulutuksen seuranta, visualisointi ja ennusteet</li>
       <li>Energiatehokkuustoimenpiteiden hallinta (Kanban, AI-suositukset)</li>
       <li>Viranomaisraporttien tuottaminen (vuosi-ilmoitus, katselmusraportti, johdon katselmus)</li>
-      <li>Integraatiot: Datahub, CSV-tuonti, Lasku-AI</li>
+      <li>Integraatiot: Datahub (edellyttää Asiakas valtuuttaa Spara Energia Oy:n
+          Datahub-palvelussa ja ottaa käyttöön Sparan rakennusten
+          kulutusseuranta-integraation), CSV-tuonti, Lasku-AI</li>
       <li>Tuki sähköpostitse ja päivitykset sopimuskaudella</li>
     </ul>
     <p>Palvelun tarkempi sisältö on kuvattu <strong>Liitteessä A</strong> (Palvelukuvaus).</p>
@@ -661,6 +675,10 @@
       <li>Ilmoittamaan viipymättä Sparalle, jos tunnukset ovat vaarantuneet</li>
       <li>Käyttämään Palvelua ainoastaan laillisiin tarkoituksiin</li>
       <li>Olemaan luovuttamatta käyttöoikeuksia kolmansille osapuolille</li>
+      <li>Valtuuttamaan <strong>Spara Energia Oy:n Datahub-palvelussa</strong> (Fingridin
+          hallinnoimassa Datahub-järjestelmässä) sekä ottamaan käyttöön Sparan
+          rakennusten energiankulutuksen seurantaintegraation — tämä on edellytys
+          automaattiselle sähkönkulutustietojen siirrolle</li>
     </ul>
   </div>
 
@@ -668,14 +686,21 @@
   <div class="clause" id="par4">
     <div class="clause-num">§ 4</div>
     <h3>Hinnoittelu</h3>
-    <p>Palvelun hinta on:</p>
+    <p><strong>Perusmaksu — yksi organisaatio:</strong></p>
     <ul>
-      <li>Kuukausimaksu: <span class="ph">[TÄYDENNETÄÄN] €/kk</span> (alv. 0 %)</li>
-      <li>Vuosimaksu (vaihtoehto): <span class="ph">[TÄYDENNETÄÄN] €/v</span>
-          laskutetaan etukäteen, sisältää <span class="ph">[TÄYDENNETÄÄN]</span> % alennuksen
-          kuukausilaskutukseen verrattuna</li>
-      <li>Käyttöönottomaksu: <span class="ph">[TÄYDENNETÄÄN] € tai 0 €]</span></li>
+      <li>Vuosimaksu: <strong>199 € / vuosi</strong> (alv. 0 %)</li>
     </ul>
+    <p><strong>Konsernilisenssi — tytäryhtiöt ja lisä-Y-tunnukset:</strong></p>
+    <p>Jos Asiakkaalla on konserni tai useita seurattavia organisaatioita,
+       laskutetaan kustakin järjestelmään lisättävästä uudesta Y-tunnuksesta
+       <strong>89 € / vuosi</strong> (alv. 0 %).
+       Laskutus syntyy, kun uusi Y-tunnus lisätään seurantaan Palvelussa,
+       ja se on voimassa kulloinkin käynnissä olevan sopimuskauden loppuun.</p>
+    <p><strong>Lisäpalvelut — puitesopimuksen perusteella:</strong></p>
+    <p>Energiakatselmukset, tehostussuunnitelmat ja muut asiantuntijapalvelut,
+       jotka suoritetaan ihmistyönä, voidaan tilata erikseen tämän sopimuksen
+       voimassaoloaikana kulloinkin voimassa olevan Sparan hinnaston mukaisesti.
+       Lisäpalveluista sovitaan aina kirjallisesti ennen tilauksen toteuttamista.</p>
     <p>Hintoihin lisätään arvonlisävero voimassa olevan lainsäädännön mukaisesti.</p>
     <p>Spara pidättää oikeuden muuttaa hintoja ilmoittamalla siitä kirjallisesti
        vähintään <strong>30 päivää</strong> ennen muutoksen voimaantuloa.
@@ -687,33 +712,35 @@
   <div class="clause" id="par5">
     <div class="clause-num">§ 5</div>
     <h3>Laskutus ja maksaminen</h3>
-    <p>Palvelumaksu laskutetaan <span class="ph">[kuukausittain / vuosittain etukäteen]</span>
-       valitun laskutusvälin mukaisesti.</p>
+    <p>Palvelumaksu laskutetaan <strong>vuosittain etukäteen</strong>
+       sopimuskauden alkaessa.</p>
     <p>Maksuehto: <strong>14 päivää netto</strong> laskun päiväyksestä.</p>
     <p>Myöhästyneille maksuille peritään viivästyskorkoa korkolain (633/1982)
        mukaisen viivästyskoron mukaisesti.</p>
     <p>Jos maksu on myöhässä yli 30 päivää, Sparalla on oikeus keskeyttää
        Palvelun käyttöoikeus ilman ennakkoilmoitusta. Maksujen suorittamisen
        jälkeen käyttöoikeus palautetaan.</p>
-    <p>Laskut toimitetaan sähköpostitse osoitteeseen
-       <span class="ph">[TÄYDENNETÄÄN — laskutussähköposti]</span>
-       tai verkkolaskuna <span class="ph">[OVT-tunnus tai Finvoice-osoite]</span>.</p>
+    <p>Laskutusosoite ilmoitetaan tilauslomakkeella. Tuetut laskutusmuodot:</p>
+    <ul>
+      <li><strong>Sähköpostilasku:</strong> laskutussähköpostiosoite</li>
+      <li><strong>Verkkolasku (Finvoice / TEAPPSXML):</strong> OVT-tunnus
+          ja operaattoritunnus</li>
+    </ul>
   </div>
 
   <!-- §6 -->
   <div class="clause" id="par6">
     <div class="clause-num">§ 6</div>
     <h3>Sopimuksen kesto ja irtisanominen</h3>
-    <p>Sopimus astuu voimaan allekirjoituspäivänä ja on voimassa aluksi
-       <span class="ph">[TÄYDENNETÄÄN — esim. 12 kuukautta]</span>
-       (minimisopimuskausi).</p>
-    <p>Minimisopimuskauden jälkeen sopimus jatkuu automaattisesti
-       <span class="ph">[kuukausi / vuosi]</span> kerrallaan, kunnes
-       se irtisanotaan kirjallisesti.</p>
+    <p>Sopimus astuu voimaan allekirjoituspäivänä ja on voimassa
+       <strong>12 kuukauden sopimuskauden</strong> kerrallaan.</p>
+    <p>Sopimuskausi uusiutuu automaattisesti <strong>12 kuukaudella</strong>,
+       ellei kumpikaan osapuoli irtisano sopimusta kirjallisesti viimeistään
+       <strong>1 kuukautta ennen</strong> sopimuskauden päättymistä.</p>
     <p>Irtisanomisaika:</p>
     <ul>
-      <li>Asiakkaan irtisanoessa: <span class="ph">[TÄYDENNETÄÄN — esim. 1 kuukausi]</span>
-          kirjallinen ilmoitus ennen laskutuskauden päättymistä</li>
+      <li>Asiakkaan irtisanoessa: kirjallinen ilmoitus vähintään
+          <strong>1 kuukautta ennen</strong> sopimuskauden päättymistä</li>
       <li>Sparan irtisanoessa ilman Asiakkaan sopimusrikkomusta:
           <strong>3 kuukautta</strong> kirjallinen ilmoitus</li>
     </ul>
@@ -879,7 +906,9 @@
     <ul>
       <li>ETJ-velvoitteen seuranta: vaatimustenmukaisuustaulukko, automaattiset hälytykset, deadline-muistutukset</li>
       <li>Energiankulutuksen hallinta: kuukausittainen seuranta, Chart.js-visualisoinnit, kynnysarvojana, ennuste</li>
-      <li>Datahub-integraatio sähkönkulutukselle (GSRN-pohjainen)</li>
+      <li>Datahub-integraatio sähkönkulutukselle (GSRN-pohjainen; edellyttää
+          Asiakkaan valtuutuksen Datahub-palvelussa ja Sparan
+          rakennusintegraation käyttöönottoa)</li>
       <li>CSV-tuonti kaikille energiamuodoille</li>
       <li>Lasku-AI: PDF/kuva-laskujen automaattinen tulkinta</li>
       <li>Toimenpidesuunnitelma: Kanban-hallinta, AI-suositukset, säästölaskuri</li>
@@ -971,6 +1000,116 @@
     if (el && val) el.value = val;
   }
 
+  // ── PRH API v3 autocomplete ──────────────────────────────────────────────
+  const PRH_V3 = 'https://avoindata.prh.fi/opendata-ytj-api/v3/companies';
+
+  function _prhStr(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return v;
+    if (Array.isArray(v)) {
+      const active = v.filter(x => !x.endDate);
+      const pick = active.find(x => (x.language||'').toUpperCase()==='FI') || active[0] || v[0];
+      return pick ? _prhStr(pick.name || pick.value || pick) : '';
+    }
+    if (typeof v === 'object')
+      return _prhStr(v.name || v.value || v.fi || v.FI || Object.values(v).find(x=>x&&typeof x==='string') || '');
+    return String(v);
+  }
+
+  function _prhName(r) {
+    const top = _prhStr(r.name) || _prhStr(r.companyName);
+    if (top) return top;
+    const arr = (r.names||[]).filter(n=>!n.endDate).sort((a,b)=>(a.order||0)-(b.order||0));
+    return _prhStr((arr.find(n=>n.language==='FI')||arr[0]||{}).name);
+  }
+
+  function _prhCity(r) {
+    const addrs = (r.addresses||[]).filter(a=>!a.endDate);
+    const addr  = addrs.find(a=>a.type===1) || addrs[0] || {};
+    return _prhStr(addr.city) || _prhStr(addr.postOffice) || _prhStr(addr.municipality);
+  }
+
+  function _prhPostal(r) {
+    const addrs = (r.addresses||[]).filter(a=>!a.endDate);
+    const addr  = addrs.find(a=>a.type===1) || addrs[0] || {};
+    return _prhStr(addr.postCode) || _prhStr(addr.zipCode) || '';
+  }
+
+  function _prhStreet(r) {
+    const addrs = (r.addresses||[]).filter(a=>!a.endDate);
+    const addr  = addrs.find(a=>a.type===1) || addrs[0] || {};
+    return _prhStr(addr.street) || _prhStr(addr.careOf) || '';
+  }
+
+  let _prhTimer = null;
+
+  function prhSetup() {
+    const inp  = document.getElementById('of_yritys');
+    const drop = document.getElementById('prh-drop');
+    const hint = document.getElementById('prh-hint');
+    if (!inp || !drop) return;
+    // If field already has a value (pre-filled), skip activation
+    if (inp.value.trim()) return;
+    if (hint) hint.style.display = 'block';
+
+    inp.addEventListener('input', () => {
+      clearTimeout(_prhTimer);
+      const q = inp.value.trim();
+      if (q.length < 3) { drop.style.display = 'none'; return; }
+      _prhTimer = setTimeout(() => prhSearch(q), 300);
+    });
+
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { drop.style.display = 'none'; }
+    });
+
+    inp.addEventListener('blur', () => {
+      setTimeout(() => { drop.style.display = 'none'; }, 200);
+    });
+  }
+
+  async function prhSearch(q) {
+    const drop = document.getElementById('prh-drop');
+    if (!drop) return;
+    try {
+      const isYtunnus = /^\d{7}-\d$/.test(q);
+      const url = isYtunnus
+        ? `${PRH_V3}?businessId=${encodeURIComponent(q)}`
+        : `${PRH_V3}?name=${encodeURIComponent(q)}&maxResults=10`;
+      const r = await fetch(url);
+      if (!r.ok) { drop.style.display = 'none'; return; }
+      const d = await r.json();
+      const companies = d.companies || d.results || [];
+      if (!companies.length) { drop.style.display = 'none'; return; }
+      drop.innerHTML = companies.map(c => {
+        const name = _prhName(c);
+        const bid  = c.businessId || '';
+        const city = _prhCity(c);
+        const ns   = JSON.stringify(name), bs = JSON.stringify(bid), cs = JSON.stringify(city);
+        const postal = JSON.stringify(_prhPostal(c));
+        const street = JSON.stringify(_prhStreet(c));
+        return `<div class="prh-item" onclick="prhPick(${ns},${bs},${cs},${postal},${street})">
+          <div class="prh-item-name">${name}</div>
+          <div class="prh-item-meta">${bid}${city ? ' &middot; ' + city : ''}</div>
+        </div>`;
+      }).join('');
+      drop.style.display = 'block';
+    } catch (_) { /* non-fatal */ }
+  }
+
+  function prhPick(name, bid, city, postal, street) {
+    const setV = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+    setV('of_yritys',    name);
+    setV('of_ytunnus',   bid);
+    setV('of_kaupunki',  city);
+    setV('of_postinumero', postal);
+    setV('of_osoite',    street);
+    const drop = document.getElementById('prh-drop');
+    if (drop) drop.style.display = 'none';
+    const hint = document.getElementById('prh-hint');
+    if (hint) hint.style.display = 'none';
+  }
+
   // ── Pre-fill from URL params + Supabase lead ─────────────────
   async function init() {
     const params = new URLSearchParams(location.search);
@@ -1028,6 +1167,7 @@
 
     sigInitCanvas();
     loadSigMeta();
+    prhSetup();
   }
 
   // ── Canvas signature ─────────────────────────────────────────
