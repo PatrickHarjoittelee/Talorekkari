@@ -219,6 +219,104 @@ main {
 }
 .req { color: var(--accent); }
 
+/* ── NUMBER INPUT BASE ───────────────────────── */
+input[type="number"] {
+  width: 100%; padding: 11px 14px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius); color: var(--text);
+  font-size: 14px; font-family: inherit; outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  -webkit-appearance: none; -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+input[type="number"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(44,232,121,.12); }
+
+/* ── ENERGY COMPONENTS ───────────────────────── */
+.esub-pills {
+  display: flex; gap: 0; border-radius: var(--radius);
+  overflow: hidden; border: 1px solid var(--border); margin-bottom: 20px;
+}
+.esub-pill {
+  flex: 1; text-align: center; padding: 8px 4px;
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  background: var(--surface2); border-right: 1px solid var(--border);
+  letter-spacing: .02em; transition: all .2s;
+}
+.esub-pill:last-child { border-right: none; }
+.esub-pill.done { color: var(--accent); background: rgba(44,232,121,.07); }
+.esub-pill.active { color: var(--accent); background: rgba(44,232,121,.13); font-weight: 800; }
+
+.energy-running-total {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; background: rgba(44,232,121,.07);
+  border: 1px solid rgba(44,232,121,.2); border-radius: var(--radius);
+  margin-bottom: 18px;
+}
+.ert-label { font-size: 11px; color: var(--text2); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em; }
+.ert-val { font-size: 18px; font-weight: 800; color: var(--accent);
+  font-variant-numeric: tabular-nums; }
+
+.ecomp {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 13px 16px; background: var(--surface2);
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; transition: border-color .2s, background .2s;
+  user-select: none; margin-bottom: 8px;
+}
+.ecomp:hover { border-color: var(--border2); }
+.ecomp.on  { border-color: var(--accent); background: var(--accent-bg); }
+.ecomp-chk {
+  width: 18px; height: 18px; border-radius: 4px;
+  border: 2px solid var(--border2); flex-shrink: 0;
+  display: grid; place-items: center;
+  font-size: 11px; color: #000; transition: all .2s; margin-top: 2px;
+}
+.ecomp.on .ecomp-chk { background: var(--accent); border-color: var(--accent); }
+.ecomp-body { flex: 1; }
+.ecomp-lbl  { font-size: 14px; font-weight: 600; color: var(--text); }
+.ecomp-hint { font-size: 11px; color: var(--text3); margin-top: 3px; line-height: 1.4; }
+.ecomp-inputs { margin-top: 12px; }
+.unit-tabs  { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.unit-tab {
+  padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  border: 1.5px solid var(--border2); cursor: pointer;
+  background: transparent; color: var(--text2); font-family: inherit;
+  transition: all .15s; letter-spacing: .02em;
+}
+.unit-tab.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.unit-input-row { display: flex; align-items: center; gap: 8px; }
+.unit-input-row input[type="number"] { flex: 1; padding: 9px 12px; }
+.unit-suffix { font-size: 12px; color: var(--text3); white-space: nowrap; }
+.kwh-preview { font-size: 12px; color: var(--accent); font-weight: 700; margin-top: 6px; min-height: 16px; }
+
+.muu-trigger {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 0 4px; font-size: 13px; color: var(--text2); cursor: pointer;
+}
+.muu-trigger input[type=checkbox] {
+  accent-color: var(--accent); width: 16px; height: 16px;
+  flex-shrink: 0; cursor: pointer;
+}
+.muu-inputs { display: none; flex-direction: column; gap: 8px; margin-top: 8px; }
+.muu-inputs.vis { display: flex; }
+
+.summary-brkd {
+  background: var(--surface2); border-radius: var(--radius);
+  padding: 12px 16px; margin-bottom: 16px; border: 1px solid var(--border);
+}
+.summary-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; font-size: 14px; color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+.summary-row:last-child { border-bottom: none; }
+.summary-total {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0 4px; font-size: 16px; font-weight: 800; color: var(--accent);
+}
+
 input[type="text"], input[type="email"], input[type="tel"], select {
   width: 100%; padding: 11px 14px;
   background: var(--surface2); border: 1px solid var(--border2);
@@ -440,7 +538,7 @@ const STEPS = [
 
 const A = {
   company_name:'', y_tunnus:'', sector:'', city:'', is_group:'',
-  heating_types:[], electricity_uses:[], vehicles:[], processes:'', direct_fuels:[],
+  ed:{},           // energy data: key→{on,unit,val,kwh} per component
   consumption:'', consumption_trend:'',
   has_audit:'', has_ems:'', has_agreement:'', reported_to_ev:'',
   contact_name:'', contact_email:'', contact_phone:'', contact_title:'',
@@ -449,6 +547,7 @@ const A = {
 
 let step = 0;
 let goingBack = false;
+let eSub = 0; // sub-step within energy step
 
 /* ── PROGRESS ──────────────────────────────────── */
 function renderProgress() {
@@ -511,8 +610,321 @@ const SECTORS = [
   ['muu','Muu toimiala'],
 ];
 
+/* ── ENERGY SUB-STEPS ──────────────────────────── */
+const ESUBS = [
+  { id:'sahko',    name:'Sähkö',          icon:'⚡' },
+  { id:'lampo',    name:'Lämpö',           icon:'🔥' },
+  { id:'liikenne', name:'Liikenne',        icon:'🚛' },
+  // eSub === 3 → summary
+];
+
+/* Conversion factors: val × f = kWh */
+const ECOMPS = {
+  sahko:[
+    { id:'val',       lbl:'Valaistus',
+      hint:'Toimisto n. 40 kWh/m²/v · teollisuushalli n. 60 kWh/m²/v',
+      units:[{u:'m²',f:40,s:'lattiapinta-ala (m²)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'lvias',     lbl:'Ilmanvaihto ja LVI-tekniikka',
+      hint:'n. 25 kWh/m²/v',
+      units:[{u:'m²',f:25,s:'lattiapinta-ala (m²)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'koneet',    lbl:'Tuotantokoneet ja prosessit',
+      hint:'n. 20 kWh/käyttötunti (vaihtelee: leikkuukone ~15, kompressori ~10, hitsauspiste ~25)',
+      units:[{u:'h',f:20,s:'käyttötunteja/vuosi'},{u:'kW',f:4000,s:'koneiden yhteiskapasiteetti (kW)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'konesali',  lbl:'Konesali tai palvelinhuone',
+      hint:'1 kW palvelinteho ≈ 7 500–8 000 kWh/v (PUE 1,5)',
+      units:[{u:'kW',f:7500,s:'palvelintehovaraus (kW)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'kylma',     lbl:'Kylmälaitteet ja kylmäketju',
+      hint:'Kauppakylmäkaluste n. 2 000 kWh/kW/v · kylmävarasto vaihtelee',
+      units:[{u:'kW',f:2000,s:'jäähdytyskapasiteetti (kW)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'ev',        lbl:'Sähköajoneuvojen lataus',
+      hint:'Henkilöauto n. 3 000 kWh/v · pakettiauto n. 5 000 kWh/v',
+      units:[{u:'kpl',f:3500,s:'sähköajoneuvojen lukumäärä'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'sahkolampo',lbl:'Sähkölämmitys (suora, lattia, patteri)',
+      hint:'n. 80–120 kWh/m²/v',
+      units:[{u:'m²',f:100,s:'lämmitettävä pinta-ala (m²)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+  ],
+  lampo:[
+    { id:'kaukolampo',lbl:'Kaukolämpö',
+      hint:'Luku löytyy suoraan kaukolämpölaskulta',
+      units:[{u:'MWh',f:1000,s:'MWh/vuosi (katso lasku)'},{u:'€',f:16.7,s:'€/vuosi (÷ ~60 €/MWh)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'oljy',      lbl:'Kevyt polttoöljy (lämmitysöljy)',
+      hint:'1 000 l ≈ 10 MWh',
+      units:[{u:'l',f:10,s:'litraa/vuosi'},{u:'€',f:8.3,s:'€/vuosi (÷ ~1,2 €/l)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'maakaasu',  lbl:'Maakaasu',
+      hint:'1 m³ ≈ 10,5 kWh',
+      units:[{u:'m³',f:10.5,s:'m³/vuosi'},{u:'MWh',f:1000,s:'MWh/vuosi'},{u:'€',f:18.2,s:'€/vuosi (÷ ~55 €/MWh)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'pelletti',  lbl:'Pelletti tai hake',
+      hint:'1 t pelletti ≈ 4 800 kWh · 1 t hake ≈ 2 500 kWh (kostea)',
+      units:[{u:'t',f:4500,s:'tonnia/vuosi (pelletti)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'maalamppu', lbl:'Maalämpö- tai ilmalämpöpumppu',
+      hint:'Sähkönkulutus ≈ lämpöteho × ~700 h / COP 3 ≈ 700 kWh/kW/v',
+      units:[{u:'kW',f:700,s:'pumpun nimellisteho (kW)'},{u:'kWh',f:1,s:'sähkönkulutus kWh/vuosi'}] },
+    { id:'kaukokylma',lbl:'Kaukoviilennys',
+      hint:'Luku löytyy laskusta',
+      units:[{u:'MWh',f:1000,s:'MWh/vuosi'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'raskas_oljy',lbl:'Raskas polttoöljy tai prosessiöljy',
+      hint:'1 l ≈ 11 kWh',
+      units:[{u:'l',f:11,s:'litraa/vuosi'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+  ],
+  liikenne:[
+    { id:'ha',       lbl:'Henkilöautot (polttomoottori)',
+      hint:'n. 7 l/100 km · 1 000 km ≈ 0,65 MWh',
+      units:[{u:'l',f:9,s:'polttoainetta yhteensä l/v'},{u:'km',f:0.65,s:'km/vuosi yhteensä'},{u:'€',f:7.5,s:'polttoainekulut €/v (÷ ~1,2 €/l)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'pa',       lbl:'Pakettiautot ja jakeluautot',
+      hint:'n. 9 l/100 km · 1 000 km ≈ 0,9 MWh',
+      units:[{u:'l',f:10,s:'polttoainetta yhteensä l/v'},{u:'km',f:0.9,s:'km/vuosi yhteensä'},{u:'€',f:8.3,s:'polttoainekulut €/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'ka',       lbl:'Kuorma-autot ja bussit',
+      hint:'n. 35 l/100 km · 1 000 km ≈ 3,5 MWh',
+      units:[{u:'l',f:10,s:'diesel yhteensä l/v'},{u:'km',f:3.3,s:'km/vuosi yhteensä'},{u:'€',f:8.3,s:'polttoainekulut €/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'tyokone',  lbl:'Työkoneet (kaivukoneet, pyöräkuormaajat, trukit, mobiilityökoneet)',
+      hint:'Kaivinkone n. 15–25 l/h · trukki n. 2–5 l/h',
+      units:[{u:'l',f:10,s:'polttoainetta yhteensä l/v'},{u:'h',f:200,s:'käyttötunteja/v (×20 l/h)'},{u:'€',f:8.3,s:'polttoainekulut €/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'laiva',    lbl:'Laivat, veneet tai muut vesialukset',
+      hint:'Pienveneet n. 20–50 l/h',
+      units:[{u:'l',f:10,s:'polttoainetta yhteensä l/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+  ],
+};
+
+/* ── ENERGY HELPERS ────────────────────────────── */
+function eKey(tid, cid) { return tid + '_' + cid; }
+
+function eCompToggle(tid, cid) {
+  const k = eKey(tid, cid);
+  const comp = ECOMPS[tid].find(c=>c.id===cid);
+  if (!A.ed[k]) A.ed[k] = { on:false, unit:comp.units[0].u, val:'', kwh:0 };
+  A.ed[k].on = !A.ed[k].on;
+  const row = document.getElementById('ec_'+k);
+  const inp = document.getElementById('ecinp_'+k);
+  if (!row) return;
+  if (A.ed[k].on) {
+    row.classList.add('on');
+    row.querySelector('.ecomp-chk').textContent = '✓';
+    if (inp) inp.style.display = 'block';
+  } else {
+    row.classList.remove('on');
+    row.querySelector('.ecomp-chk').textContent = '';
+    if (inp) inp.style.display = 'none';
+    A.ed[k].kwh = 0;
+    eUpdateTotal();
+  }
+}
+
+function eCompUnit(tid, cid, unit) {
+  const k = eKey(tid, cid);
+  if (!A.ed[k]) return;
+  A.ed[k].unit = unit;
+  const comp = ECOMPS[tid].find(c=>c.id===cid);
+  comp.units.forEach(u => {
+    const tab = document.getElementById('etab_'+k+'_'+u.u);
+    if (tab) tab.classList.toggle('active', u.u===unit);
+  });
+  const sfx = document.getElementById('esfx_'+k);
+  const unitCfg = comp.units.find(u=>u.u===unit);
+  if (sfx && unitCfg) sfx.textContent = unitCfg.s;
+  eCalc(tid, cid);
+}
+
+function eCompVal(tid, cid, val) {
+  const k = eKey(tid, cid);
+  if (!A.ed[k]) return;
+  A.ed[k].val = val;
+  eCalc(tid, cid);
+}
+
+function eCalc(tid, cid) {
+  const k = eKey(tid, cid);
+  const d = A.ed[k];
+  if (!d) return;
+  const comp = ECOMPS[tid].find(c=>c.id===cid);
+  const unitCfg = comp.units.find(u=>u.u===d.unit) || comp.units[0];
+  const raw = parseFloat(d.val) || 0;
+  d.kwh = raw * unitCfg.f;
+  const prev = document.getElementById('eprev_'+k);
+  if (prev) prev.textContent = d.kwh > 0 ? '≈ ' + fmtKwh(d.kwh) : '';
+  eUpdateTotal();
+}
+
+function muuToggle(tid) {
+  const k = tid + '_muu';
+  if (!A.ed[k]) A.ed[k] = { on:false, label:'', kwh:0 };
+  A.ed[k].on = !A.ed[k].on;
+  const el = document.getElementById('muu_'+tid+'_i');
+  if (el) el.classList.toggle('vis', A.ed[k].on);
+}
+function muuKwh(tid, v) {
+  const k = tid + '_muu';
+  if (!A.ed[k]) A.ed[k] = { on:true, label:'', kwh:0 };
+  A.ed[k].kwh = parseFloat(v) || 0;
+  eUpdateTotal();
+}
+function muuLabel(tid, v) {
+  const k = tid + '_muu';
+  if (A.ed[k]) A.ed[k].label = v;
+}
+
+function calcTotalKwh() {
+  return Object.values(A.ed).reduce((s,d) => s + (d.on ? (parseFloat(d.kwh)||0) : 0), 0);
+}
+function fmtKwh(kwh) {
+  if (kwh >= 1e6) return (kwh/1e6).toFixed(1) + ' GWh/v';
+  if (kwh >= 1000) return Math.round(kwh/1000) + ' MWh/v';
+  return Math.round(kwh) + ' kWh/v';
+}
+function eUpdateTotal() {
+  const t = calcTotalKwh();
+  const el = document.getElementById('ert_val');
+  if (el) el.textContent = t > 0 ? fmtKwh(t) : '—';
+  // auto-set consumption band
+  if (t > 0) {
+    const mwh = t/1000;
+    A.consumption = mwh<500 ? '<500' : mwh<2700 ? '500-2700' : mwh<5000 ? '2700-5000' : mwh<23600 ? '5000-23600' : '23600+';
+  }
+}
+
+function buildEComp(tid, comp) {
+  const k = eKey(tid, comp.id);
+  const d = A.ed[k] || { on:false, unit:comp.units[0].u, val:'', kwh:0 };
+  const activeU = d.unit || comp.units[0].u;
+  const activeCfg = comp.units.find(u=>u.u===activeU) || comp.units[0];
+  return `<div class="ecomp${d.on?' on':''}" id="ec_${k}" onclick="eCompToggle('${tid}','${comp.id}')">
+    <div class="ecomp-chk">${d.on?'✓':''}</div>
+    <div class="ecomp-body">
+      <div class="ecomp-lbl">${comp.lbl}</div>
+      ${comp.hint?`<div class="ecomp-hint">${comp.hint}</div>`:''}
+      <div id="ecinp_${k}" style="display:${d.on?'block':'none'}">
+        <div class="ecomp-inputs" onclick="event.stopPropagation()">
+          ${comp.units.length>1?`<div class="unit-tabs">${comp.units.map(u=>`<button class="unit-tab${u.u===activeU?' active':''}" id="etab_${k}_${u.u}" onclick="eCompUnit('${tid}','${comp.id}','${u.u}')">${u.u}</button>`).join('')}</div>`:''}
+          <div class="unit-input-row">
+            <input type="number" min="0" step="any" value="${d.val}" placeholder="0"
+              oninput="eCompVal('${tid}','${comp.id}',this.value)"
+              onclick="event.stopPropagation()">
+            <span class="unit-suffix" id="esfx_${k}">${activeCfg.s}</span>
+          </div>
+          <div class="kwh-preview" id="eprev_${k}">${d.kwh>0?'≈ '+fmtKwh(d.kwh):''}</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildEnergySub() {
+  if (eSub >= ESUBS.length) {
+    // ── Summary ─────────────────────────────────────
+    const total = calcTotalKwh();
+    const mwh = total/1000;
+    const bandColor = total===0?'var(--text3)':mwh<500?'var(--accent)':mwh<2700?'var(--warn)':'var(--danger)';
+    const bandLabel = total===0?'Syötä arvioita alla':mwh<500?'Alle 500 MWh/v — selvästi rajan alla':
+      mwh<2700?'500–2 700 MWh/v — lähellä velvoiterajaa':
+      mwh<5000?'2 700–5 000 MWh/v — ylittää velvoiterajan':
+      mwh<23600?'5 000–23 600 MWh/v — selvästi velvoiterajojen yläpuolella':
+      'Yli 23 600 MWh/v — ISO 50001 pakollinen';
+    if (total>0) {
+      const m=total/1000;
+      A.consumption=m<500?'<500':m<2700?'500-2700':m<5000?'2700-5000':m<23600?'5000-23600':'23600+';
+    }
+    const brkd = ESUBS.map(sub=>{
+      const t = Object.entries(A.ed)
+        .filter(([k])=>k.startsWith(sub.id+'_')&&A.ed[k].on)
+        .reduce((s,[,d])=>s+(parseFloat(d.kwh)||0),0);
+      return t>0?`<div class="summary-row"><span>${sub.icon} ${sub.name}</span><span style="font-weight:700;font-variant-numeric:tabular-nums">${fmtKwh(t)}</span></div>`:'';
+    }).join('');
+    return `
+      <div class="card-eyebrow">Vaihe 2 / 4 — Energiamäärät</div>
+      ${esubPills()}
+      <h2>📊 Kulutusyhteenveto</h2>
+      <div class="card-desc">Alla laskettu arvio syöttämiesi tietojen pohjalta. Voit palata täydentämään tai jatkaa eteenpäin.</div>
+      <div style="text-align:center;padding:24px 0 16px">
+        <div style="font-size:40px;font-weight:900;font-variant-numeric:tabular-nums;color:${bandColor}">${total>0?fmtKwh(total):'—'}</div>
+        <div style="font-size:13px;margin-top:8px;color:${bandColor}">${bandLabel}</div>
+      </div>
+      ${brkd?`<div class="summary-brkd">${brkd}</div>`:''}
+      ${total===0?`<p style="font-size:13px;color:var(--text3);text-align:center;padding:0 0 12px">Ei arvioita syötetty — voit silti jatkaa tai palata täydentämään.</p>`:''}
+      <div class="field" style="margin-top:12px"><label>Tarkista tai korjaa kulutusluokka <span class="req">*</span></label>
+        ${radio('consumption',[
+          {v:'<500',      l:'Alle 500 MWh / vuosi',   s:'Selvästi rajan alla'},
+          {v:'500-2700',  l:'500–2 700 MWh / vuosi',  s:'Lähellä velvoiterajaa'},
+          {v:'2700-5000', l:'2 700–5 000 MWh / vuosi',s:'Ylittää velvoiterajan — kevyt raportointi'},
+          {v:'5000-23600',l:'5 000–23 600 MWh / vuosi',s:'Selvästi velvoiterajojen yläpuolella'},
+          {v:'23600+',    l:'Yli 23 600 MWh / vuosi', s:'ISO 50001 pakollinen'},
+          {v:'unknown',   l:'En osaa arvioida',        s:'Autamme selvittämään'},
+        ])}</div>
+      <div class="field"><label>Kulutuksen kehityssuunta</label>
+        ${radio('consumption_trend',[
+          {v:'growing',l:'Kasvava'},{v:'stable',l:'Tasainen'},
+          {v:'decreasing',l:'Laskeva'},{v:'unknown',l:'En tiedä'},
+        ])}</div>`;
+  }
+
+  // ── Normal energy sub-step ──────────────────────
+  const sub = ESUBS[eSub];
+  const comps = ECOMPS[sub.id];
+  const total = calcTotalKwh();
+  return `
+    <div class="card-eyebrow">Vaihe 2 / 4 — ${sub.icon} ${sub.name}</div>
+    ${esubPills()}
+    <h2>${sub.icon} ${sub.name}</h2>
+    <div class="card-desc">${subDesc(sub.id)} Rastita kohteet ja anna arvio — valitse sinulle tutuin yksikkö.</div>
+    <div class="energy-running-total">
+      <span class="ert-label">Laskettu kulutus tähän mennessä</span>
+      <span class="ert-val" id="ert_val">${total>0?fmtKwh(total):'—'}</span>
+    </div>
+    ${comps.map(c=>buildEComp(sub.id,c)).join('')}
+    <div class="muu-trigger" onclick="muuToggle('${sub.id}')">
+      <input type="checkbox" ${A.ed[sub.id+'_muu']?.on?'checked':''} onclick="event.stopPropagation();muuToggle('${sub.id}')">
+      Muuta ${sub.name.toLowerCase()}kulutusta mielessä?
+    </div>
+    <div id="muu_${sub.id}_i" class="muu-inputs${A.ed[sub.id+'_muu']?.on?' vis':''}">
+      <input type="text" placeholder="Mitä? (vapaaehtoinen kuvaus)"
+        value="${esc(A.ed[sub.id+'_muu']?.label||'')}"
+        oninput="muuLabel('${sub.id}',this.value)">
+      <div class="unit-input-row">
+        <input type="number" min="0" placeholder="kWh/vuosi"
+          value="${A.ed[sub.id+'_muu']?.kwh||''}"
+          oninput="muuKwh('${sub.id}',this.value)">
+        <span class="unit-suffix">kWh/v</span>
+      </div>
+    </div>`;
+}
+
+function esubPills() {
+  return `<div class="esub-pills">${ESUBS.map((s,i)=>`<div class="esub-pill${i<eSub?' done':i===eSub?' active':''}">${s.icon} ${s.name}</div>`).join('')}<div class="esub-pill${eSub>=ESUBS.length?' active':''}">📊 Yhteenveto</div></div>`;
+}
+
+function subDesc(id) {
+  return {
+    sahko:'Sähkönkulutuksen kohteet — valaistus, LVI, tuotantokoneet, konesalit, kylmä.',
+    lampo:'Kaukolämpö, öljy, maakaasu, biomassa ja lämpöpumput.',
+    liikenne:'Polttomoottoriajoneuvot ja raskaat työkoneet.',
+  }[id]||'';
+}
+
+function navESub(dir) {
+  goingBack = dir < 0;
+  eSub = Math.max(0, Math.min(ESUBS.length, eSub+dir));
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ── STEP CONTENT ──────────────────────────────── */
 function buildStep() {
   const s = STEPS[step].id;
+
+  // Energy step: own sub-step navigation
+  if (s === 'energy') {
+    const isLastSub = eSub >= ESUBS.length;
+    const back = eSub > 0
+      ? `<button class="btn btn-secondary" onclick="navESub(-1)">← Takaisin</button>`
+      : `<button class="btn btn-secondary" onclick="nav(-1)">← Takaisin</button>`;
+    const next = isLastSub
+      ? `<button class="btn btn-primary" onclick="nav(1)">Seuraava →</button>`
+      : `<button class="btn btn-primary" onclick="navESub(1)">Seuraava →</button>`;
+    return `<div class="card${goingBack?' back':''}">
+      ${buildEnergySub()}
+      <div class="err-msg" id="errMsg" style="display:none">Tarkista kulutusluokka.</div>
+      <div class="btn-row">${back}${next}</div>
+    </div>`;
+  }
+
   const back = step > 0 ? `<button class="btn btn-secondary" onclick="nav(-1)">← Takaisin</button>` : '';
   const next = s==='contact'
     ? `<button class="btn btn-primary" onclick="submit()">Näytä tulos →</button>`
@@ -535,94 +947,6 @@ function buildStep() {
         ${radio('is_group',[
           {v:'no',  l:'Itsenäinen yritys'},
           {v:'yes', l:'Osa suurempaa konsernia', s:'ETJ-velvoite voi koskea koko konsernia — ryhmän kulutus lasketaan yhteen'},
-        ])}</div>`,
-
-    energy: `
-      <div class="card-eyebrow">Vaihe 2 / 4</div>
-      <h2>Energia ja kulutus</h2>
-      <div class="card-desc">Kerro mistä lähteistä energianne tulee ja mihin sitä kuluu. Tiedot auttavat arvioimaan ETJ-velvoitteen ja säästöpotentiaalin tarkasti.</div>
-
-      <div class="field">
-        <label class="section-label">Kiinteistöjen lämmitys ja jäähdytys <span class="req">*</span></label>
-        <div class="field-hint">Valitse kaikki käytössä olevat muodot</div>
-        ${checks('heating_types',[
-          {v:'kaukolampo',       l:'Kaukolämpö'},
-          {v:'kaukokylma',       l:'Kaukoviilennys / kaukokylmä'},
-          {v:'sahkolampo',       l:'Sähkölämmitys (suora, lattia, patteri)'},
-          {v:'maalampopumppu',   l:'Maalämpö- tai ilmalämpöpumppu'},
-          {v:'oljylampo',        l:'Öljylämmitys'},
-          {v:'kaasulammitys',    l:'Kaasulämmitys (maakaasu, LNG)'},
-          {v:'biomassa',         l:'Biomassa, pelletti tai hake'},
-          {v:'ei_kiinteistoja',  l:'Ei omia tai hallittavia kiinteistöjä'},
-        ])}</div>
-
-      <hr class="energy-section-divider">
-      <div class="field">
-        <label class="section-label">Sähkönkäyttö — merkittävimmät kohteet</label>
-        <div class="field-hint">Valitse kaikki, joihin sähköä kuluu merkittävästi</div>
-        ${checks('electricity_uses',[
-          {v:'valaistus_lvias',  l:'Valaistus ja kiinteistötekniikka (LVI, ilmanvaihto)'},
-          {v:'tuotantokoneet',   l:'Tuotantokoneet ja teolliset prosessit'},
-          {v:'konesali',         l:'Konesali tai palvelinhuone / IT-infrastruktuuri'},
-          {v:'ev_lataus',        l:'Sähköajoneuvojen lataus'},
-          {v:'kylmalaitteet',    l:'Kylmälaitteet (kylmäketju, kylmävarasto, pakastus)'},
-          {v:'pumput',           l:'Pumput, kompressorit ja puhaltimet'},
-          {v:'muu_sahko',        l:'Muu sähkönkäyttö'},
-        ])}</div>
-
-      <hr class="energy-section-divider">
-      <div class="field">
-        <label class="section-label">Ajoneuvokalusto</label>
-        <div class="field-hint">Valitse kaikki yrityksenne hallinnoimat tai käyttämät</div>
-        ${checks('vehicles',[
-          {v:'ei_kalustoa',         l:'Ei omaa ajoneuvokantaa'},
-          {v:'henkiloautot',         l:'Henkilöautot (yritysautot)'},
-          {v:'pakettiautot',         l:'Paketti- tai jakeluautot'},
-          {v:'kuorma_autot',         l:'Kuorma-autot tai bussit'},
-          {v:'tyokoneet',            l:'Työkoneet (trukit, pyöräkuormaajat, mobiilityökoneet)'},
-          {v:'laivat_lentokoneet',   l:'Laivat, veneet tai lentokoneet'},
-        ])}</div>
-
-      <hr class="energy-section-divider">
-      <div class="field">
-        <label class="section-label">Teolliset prosessit ja tuotanto</label>
-        ${radio('processes',[
-          {v:'ei_prosesseja',      l:'Ei teollisia prosesseja',        s:'Palvelu-, toimisto- tai vähittäiskauppatoiminta'},
-          {v:'kevyt_tuotanto',     l:'Kevyt tuotanto tai kokoonpano',  s:'Metallintyöstö, elektroniikka, pakkaus tms.'},
-          {v:'energiaintensiivinen',l:'Energiaintensiivinen tuotanto', s:'Uunit, hitsaus, kuivaus, kompressorit, paineilma'},
-          {v:'raskas_prosessi',    l:'Raskas tai kemiallinen prosessi', s:'Sulatus, valimo, kemianteollisuus, paperi/sellu'},
-        ])}</div>
-
-      <hr class="energy-section-divider">
-      <div class="field">
-        <label class="section-label">Suora polttoaineiden käyttö</label>
-        <div class="field-hint">Polttoaineet, joita poltetaan suoraan kiinteistöissä tai prosesseissa (ei liikennepolttoaineet)</div>
-        ${checks('direct_fuels',[
-          {v:'ei_polttoaineita',  l:'Ei suoraa polttoainekäyttöä'},
-          {v:'maakaasu',          l:'Maakaasu tai LNG'},
-          {v:'kevyt_oljy',        l:'Kevyt polttoöljy (lämmitys tai prosessi)'},
-          {v:'raskas_oljy',       l:'Raskas polttoöljy tai bitumi'},
-          {v:'biopolttoaineet',   l:'Biopolttoaineet, bioöljy tai biopelletit (prosessipoltto)'},
-          {v:'propaani',          l:'Propaani, butaani tai nestekaasu'},
-        ])}</div>
-
-      <hr class="energy-section-divider">
-      <div class="field"><label>Arvioitu vuotuinen kokonaiskulutus — kaikki energiamuodot yhteensä <span class="req">*</span></label>
-        ${radio('consumption',[
-          {v:'<500',      l:'Alle 500 MWh / vuosi',         s:'Todennäköisesti velvoiterajan alapuolella'},
-          {v:'500-2700',  l:'500–2 700 MWh / vuosi',        s:'Lähestyy rajaa — seuranta suositeltavaa'},
-          {v:'2700-5000', l:'2 700–5 000 MWh / vuosi',      s:'Ylittää velvoiterajan — toimenpiteet tarpeen'},
-          {v:'5000-23600',l:'5 000–23 600 MWh / vuosi',     s:'Selvästi velvoiterajojen yläpuolella'},
-          {v:'23600+',    l:'Yli 23 600 MWh / vuosi',       s:'EMS-velvoite — energianhallintajärjestelmä vaaditaan'},
-          {v:'unknown',   l:'En osaa arvioida',              s:'Autamme selvittämään kulutuksen'},
-        ])}</div>
-
-      <div class="field"><label>Kulutuksen kehityssuunta</label>
-        ${radio('consumption_trend',[
-          {v:'growing',   l:'Kasvava'},
-          {v:'stable',    l:'Tasainen'},
-          {v:'decreasing',l:'Laskeva'},
-          {v:'unknown',   l:'En tiedä'},
         ])}</div>`,
 
     status: `
@@ -712,7 +1036,7 @@ function validate() {
   err.style.display = 'none'; err.textContent = 'Täytä kaikki pakolliset kentät.';
   const s = STEPS[step].id;
   if (s==='company' && (!A.company_name || !A.sector || !A.city))              { err.style.display='block'; return false; }
-  if (s==='energy'  && (!A.heating_types.length || !A.consumption))             { err.style.display='block'; return false; }
+  if (s==='energy'  && eSub>=ESUBS.length && !A.consumption)                   { err.style.display='block'; return false; }
   if (s==='status'  && (!A.has_audit || !A.has_ems || !A.has_agreement || !A.reported_to_ev)) { err.style.display='block'; return false; }
   if (s==='contact') {
     if (!A.contact_name || !A.contact_email) { err.style.display='block'; return false; }
@@ -727,6 +1051,8 @@ function nav(dir) {
   if (dir > 0 && !validate()) return;
   goingBack = dir < 0;
   step = Math.max(0, Math.min(STEPS.length-1, step+dir));
+  // entering energy from after → land on summary; from before → start at sub 0
+  if (STEPS[step].id === 'energy') eSub = dir < 0 ? ESUBS.length : 0;
   render();
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -761,11 +1087,8 @@ async function storeLead(level) {
         sector:            A.sector,
         city:              A.city,
         is_group:          A.is_group==='yes',
-        heating_types:     A.heating_types,
-        electricity_uses:  A.electricity_uses,
-        vehicles:          A.vehicles,
-        processes:         A.processes,
-        direct_fuels:      A.direct_fuels,
+        total_kwh:         Math.round(calcTotalKwh()),
+        energy_detail:     JSON.stringify(A.ed),
         consumption:       A.consumption,
         consumption_trend: A.consumption_trend,
         has_audit:         A.has_audit,
@@ -931,13 +1254,12 @@ function showResult(r) {
 function restart() {
   Object.assign(A,{
     company_name:'',y_tunnus:'',sector:'',city:'',is_group:'',
-    heating_types:[],electricity_uses:[],vehicles:[],processes:'',direct_fuels:[],
-    consumption:'',consumption_trend:'',
+    ed:{},consumption:'',consumption_trend:'',
     has_audit:'',has_ems:'',has_agreement:'',reported_to_ev:'',
     contact_name:'',contact_email:'',contact_phone:'',contact_title:'',
     wants_contact:false,wants_newsletter:false,
   });
-  step=0; goingBack=false;
+  step=0; goingBack=false; eSub=0;
   document.getElementById('progressSection').style.display='';
   render();
   window.scrollTo({top:0,behavior:'smooth'});
