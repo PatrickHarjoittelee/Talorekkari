@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spara ETJ+ — Tilaussopimus</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #080F1C;
+      --bg2:     #0D1A30;
+      --bg3:     #132040;
+      --bg4:     #1a2d55;
+      --accent:  #2CE879;
+      --accent2: #1fb85e;
+      --text:    #E8EDF5;
+      --text2:   #8A9BBF;
+      --text3:   #5A6D90;
+      --border:  #1E3060;
+      --red:     #EF5350;
+      --orange:  #FFA726;
+      --blue:    #42A5F5;
+      --radius:  10px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    a { color: var(--accent); }
+    a:hover { text-decoration: underline; }
+
+    /* ── Header ── */
+    .site-header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: #080F1C;
+      flex-shrink: 0;
+    }
+    .site-header h1 { font-size: 15px; font-weight: 600; }
+    .site-header h1 span { color: var(--accent); }
+    .header-right { margin-left: auto; display: flex; gap: 16px; align-items: center; font-size: 13px; }
+    .header-right a { color: var(--text2); text-decoration: none; transition: color .2s; }
+    .header-right a:hover { color: var(--accent); }
+    .btn-print {
+      background: var(--bg3); color: var(--text);
+      border: 1px solid var(--border); border-radius: 7px;
+      padding: 7px 14px; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: border-color .2s;
+    }
+    .btn-print:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Document wrapper ── */
+    .doc-wrapper {
+      max-width: 840px;
+      margin: 48px auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Cover ── */
+    .cover {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px 48px 40px;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .cover-logo {
+      display: inline-flex; align-items: center; gap: 12px;
+      margin-bottom: 32px;
+    }
+    .cover-logo .logo { width: 48px; height: 48px; font-size: 22px; border-radius: 12px; }
+    .cover-logo .name { font-size: 22px; font-weight: 700; }
+    .cover-logo .name span { color: var(--accent); }
+    .cover h2 {
+      font-size: 26px; font-weight: 800;
+      margin-bottom: 12px; line-height: 1.2;
+    }
+    .cover-sub {
+      font-size: 15px; color: var(--text2);
+      margin-bottom: 36px;
+    }
+    .cover-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 32px;
+      text-align: left;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    .cover-meta dt { color: var(--text3); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+    .cover-meta dd { font-weight: 600; color: var(--text); }
+    .cover-meta dd.placeholder { color: var(--orange); font-style: italic; }
+    .cover-notice {
+      font-size: 12px; color: var(--text3);
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      line-height: 1.6;
+    }
+
+    /* ── Section ── */
+    .section {
+      margin-bottom: 0;
+    }
+    .clause {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 12px;
+    }
+    .clause-num {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .clause h3 {
+      font-size: 17px; font-weight: 700;
+      margin-bottom: 16px; color: var(--text);
+    }
+    .clause p {
+      font-size: 14px; color: var(--text2);
+      line-height: 1.75; margin-bottom: 10px;
+    }
+    .clause p:last-child { margin-bottom: 0; }
+    .clause p strong { color: var(--text); }
+    .clause ul {
+      margin: 8px 0 10px 20px;
+      font-size: 14px; color: var(--text2); line-height: 1.7;
+    }
+    .clause ul li { margin-bottom: 4px; }
+
+    /* ── Placeholder field ── */
+    .ph {
+      display: inline-block;
+      background: rgba(255,167,38,.12);
+      border: 1px dashed rgba(255,167,38,.4);
+      border-radius: 6px;
+      padding: 1px 10px;
+      font-size: 13px; font-weight: 700;
+      color: var(--orange);
+      font-style: italic;
+    }
+
+    /* ── Signature block ── */
+    .signatures {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 12px;
+    }
+    .signatures h3 {
+      font-size: 16px; font-weight: 700;
+      margin-bottom: 24px; color: var(--text);
+    }
+    .sig-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+    .sig-block h4 {
+      font-size: 13px; font-weight: 700;
+      color: var(--text2); margin-bottom: 16px;
+    }
+    .sig-line {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin-bottom: 20px;
+      min-height: 36px;
+    }
+    .sig-label {
+      font-size: 11px; color: var(--text3);
+      text-transform: uppercase; letter-spacing: .5px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Appendix ── */
+    .appendix {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 12px;
+    }
+    .appendix-label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--blue);
+      margin-bottom: 6px;
+    }
+    .appendix h3 {
+      font-size: 16px; font-weight: 700;
+      margin-bottom: 14px; color: var(--text);
+    }
+    .appendix p {
+      font-size: 13px; color: var(--text2);
+      line-height: 1.7; margin-bottom: 8px;
+    }
+    .appendix ul {
+      margin: 6px 0 8px 20px;
+      font-size: 13px; color: var(--text2); line-height: 1.7;
+    }
+    .appendix ul li { margin-bottom: 3px; }
+
+    /* ── Footer ── */
+    .site-footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 13px;
+    }
+    .footer-links { display: flex; gap: 18px; }
+    .footer-links a { color: var(--text2); text-decoration: none; transition: color .2s; }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-copy { color: var(--text3); }
+
+    /* ── Table of contents ── */
+    .toc {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 32px;
+      margin-bottom: 24px;
+      font-size: 13px;
+    }
+    .toc h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--text3); margin-bottom: 14px; }
+    .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 32px; }
+    .toc a { color: var(--text2); text-decoration: none; padding: 3px 0; display: block; transition: color .15s; }
+    .toc a:hover { color: var(--accent); }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .site-header { padding: 0 16px; }
+      .doc-wrapper { padding: 0 12px 60px; margin-top: 24px; }
+      .cover { padding: 28px 20px; }
+      .cover-meta { grid-template-columns: 1fr; }
+      .clause { padding: 20px; }
+      .sig-row { grid-template-columns: 1fr; gap: 24px; }
+      .toc-grid { grid-template-columns: 1fr; }
+      .site-footer { flex-direction: column; padding: 16px; }
+    }
+
+    /* ── Print ── */
+    @media print {
+      :root {
+        --bg: #fff; --bg2: #fff; --bg3: #f5f7fa; --bg4: #eef1f7;
+        --text: #111827; --text2: #374151; --text3: #6B7280;
+        --border: #d1d5db; --accent: #15803d; --blue: #1d4ed8; --orange: #b45309;
+      }
+      body { background: #fff; color: #111; font-size: 10.5pt; }
+      .site-header { display: none; }
+      .doc-wrapper { max-width: 100%; margin: 0; padding: 0; }
+      .cover { border: 2px solid #111; border-radius: 0; text-align: left; }
+      .cover-logo { margin-bottom: 20pt; }
+      .clause, .appendix, .signatures, .toc { border: 1px solid #ccc; border-radius: 0; margin-bottom: 0; break-inside: avoid; }
+      .clause + .clause, .appendix + .appendix { border-top: none; }
+      .signatures { border-top: 2px solid #111; }
+      .ph { border: 1px solid #b45309; }
+      .site-footer { display: none; }
+      .btn-print { display: none; }
+      @page { margin: 18mm 20mm; size: A4; }
+      .cover { page-break-after: always; }
+      h3 { page-break-after: avoid; }
+      .sig-row { gap: 60pt; }
+      .sig-line { border-bottom: 1px solid #111; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="site-header">
+  <div class="logo">S</div>
+  <h1>Spara <span>ETJ+</span> — Tilaussopimus</h1>
+  <div class="header-right">
+    <a href="etj-palvelukuvaus.html">Palvelukuvaus</a>
+    <a href="etj-kayttohje.html">Käyttöohje</a>
+    <button class="btn-print" onclick="window.print()">🖨 Tulosta / Tallenna PDF</button>
+  </div>
+</header>
+
+<!-- ── Document ── -->
+<div class="doc-wrapper">
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="cover-logo">
+      <div class="logo">S</div>
+      <div class="name">Spara <span>ETJ+</span></div>
+    </div>
+    <h2>Energiatehokkuuspalvelun tilaussopimus</h2>
+    <p class="cover-sub">ETJ+-palvelusopimus energiatehokkuuslain velvoitteiden hallintaan</p>
+
+    <div class="cover-meta">
+      <div>
+        <dt>Palveluntarjoaja</dt>
+        <dd>Spara Energia Oy</dd>
+      </div>
+      <div>
+        <dt>Y-tunnus</dt>
+        <dd class="placeholder">[TÄYDENNETÄÄN]</dd>
+      </div>
+      <div>
+        <dt>Asiakas (tilaaja)</dt>
+        <dd class="placeholder">[TÄYDENNETÄÄN — yrityksen nimi]</dd>
+      </div>
+      <div>
+        <dt>Y-tunnus (asiakas)</dt>
+        <dd class="placeholder">[TÄYDENNETÄÄN]</dd>
+      </div>
+      <div>
+        <dt>Sopimusnumero</dt>
+        <dd class="placeholder">[TÄYDENNETÄÄN]</dd>
+      </div>
+      <div>
+        <dt>Sopimuspäivä</dt>
+        <dd class="placeholder">[TÄYDENNETÄÄN]</dd>
+      </div>
+      <div>
+        <dt>Sopimuksen alkaminen</dt>
+        <dd class="placeholder">[TÄYDENNETÄÄN]</dd>
+      </div>
+      <div>
+        <dt>Minimisopimuskausi</dt>
+        <dd class="placeholder">[TÄYDENNETÄÄN — esim. 12 kk]</dd>
+      </div>
+    </div>
+
+    <p class="cover-notice">
+      Tämä sopimus on laadittu sähköistä tai fyysistä allekirjoitusta varten.
+      Täytä <span style="color:var(--orange)">[TÄYDENNETÄÄN]</span>-kohdat ennen allekirjoitusta.
+      Sopimus syntyy molempien osapuolten hyväksyttyä sen.
+    </p>
+  </div>
+
+  <!-- Sisällysluettelo -->
+  <div class="toc">
+    <h4>Sisällysluettelo</h4>
+    <div class="toc-grid">
+      <a href="#par1">§1 Osapuolet</a>
+      <a href="#par7">§7 Tietosuoja</a>
+      <a href="#par2">§2 Palvelun kohde</a>
+      <a href="#par8">§8 Tietoturva</a>
+      <a href="#par3">§3 Käyttöoikeudet</a>
+      <a href="#par9">§9 Palvelutaso</a>
+      <a href="#par4">§4 Hinnoittelu</a>
+      <a href="#par10">§10 Vastuunrajoitus</a>
+      <a href="#par5">§5 Laskutus</a>
+      <a href="#par11">§11 Force majeure</a>
+      <a href="#par6">§6 Sopimuksen kesto</a>
+      <a href="#par12">§12 Sovellettava laki</a>
+    </div>
+  </div>
+
+  <!-- §1 -->
+  <div class="clause" id="par1">
+    <div class="clause-num">§ 1</div>
+    <h3>Osapuolet</h3>
+    <p><strong>Palveluntarjoaja:</strong> Spara Energia Oy (jäljempänä "Spara"),
+       Y-tunnus <span class="ph">[TÄYDENNETÄÄN]</span>,
+       osoite <span class="ph">[TÄYDENNETÄÄN]</span>.</p>
+    <p><strong>Tilaaja / Asiakas:</strong> <span class="ph">[TÄYDENNETÄÄN — yrityksen virallinen nimi]</span>
+       (jäljempänä "Asiakas"),
+       Y-tunnus <span class="ph">[TÄYDENNETÄÄN]</span>,
+       osoite <span class="ph">[TÄYDENNETÄÄN]</span>.</p>
+    <p>Spara ja Asiakas viittaavat yhdessä "osapuoliin".</p>
+  </div>
+
+  <!-- §2 -->
+  <div class="clause" id="par2">
+    <div class="clause-num">§ 2</div>
+    <h3>Palvelun kohde</h3>
+    <p>Spara tarjoaa Asiakkaalle <strong>ETJ+-energiatehokkuuspalvelun</strong> (jäljempänä "Palvelu"),
+       joka on Energiatehokkuuslain (1429/2014, muutos 1279/2022) tarkoittama
+       energianhallintapalvelu ja vapauttaa Asiakkaan perinteisestä energiakatselmuksesta
+       (§5 ETL), kun Asiakkaan vuosikulutus on 2 700–23 600 MWh.</p>
+    <p>Palvelun keskeinen sisältö:</p>
+    <ul>
+      <li>Pääsy ETJ+-dashboardiin (selainpohjainen SaaS-sovellus)</li>
+      <li>Energiankulutuksen seuranta, visualisointi ja ennusteet</li>
+      <li>Energiatehokkuustoimenpiteiden hallinta (Kanban, AI-suositukset)</li>
+      <li>Viranomaisraporttien tuottaminen (vuosi-ilmoitus, katselmusraportti, johdon katselmus)</li>
+      <li>Integraatiot: Datahub, CSV-tuonti, Lasku-AI</li>
+      <li>Tuki sähköpostitse ja päivitykset sopimuskaudella</li>
+    </ul>
+    <p>Palvelun tarkempi sisältö on kuvattu <strong>Liitteessä A</strong> (Palvelukuvaus).</p>
+  </div>
+
+  <!-- §3 -->
+  <div class="clause" id="par3">
+    <div class="clause-num">§ 3</div>
+    <h3>Käyttöoikeudet</h3>
+    <p>Spara myöntää Asiakkaalle <strong>ei-yksinomaisen, ei-siirrettävän</strong>
+       käyttöoikeuden Palveluun sopimuksen voimassaoloajaksi (SaaS-lisenssi).</p>
+    <p>Sopimukseen sisältyy <span class="ph">[TÄYDENNETÄÄN]</span> nimettyä käyttäjätiliä.
+       Lisäkäyttäjiä voidaan hankkia lisämaksusta erikseen sovittavalla hinnalla.</p>
+    <p>Asiakas sitoutuu:</p>
+    <ul>
+      <li>Pitämään käyttäjätunnukset salassa ja suojaamaan ne luvattomalta käytöltä</li>
+      <li>Ilmoittamaan viipymättä Sparalle, jos tunnukset ovat vaarantuneet</li>
+      <li>Käyttämään Palvelua ainoastaan laillisiin tarkoituksiin</li>
+      <li>Olemaan luovuttamatta käyttöoikeuksia kolmansille osapuolille</li>
+    </ul>
+  </div>
+
+  <!-- §4 -->
+  <div class="clause" id="par4">
+    <div class="clause-num">§ 4</div>
+    <h3>Hinnoittelu</h3>
+    <p>Palvelun hinta on:</p>
+    <ul>
+      <li>Kuukausimaksu: <span class="ph">[TÄYDENNETÄÄN] €/kk</span> (alv. 0 %)</li>
+      <li>Vuosimaksu (vaihtoehto): <span class="ph">[TÄYDENNETÄÄN] €/v</span>
+          laskutetaan etukäteen, sisältää <span class="ph">[TÄYDENNETÄÄN]</span> % alennuksen
+          kuukausilaskutukseen verrattuna</li>
+      <li>Käyttöönottomaksu: <span class="ph">[TÄYDENNETÄÄN] € tai 0 €]</span></li>
+    </ul>
+    <p>Hintoihin lisätään arvonlisävero voimassa olevan lainsäädännön mukaisesti.</p>
+    <p>Spara pidättää oikeuden muuttaa hintoja ilmoittamalla siitä kirjallisesti
+       vähintään <strong>30 päivää</strong> ennen muutoksen voimaantuloa.
+       Jos Asiakas ei hyväksy uusia hintoja, hänellä on oikeus irtisanoa sopimus
+       ilmoituksen saatuaan.</p>
+  </div>
+
+  <!-- §5 -->
+  <div class="clause" id="par5">
+    <div class="clause-num">§ 5</div>
+    <h3>Laskutus ja maksaminen</h3>
+    <p>Palvelumaksu laskutetaan <span class="ph">[kuukausittain / vuosittain etukäteen]</span>
+       valitun laskutusvälin mukaisesti.</p>
+    <p>Maksuehto: <strong>14 päivää netto</strong> laskun päiväyksestä.</p>
+    <p>Myöhästyneille maksuille peritään viivästyskorkoa korkolain (633/1982)
+       mukaisen viivästyskoron mukaisesti.</p>
+    <p>Jos maksu on myöhässä yli 30 päivää, Sparalla on oikeus keskeyttää
+       Palvelun käyttöoikeus ilman ennakkoilmoitusta. Maksujen suorittamisen
+       jälkeen käyttöoikeus palautetaan.</p>
+    <p>Laskut toimitetaan sähköpostitse osoitteeseen
+       <span class="ph">[TÄYDENNETÄÄN — laskutussähköposti]</span>
+       tai verkkolaskuna <span class="ph">[OVT-tunnus tai Finvoice-osoite]</span>.</p>
+  </div>
+
+  <!-- §6 -->
+  <div class="clause" id="par6">
+    <div class="clause-num">§ 6</div>
+    <h3>Sopimuksen kesto ja irtisanominen</h3>
+    <p>Sopimus astuu voimaan allekirjoituspäivänä ja on voimassa aluksi
+       <span class="ph">[TÄYDENNETÄÄN — esim. 12 kuukautta]</span>
+       (minimisopimuskausi).</p>
+    <p>Minimisopimuskauden jälkeen sopimus jatkuu automaattisesti
+       <span class="ph">[kuukausi / vuosi]</span> kerrallaan, kunnes
+       se irtisanotaan kirjallisesti.</p>
+    <p>Irtisanomisaika:</p>
+    <ul>
+      <li>Asiakkaan irtisanoessa: <span class="ph">[TÄYDENNETÄÄN — esim. 1 kuukausi]</span>
+          kirjallinen ilmoitus ennen laskutuskauden päättymistä</li>
+      <li>Sparan irtisanoessa ilman Asiakkaan sopimusrikkomusta:
+          <strong>3 kuukautta</strong> kirjallinen ilmoitus</li>
+    </ul>
+    <p>Kumpi tahansa osapuoli voi purkaa sopimuksen välittömästi, jos toinen
+       osapuoli rikkoo olennaisesti sopimuksen ehtoja eikä korjaa rikkomusta
+       30 päivän kuluessa kirjallisesta huomautuksesta.</p>
+    <p>Sopimuksen päättyessä Spara antaa Asiakkaalle 30 päivää aikaa ladata
+       omat tietonsa Palvelusta ennen kuin tiedot poistetaan.</p>
+  </div>
+
+  <!-- §7 -->
+  <div class="clause" id="par7">
+    <div class="clause-num">§ 7</div>
+    <h3>Tietosuoja</h3>
+    <p>Sopimuksen perusteella osapuolten roolit ovat:</p>
+    <ul>
+      <li><strong>Asiakas = rekisterinpitäjä</strong> — vastaa siitä, millä perusteella
+          henkilötietoja käsitellään ja mitä tietoja Palveluun syötetään</li>
+      <li><strong>Spara = henkilötietojen käsittelijä</strong> — käsittelee henkilötietoja
+          ainoastaan Asiakkaan ohjeiden mukaisesti tämän sopimuksen täyttämiseksi</li>
+    </ul>
+    <p>Tietojen käsittelyn perusta on sopimuksen täyttäminen (GDPR art. 6(1)(b)).
+       Tietojen käsittelyn yksityiskohdista sovitaan <strong>Liitteessä B</strong>
+       (Tietojenkäsittelysopimus, DPA), joka muodostaa osan tätä sopimusta.</p>
+    <p>Tiedot sijaitsevat EU/ETA-alueella (palvelinkeskus: Frankfurt, Saksa).
+       Tietoja ei siirretä EU/ETA-alueen ulkopuolelle ilman Asiakkaan kirjallista suostumusta.</p>
+    <p>Kulutusdata ja raportit säilytetään sopimussuhteen ajan ja 12 kuukautta
+       sopimuksen päättymisen jälkeen, minkä jälkeen ne poistetaan tai anonymisoidaan.</p>
+    <p>Asiakkaalla on oikeus pyytää tietojensa siirtoa tai poistoa ottamalla yhteyttä
+       osoitteeseen <a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a>.</p>
+  </div>
+
+  <!-- §8 -->
+  <div class="clause" id="par8">
+    <div class="clause-num">§ 8</div>
+    <h3>Tietoturva</h3>
+    <p><strong>Sparan velvoitteet:</strong></p>
+    <ul>
+      <li>Tietokanta suojattu Row Level Security (RLS) -mekanismilla: jokainen
+          käyttäjä pääsee vain omiin tietoihinsa</li>
+      <li>Tiedonsiirto salattu TLS 1.2+ -protokollalla</li>
+      <li>Käyttäjätunnistus vahvalla salasanakäytännöllä ja tukee kaksivaiheista tunnistusta</li>
+      <li>Turvapäivitykset asennetaan viipymättä havaitsemisen jälkeen</li>
+      <li>Tietoturvaloukkauksesta ilmoitetaan Asiakkaalle 72 tunnin kuluessa havaitsemisesta</li>
+    </ul>
+    <p><strong>Asiakkaan velvoitteet:</strong></p>
+    <ul>
+      <li>Pitää käyttäjätunnukset ja salasanat salassa</li>
+      <li>Ilmoittaa Sparalle viipymättä mahdollisesta tietoturvaloukkauksesta</li>
+      <li>Huolehtia siitä, että vain oikeutetut henkilöt pääsevät Palveluun</li>
+    </ul>
+  </div>
+
+  <!-- §9 -->
+  <div class="clause" id="par9">
+    <div class="clause-num">§ 9</div>
+    <h3>Palvelutaso</h3>
+    <p>Spara pyrkii tarjoamaan Palvelun <strong>99 %:n käytettävyydellä</strong>
+       kalenterikuukautta kohden (huoltoikkunat pois lukien).</p>
+    <p>Suunnitelluista huoltokatkoksista ilmoitetaan vähintään 24 tuntia
+       etukäteen sähköpostitse. Huoltokatkot pyritään ajoittamaan
+       viikonlopuille tai arkisin klo 22–06 välille.</p>
+    <p>Tukipalvelu:</p>
+    <ul>
+      <li>Kanava: sähköposti <a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a></li>
+      <li>Aukioloaika: arkisin klo 8–16</li>
+      <li>Vasteaika: <strong>1 arkipäivä</strong> normaalit kyselyt,
+          <strong>4 tuntia</strong> kriittiset häiriöt (merkitty otsikkoon "KIIREELLINEN")</li>
+    </ul>
+    <p>Spara ei sitoudu hyvityksiin palvelukatkoksista, ellei erikseen kirjallisesti sovita.</p>
+  </div>
+
+  <!-- §10 -->
+  <div class="clause" id="par10">
+    <div class="clause-num">§ 10</div>
+    <h3>Vastuunrajoitus</h3>
+    <p>Spara ei vastaa välillisistä vahingoista, kuten saamatta jääneestä
+       liikevoitosta, liiketoiminnan keskeytymisestä, tietojen menettämisestä
+       tai muista epäsuorista vahingoista, vaikka Sparalle olisi ilmoitettu
+       tällaisten vahinkojen mahdollisuudesta.</p>
+    <p>Sparan kokonaisvastuu yhden kalenterivuoden aikana rajoittuu
+       <strong>yhden (1) kuukauden palvelumaksua</strong> vastaavaan summaan.</p>
+    <p>Palvelu tarjotaan "sellaisena kuin se on" (as-is). Spara ei takaa,
+       että Palvelu on virheettömän tai keskeytymätön, mutta pyrkii
+       korjaamaan havaitut virheet kohtuullisessa ajassa.</p>
+    <p>Tämä vastuunrajoitus ei rajoita vahingonkorvausta tapauksissa, joissa
+       vahinko on aiheutunut tahallisesta teosta tai törkeästä huolimattomuudesta.</p>
+  </div>
+
+  <!-- §11 -->
+  <div class="clause" id="par11">
+    <div class="clause-num">§ 11</div>
+    <h3>Force majeure — Ylivoimainen este</h3>
+    <p>Kumpikaan osapuoli ei ole vastuussa velvoitteidensa täyttämisen
+       viivästymisestä tai laiminlyönnistä, mikäli se johtuu ylivoimaisesta
+       esteestä (force majeure).</p>
+    <p>Ylivoimaisena esteenä pidetään mm. luonnonkatastrofia, sodankäyntiä,
+       lakkoa, viranomaismääräystä, sähkökatkosta tai muuta vastaavaa
+       osapuolesta riippumatonta syytä.</p>
+    <p>Ylivoimaisesta esteestä on ilmoitettava toiselle osapuolelle kirjallisesti
+       <strong>30 päivän kuluessa</strong> esteen havaitsemisesta. Jos este
+       jatkuu yli 60 päivää, kummalla tahansa osapuolella on oikeus irtisanoa
+       sopimus ilman korvausvelvollisuutta.</p>
+  </div>
+
+  <!-- §12 -->
+  <div class="clause" id="par12">
+    <div class="clause-num">§ 12</div>
+    <h3>Sovellettava laki ja riidanratkaisu</h3>
+    <p>Tähän sopimukseen sovelletaan <strong>Suomen lakia</strong>.</p>
+    <p>Sopimuksesta aiheutuvat riidat pyritään ensisijaisesti ratkaisemaan
+       osapuolten välisin neuvotteluin 30 päivän kuluessa riidan syntymisestä.</p>
+    <p>Jos sovinto ei onnistu neuvotteluissa, riidat ratkaistaan
+       <strong>Helsingin käräjäoikeudessa</strong> ensimmäisenä
+       oikeusasteena — tai osapuolten kirjallisesti sopimalla välimiesoikeudessa
+       Keskuskauppakamarin välimiesmenettelysääntöjen mukaisesti.</p>
+    <p>Kieli: sopimus ja kaikki sitä koskevat ilmoitukset laaditaan suomen kielellä.</p>
+  </div>
+
+  <!-- Allekirjoitukset -->
+  <div class="signatures">
+    <h3>Allekirjoitukset</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:24px;">
+      Osapuolet vahvistavat allekirjoituksillaan tutustuneensa tähän sopimukseen
+      ja sitoutuvansa sen ehtoihin.
+    </p>
+    <div class="sig-row">
+      <div class="sig-block">
+        <h4>Palveluntarjoaja</h4>
+        <div class="sig-label">Yritys</div>
+        <p style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:16px;">Spara Energia Oy</p>
+        <div class="sig-label">Allekirjoitus</div>
+        <div class="sig-line"></div>
+        <div class="sig-label">Nimen selvennys</div>
+        <div class="sig-line"></div>
+        <div class="sig-label">Titteli</div>
+        <div class="sig-line"></div>
+        <div class="sig-label">Paikka ja päiväys</div>
+        <div class="sig-line"></div>
+      </div>
+      <div class="sig-block">
+        <h4>Tilaaja / Asiakas</h4>
+        <div class="sig-label">Yritys</div>
+        <div class="sig-line" style="min-height:28px;"></div>
+        <div class="sig-label">Allekirjoitus</div>
+        <div class="sig-line"></div>
+        <div class="sig-label">Nimen selvennys</div>
+        <div class="sig-line"></div>
+        <div class="sig-label">Titteli</div>
+        <div class="sig-line"></div>
+        <div class="sig-label">Paikka ja päiväys</div>
+        <div class="sig-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liite A -->
+  <div class="appendix">
+    <div class="appendix-label">Liite A</div>
+    <h3>Palvelun sisältö</h3>
+    <p>Tämä liite täydentää §2:ta ja kuvaa ETJ+-palvelun sisällön yksityiskohtaisesti.</p>
+    <p><strong>Included — Palveluun sisältyvät ominaisuudet:</strong></p>
+    <ul>
+      <li>ETJ-velvoitteen seuranta: vaatimustenmukaisuustaulukko, automaattiset hälytykset, deadline-muistutukset</li>
+      <li>Energiankulutuksen hallinta: kuukausittainen seuranta, Chart.js-visualisoinnit, kynnysarvojana, ennuste</li>
+      <li>Datahub-integraatio sähkönkulutukselle (GSRN-pohjainen)</li>
+      <li>CSV-tuonti kaikille energiamuodoille</li>
+      <li>Lasku-AI: PDF/kuva-laskujen automaattinen tulkinta</li>
+      <li>Toimenpidesuunnitelma: Kanban-hallinta, AI-suositukset, säästölaskuri</li>
+      <li>Viranomaisraportit: vuosi-ilmoitus, katselmusraportti, johdon katselmus (PDF, JSON, CSV)</li>
+      <li>Kuntanäkymä (mikäli sovittu)</li>
+      <li>Konsernihallinta: tytäryhtiöt, käyttöpaikat, hierarkia (mikäli sovittu)</li>
+      <li>Tukipalvelu sähköpostitse (§9 mukaisesti)</li>
+      <li>Päivitykset sopimuskaudella (uudet ominaisuudet ja tietoturvapäivitykset)</li>
+    </ul>
+    <p><strong>Excluded — Palveluun ei sisälly:</strong></p>
+    <ul>
+      <li>Fyysinen energiakatselmus tai auditointi kiinteistöissä</li>
+      <li>Viranomaisten yhteydenpito asiakkaan puolesta</li>
+      <li>ISO 50001 -sertifiointi tai -konsultointi</li>
+      <li>Lainopillinen neuvonta</li>
+    </ul>
+  </div>
+
+  <!-- Liite B -->
+  <div class="appendix">
+    <div class="appendix-label">Liite B</div>
+    <h3>Tietojenkäsittelysopimus (DPA)</h3>
+    <p>Tämä liite muodostaa GDPR:n (asetus 2016/679) artiklan 28 mukaisen
+       tietojenkäsittelysopimuksen osapuolten välillä.</p>
+
+    <p><strong>1. Käsittelyn tarkoitus ja kohde</strong></p>
+    <p>Spara käsittelee henkilötietoja yksinomaan ETJ+-palvelun tuottamiseksi
+       Asiakkaalle tämän sopimuksen mukaisesti.</p>
+
+    <p><strong>2. Käsiteltävät henkilötietotyypit</strong></p>
+    <ul>
+      <li>Yhteyshenkilöiden nimi ja sähköpostiosoite (käyttäjätilit)</li>
+      <li>Organisaatiotiedot (yritysnimi, Y-tunnus, osoite)</li>
+      <li>Palvelun käyttöloki (kirjautumisaika, toiminnot)</li>
+    </ul>
+    <p>Energiankulutusdata ei sisällä henkilötietoja, ellei Asiakas itse liitä
+       siihen henkilöitäviä tietoja.</p>
+
+    <p><strong>3. Rekisteröityjen ryhmät</strong></p>
+    <p>Asiakkaan nimeämät ETJ+-käyttäjät (yhteyshenkilöt, energiavastaavat).</p>
+
+    <p><strong>4. Alikäsittelijät</strong></p>
+    <p>Spara käyttää seuraavia alikäsittelijöitä:</p>
+    <ul>
+      <li><strong>Supabase Inc.</strong> — tietokanta ja autentikointi (palvelinkeskus: EU/Frankfurt)</li>
+    </ul>
+    <p>Alikäsittelijöiden vaihtumisesta ilmoitetaan Asiakkaalle 30 päivää etukäteen.</p>
+
+    <p><strong>5. Siirrot kolmansiin maihin</strong></p>
+    <p>Tietoja ei siirretä EU/ETA-alueen ulkopuolelle.</p>
+
+    <p><strong>6. Tietojen säilytysaika ja poisto</strong></p>
+    <p>Henkilötiedot poistetaan 12 kuukauden kuluessa sopimuksen päättymisestä,
+       ellei lainsäädäntö edellytä pidempää säilytysaikaa.</p>
+
+    <p><strong>7. Rekisteröidyn oikeudet</strong></p>
+    <p>Asiakkaalla on oikeus pyytää pääsy, oikaisu tai poisto henkilötiedoistaan
+       ottamalla yhteyttä <a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a>.
+       Pyyntöihin vastataan 30 päivän kuluessa.</p>
+
+    <p><strong>8. Tietoturvaloukkauksista ilmoittaminen</strong></p>
+    <p>Spara ilmoittaa tietoturvaloukkauksesta Asiakkaalle 72 tunnin kuluessa
+       sen havaitsemisesta, jotta Asiakas voi täyttää oman ilmoitusvelvollisuutensa
+       valvontaviranomaiselle (Tietosuojavaltuutetun toimisto).</p>
+  </div>
+
+</div>
+
+<!-- ── Footer ── -->
+<footer class="site-footer">
+  <span class="footer-copy">© 2026 Spara Energia Oy — ETJ+ tilaussopimuspohja v1.0</span>
+  <nav class="footer-links">
+    <a href="etj-palvelukuvaus.html">Palvelukuvaus</a>
+    <a href="etj-kayttohje.html">Käyttöohje</a>
+    <a href="etj-testi.html">ETJ-testi</a>
+    <a href="etj-plus.html">Dashboard</a>
+  </nav>
+</footer>
+
+</body>
+</html>

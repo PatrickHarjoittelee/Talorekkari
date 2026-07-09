@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spara ETJ+ — Palvelukuvaus</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #080F1C;
+      --bg2:     #0D1A30;
+      --bg3:     #132040;
+      --bg4:     #1a2d55;
+      --accent:  #2CE879;
+      --accent2: #1fb85e;
+      --text:    #E8EDF5;
+      --text2:   #8A9BBF;
+      --text3:   #5A6D90;
+      --border:  #1E3060;
+      --red:     #EF5350;
+      --orange:  #FFA726;
+      --blue:    #42A5F5;
+      --radius:  10px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Header ── */
+    .site-header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 18px; color: #080F1C;
+      flex-shrink: 0;
+    }
+    .site-header h1 { font-size: 17px; font-weight: 600; }
+    .site-header h1 span { color: var(--accent); }
+    .header-nav { margin-left: auto; display: flex; gap: 24px; font-size: 13px; }
+    .header-nav a { color: var(--text2); transition: color .2s; }
+    .header-nav a:hover { color: var(--text); text-decoration: none; }
+    .btn-primary {
+      background: var(--accent); color: #080F1C;
+      border: none; border-radius: 8px;
+      padding: 8px 18px; font-size: 13px; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      transition: background .2s;
+    }
+    .btn-primary:hover { background: var(--accent2); text-decoration: none; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(145deg, #0D1A30 0%, #0a1525 60%, #0f1e38 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 80px 40px 72px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(44,232,121,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      background: rgba(44,232,121,.12);
+      color: var(--accent);
+      border: 1px solid rgba(44,232,121,.25);
+      border-radius: 20px;
+      padding: 5px 16px;
+      font-size: 12px; font-weight: 600; letter-spacing: .8px;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .hero h2 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      letter-spacing: -.5px;
+    }
+    .hero h2 .hl { color: var(--accent); }
+    .hero-sub {
+      font-size: clamp(15px, 2vw, 18px);
+      color: var(--text2);
+      max-width: 660px;
+      margin: 0 auto 36px;
+      line-height: 1.7;
+    }
+    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 22px; font-size: 14px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+    .btn-hero {
+      background: var(--accent); color: #080F1C;
+      border: none; border-radius: 8px;
+      padding: 12px 28px; font-size: 15px; font-weight: 800;
+      cursor: pointer; text-decoration: none;
+      transition: background .2s, transform .15s;
+    }
+    .btn-hero:hover { background: var(--accent2); transform: translateY(-1px); text-decoration: none; }
+
+    /* ── Sections ── */
+    section { padding: 64px 40px; }
+    section + section { border-top: 1px solid var(--border); }
+
+    .section-eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 700; line-height: 1.25;
+      margin-bottom: 16px;
+    }
+    .section-desc {
+      font-size: 15px; color: var(--text2);
+      max-width: 640px; line-height: 1.75;
+      margin-bottom: 40px;
+    }
+    .section-center { text-align: center; }
+    .section-center .section-desc { margin-left: auto; margin-right: auto; }
+
+    /* ── Kenelle cards ── */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 36px;
+    }
+    .profile-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .profile-icon { font-size: 28px; margin-bottom: 14px; }
+    .profile-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .profile-card p { font-size: 14px; color: var(--text2); line-height: 1.6; }
+    .profile-card .tag {
+      display: inline-block;
+      margin-top: 12px;
+      background: rgba(44,232,121,.1);
+      color: var(--accent);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 12px; font-weight: 600;
+    }
+
+    /* ── Velvoite / Timeline ── */
+    .timeline {
+      display: flex;
+      gap: 0;
+      margin-bottom: 40px;
+      position: relative;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .timeline-item {
+      flex: 1; min-width: 200px;
+      padding: 20px 24px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: none;
+      position: relative;
+    }
+    .timeline-item:first-child { border-left: 1px solid var(--border); border-radius: var(--radius) 0 0 var(--radius); }
+    .timeline-item:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+    .timeline-item.urgent { border-top: 3px solid var(--orange); }
+    .timeline-item.critical { border-top: 3px solid var(--red); }
+    .timeline-item.safe { border-top: 3px solid var(--accent); }
+    .timeline-date { font-size: 12px; font-weight: 700; letter-spacing: .5px; color: var(--text2); margin-bottom: 8px; }
+    .timeline-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .timeline-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+    .timeline-badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 2px 8px; border-radius: 6px;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .4px;
+    }
+    .badge-orange { background: rgba(255,167,38,.2); color: #ffb74d; }
+    .badge-red    { background: rgba(239,83,80,.2); color: #e57373; }
+    .badge-green  { background: rgba(44,232,121,.15); color: var(--accent); }
+
+    .threshold-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 14px; background: var(--bg2);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .threshold-table thead tr { background: var(--bg3); }
+    .threshold-table th {
+      padding: 12px 16px; text-align: left;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px;
+      color: var(--text2);
+    }
+    .threshold-table td { padding: 12px 16px; border-top: 1px solid var(--border); }
+    .threshold-table tr:hover td { background: var(--bg3); }
+
+    /* ── Feature cards ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover { border-color: rgba(44,232,121,.4); transform: translateY(-2px); }
+    .feature-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      background: rgba(44,232,121,.12);
+      color: var(--accent);
+      border-radius: 8px;
+      font-size: 14px; font-weight: 800;
+      margin-bottom: 16px;
+    }
+    .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .feature-tags { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .feature-tag {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px; color: var(--text2);
+    }
+
+    /* ── Steps ── */
+    .steps { display: flex; gap: 0; flex-wrap: wrap; }
+    .step {
+      flex: 1; min-width: 220px;
+      padding: 32px 28px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: none;
+      text-align: center;
+    }
+    .step:first-child { border-left: 1px solid var(--border); border-radius: var(--radius) 0 0 var(--radius); }
+    .step:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+    .step-num {
+      width: 48px; height: 48px;
+      background: var(--accent);
+      color: #080F1C;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800;
+      margin: 0 auto 16px;
+    }
+    .step h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .step p { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 16px; }
+
+    /* ── Contact ── */
+    .contact-box {
+      background: var(--bg2);
+      border: 1px solid rgba(44,232,121,.2);
+      border-radius: var(--radius);
+      padding: 40px;
+      text-align: center;
+    }
+    .contact-box h3 { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+    .contact-box p { font-size: 15px; color: var(--text2); margin-bottom: 24px; }
+    .contact-email {
+      font-size: 20px; font-weight: 700; color: var(--accent);
+    }
+    .disclaimer {
+      margin-top: 24px;
+      font-size: 12px; color: var(--text3); line-height: 1.6;
+    }
+
+    /* ── Footer ── */
+    .site-footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 13px;
+    }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: var(--text2); transition: color .2s; }
+    .footer-links a:hover { color: var(--accent); text-decoration: none; }
+    .footer-copy { color: var(--text3); }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .site-header { padding: 0 20px; }
+      .header-nav { display: none; }
+      section { padding: 48px 20px; }
+      .hero { padding: 56px 20px 48px; }
+      .steps { flex-direction: column; }
+      .step { border-left: 1px solid var(--border); border-top: none; border-radius: 0; }
+      .step:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+      .step:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+      .timeline { flex-direction: column; }
+      .timeline-item { border-left: 1px solid var(--border); border-top: none; border-radius: 0; }
+      .timeline-item:first-child { border-radius: var(--radius) var(--radius) 0 0; border-top: 1px solid var(--border); }
+      .timeline-item:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+      .timeline-item.urgent, .timeline-item.critical, .timeline-item.safe { border-top: none; border-left: 3px solid; }
+      .timeline-item.urgent { border-left-color: var(--orange); }
+      .timeline-item.critical { border-left-color: var(--red); }
+      .timeline-item.safe { border-left-color: var(--accent); }
+      .site-footer { flex-direction: column; align-items: flex-start; padding: 20px; }
+    }
+
+    /* ── Print ── */
+    @media print {
+      :root {
+        --bg: #ffffff; --bg2: #f5f7fa; --bg3: #eef1f7; --bg4: #e0e5ef;
+        --text: #111827; --text2: #374151; --text3: #6B7280;
+        --border: #d1d5db; --accent: #15803d; --accent2: #166534;
+      }
+      body { background: #fff; color: #111; font-size: 12pt; }
+      .site-header { position: static; box-shadow: none; border-bottom: 2px solid #111; }
+      .hero::before { display: none; }
+      .hero { background: #fff; border-bottom: 1px solid #ccc; padding: 32pt 0; }
+      .feature-card:hover { transform: none; }
+      .header-nav, .btn-hero, .hero-actions .btn-outline { display: none; }
+      section { padding: 24pt 0; }
+      .feature-grid { grid-template-columns: repeat(2, 1fr); }
+      @page { margin: 20mm; }
+      h2, h3, .timeline-item { page-break-inside: avoid; }
+      .site-footer { border-top: 1px solid #ccc; padding: 12pt 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="site-header">
+  <div class="logo">S</div>
+  <h1>Spara <span>ETJ+</span></h1>
+  <nav class="header-nav">
+    <a href="#kenelle">Kenelle</a>
+    <a href="#velvoite">Velvoite</a>
+    <a href="#palvelu">Palvelu</a>
+    <a href="#alkuun">Aloitus</a>
+    <a href="etj-kayttohje.html">Käyttöohje</a>
+    <a href="etj-tilaussopimus.html" class="btn-primary">Tilaa palvelu</a>
+  </nav>
+</header>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-eyebrow">Energiatehokkuuslaki 1429/2014 · Muutos 1279/2022</div>
+  <h2>Energiatehokkuusvelvoitteet<br>hallintaan <span class="hl">ilman ISO 50001</span></h2>
+  <p class="hero-sub">
+    Suomen energiatehokkuuslaki velvoittaa yli 2 700 MWh/v kuluttavia yrityksiä vuodesta 2026 alkaen.
+    Spara ETJ+ hoitaa seurannan, raportoinnin ja velvoitteen täyttämisen puolestasi.
+  </p>
+  <div class="hero-actions">
+    <a href="etj-testi.html" class="btn-outline">Tee ilmainen ETJ-testi</a>
+    <a href="etj-tilaussopimus.html" class="btn-hero">Tilaa ETJ+ →</a>
+  </div>
+</section>
+
+<!-- ── Kenelle ── -->
+<section id="kenelle">
+  <div class="section-eyebrow">Kohderyhmä</div>
+  <h2 class="section-title">Kenelle ETJ+ on tehty?</h2>
+  <p class="section-desc">
+    ETJ+ on suunniteltu suomalaisille yrityksille, joiden energiankulutus on
+    <strong>2 700–23 600 MWh/vuodessa</strong> — eli ns. velvoite-kevyt-segmentille,
+    joka on energiakatselmuksen piirissä mutta ei vielä ISO 50001 -velvoitteen alainen.
+  </p>
+
+  <div class="profile-grid">
+    <div class="profile-card">
+      <div class="profile-icon">🏭</div>
+      <h3>Teollisuusyritys</h3>
+      <p>Metalliteollisuuden tai elintarviketuotannon laitos, jonka vuosikulutus on 5 000–15 000 MWh.
+         Sähkö ja prosessilämpö ovat pääenergiamuodot. ETJ+ seuraa kulutusta reaaliajassa
+         ja laskee katselmustarpeen automaattisesti.</p>
+      <span class="tag">~8 500 MWh/v</span>
+    </div>
+    <div class="profile-card">
+      <div class="profile-icon">🏬</div>
+      <h3>Kauppakeskus tai toimitila</h3>
+      <p>Suuri kiinteistö tai kiinteistöportfolio, jonka pääkulutukset ovat kaukolämpö ja
+         kiinteistösähkö. ETJ+ tunnistaa kiinteistökohtaiset kulutukset ja tuottaa
+         vaatimusten mukaisen vuosi-ilmoituksen.</p>
+      <span class="tag">~12 000 MWh/v</span>
+    </div>
+    <div class="profile-card">
+      <div class="profile-icon">🚚</div>
+      <h3>Logistiikka ja kuljetusala</h3>
+      <p>Kuljetusyritys, jonka laivasto kuluttaa merkittävästi polttoainetta.
+         ETJ+ muuntaa diesellitrasta ja kilometreistä MWh:ksi, laskee velvoiterajan
+         ja ohjaa toimenpidesuunnitelmaan.</p>
+      <span class="tag">~6 500 MWh/v</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── Velvoite ── -->
+<section id="velvoite" style="background:var(--bg2);">
+  <div class="section-eyebrow">Lainsäädäntö</div>
+  <h2 class="section-title">Energiatehokkuuslain velvoitteet</h2>
+  <p class="section-desc">
+    Energiatehokkuuslaki (1429/2014, muutos 1279/2022) asettaa suuryrityksille ja
+    energiaintensiivisille yrityksille kolme keskeistä velvoitetta.
+    Noudattamatta jättäminen voi johtaa hallinnollisiin seuraamuksiin.
+  </p>
+
+  <div class="timeline" style="margin-bottom:36px;">
+    <div class="timeline-item safe">
+      <div class="timeline-date">Nyt → 10/2026</div>
+      <div class="timeline-title">Valmistautumisaika</div>
+      <div class="timeline-desc">Kartoita kulutus, arvioi velvoiteraja, laadi toimenpidesuunnitelma ETJ+:n avulla.</div>
+      <span class="timeline-badge badge-green">Toimenpide nyt</span>
+    </div>
+    <div class="timeline-item urgent">
+      <div class="timeline-date">11.10.2026</div>
+      <div class="timeline-title">Ensimmäinen energiakatselmus tai ETJ+-sopimus</div>
+      <div class="timeline-desc">&gt; 2 700 MWh/v kuluttava suuryritys. ETJ+-sopimus vapauttaa katselmuksesta.</div>
+      <span class="timeline-badge badge-orange">Kriittinen</span>
+    </div>
+    <div class="timeline-item urgent">
+      <div class="timeline-date">31.12.2026</div>
+      <div class="timeline-title">Vuosi-ilmoitus 2025 Energiavirastolle</div>
+      <div class="timeline-desc">Kulutusvuoden 2025 tiedot on ilmoitettava. ETJ+ tuottaa raportin automaattisesti.</div>
+      <span class="timeline-badge badge-orange">Kriittinen</span>
+    </div>
+    <div class="timeline-item critical">
+      <div class="timeline-date">11.10.2027</div>
+      <div class="timeline-title">ISO 50001 tai vastaava EMS</div>
+      <div class="timeline-desc">&gt; 23 600 MWh/v kuluttavat yritykset. Alle tämän rajan ETJ+-sopimus riittää.</div>
+      <span class="timeline-badge badge-red">23 600+ MWh/v</span>
+    </div>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="threshold-table">
+      <thead>
+        <tr>
+          <th>Kulutus (MWh/v)</th>
+          <th>Velvoite</th>
+          <th>Vaihtoehto</th>
+          <th>Seuraamukset</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>&lt; 2 700</strong></td>
+          <td>Ei velvoitetta</td>
+          <td>—</td>
+          <td>Ei sovelleta</td>
+        </tr>
+        <tr>
+          <td><strong>2 700 – 23 600</strong></td>
+          <td>Energiakatselmus (4 v. välein) + vuosi-ilmoitus</td>
+          <td style="color:var(--accent);">✓ ETJ+-sopimus vapauttaa</td>
+          <td style="color:var(--orange);">Hallinnollinen sanktio</td>
+        </tr>
+        <tr>
+          <td><strong>&gt; 23 600</strong></td>
+          <td>ISO 50001 tai vastaava EMS</td>
+          <td>Ei vapautusta</td>
+          <td style="color:var(--red);">Hallinnollinen sanktio</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Palvelun osat ── -->
+<section id="palvelu">
+  <div class="section-eyebrow">Ominaisuudet</div>
+  <h2 class="section-title">Kaikki mitä ETJ-velvoitteen täyttämiseen tarvitaan</h2>
+  <p class="section-desc">
+    ETJ+ on kattava SaaS-palvelu, joka yhdistää energiaseurannan, viranomaisraportoinnin
+    ja toimenpidejohtamisen yhteen näkymään.
+  </p>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-num">①</div>
+      <h3>ETJ-velvoitteen seuranta</h3>
+      <p>Reaaliaikainen vaatimustenmukaisuusnäkymä kertoo yhdellä vilkaisulla, onko
+         yritys lain vaatimusten mukainen. Automaattiset hälytykset deadlineista ja
+         raja-arvojen ylityksistä.</p>
+      <div class="feature-tags">
+        <span class="feature-tag">Compliance-taulukko</span>
+        <span class="feature-tag">Hälytykset</span>
+        <span class="feature-tag">Deadline-seuranta</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-num">②</div>
+      <h3>Energiankulutuksen hallinta</h3>
+      <p>Sähkön, kaukolämmön, kaasun ja polttoaineiden kuukausittainen seuranta
+         interaktiivisilla kaavioilla. Datahub-integraatio, CSV-tuonti ja
+         tekoälypohjainen laskuntulkinta (Lasku-AI).</p>
+      <div class="feature-tags">
+        <span class="feature-tag">Datahub</span>
+        <span class="feature-tag">CSV-tuonti</span>
+        <span class="feature-tag">Lasku-AI</span>
+        <span class="feature-tag">Ennuste</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-num">③</div>
+      <h3>Toimenpidesuunnitelmat ja tekoälysuositukset</h3>
+      <p>Kanban-pohjainen toimenpidenäkymä: avoin → käynnissä → valmis.
+         AI-ehdotukset suurimmista säästöpotentiaaleista perustuen kulutustietoihin.
+         MWh-säästöjen ja kustannussäästöjen seuranta.</p>
+      <div class="feature-tags">
+        <span class="feature-tag">Kanban</span>
+        <span class="feature-tag">AI-suositukset</span>
+        <span class="feature-tag">Säästölaskuri</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-num">④</div>
+      <h3>Viranomaisraportointi</h3>
+      <p>Tuota Energiaviraston edellyttämät raportit suoraan ETJ+:sta:
+         vuosi-ilmoitus, katselmusraportti ja johdon katselmus.
+         Latausformaatit: PDF, JSON ja CSV.</p>
+      <div class="feature-tags">
+        <span class="feature-tag">Vuosi-ilmoitus</span>
+        <span class="feature-tag">Katselmus</span>
+        <span class="feature-tag">PDF / JSON / CSV</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-num">⑤</div>
+      <h3>Kuntanäkymä</h3>
+      <p>Kunnan energiavastaava näkee yhteenvedon kaikista alueensa velvoiteyrityksistä
+         yhdessä näkymässä. Kuntaporttaalin kautta voidaan seurata alueellisia
+         energiatehokkuustavoitteiden toteutumista.</p>
+      <div class="feature-tags">
+        <span class="feature-tag">Kuntaporttaali</span>
+        <span class="feature-tag">Alue-yhteenveto</span>
+        <span class="feature-tag">Multi-yritys</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-num">⑥</div>
+      <h3>Konsernihallinta</h3>
+      <p>Konserni voi hallita kaikkia tytäryhtiöitä ja käyttöpaikkoja yhdeltä tililtä.
+         Hierarkkinen näkymä, käyttäjäroolien hallinta (Admin / Kunta / Asiakas)
+         ja kategoriapohjainen tiedonjäsentely.</p>
+      <div class="feature-tags">
+        <span class="feature-tag">Tytäryhtiöt</span>
+        <span class="feature-tag">Käyttöpaikat</span>
+        <span class="feature-tag">Hierarkia</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Miten alkuun ── -->
+<section id="alkuun" style="background:var(--bg2);">
+  <div class="section-center">
+    <div class="section-eyebrow">Aloitus</div>
+    <h2 class="section-title">Kolme askelta velvoitteen hallintaan</h2>
+    <p class="section-desc">ETJ+ on käyttövalmis parissa tunnissa.</p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Tee ilmainen ETJ-testi</h3>
+      <p>Selvitä 5 minuutissa, oletko energiatehokkuuslain velvoitteiden piirissä
+         ja mikä on yrityksesi tilanne.</p>
+      <a href="etj-testi.html" class="btn-outline">Aloita testi →</a>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Tilaa ETJ+-palvelu</h3>
+      <p>Täytä ja allekirjoita tilaussopimus sähköisesti. Spara aktivoi tunnuksesi
+         1 arkipäivän sisällä.</p>
+      <a href="etj-tilaussopimus.html" class="btn-outline">Katso sopimus →</a>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Kirjaudu ja aloita seuranta</h3>
+      <p>Syötä ensimmäiset kulutustiedot tai yhdistä Datahub. ETJ+ laskee
+         velvoitetilanteen automaattisesti.</p>
+      <a href="etj-plus.html" class="btn-outline">Avaa dashboard →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Yhteystiedot ── -->
+<section id="yhteystiedot">
+  <div class="contact-box">
+    <h3>Ota yhteyttä</h3>
+    <p>Haluatko kuulla lisää tai saada tarjouksen? Otamme yhteyttä saman arkipäivän aikana.</p>
+    <div class="contact-email"><a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a></div>
+    <p style="margin-top:12px; color:var(--text2); font-size:14px;">
+      <a href="https://sparaenergia.com" target="_blank" rel="noopener">sparaenergia.com</a>
+    </p>
+    <p class="disclaimer">
+      Tämä palvelukuvaus on suuntaa-antava. Lopullinen palvelun sisältö ja hinnoittelu vahvistetaan tilaussopimuksessa.
+      Spara Energia Oy pidättää oikeuden muuttaa palvelun ominaisuuksia ilman ennakkoilmoitusta.
+      Laintulkinta on asiakkaan vastuulla; ETJ+ ei korvaa oikeudellista neuvontaa.
+    </p>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="site-footer">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="logo" style="width:28px;height:28px;font-size:13px;">S</div>
+    <span class="footer-copy">© 2026 Spara Energia Oy</span>
+  </div>
+  <nav class="footer-links">
+    <a href="etj-kayttohje.html">Käyttöohje</a>
+    <a href="etj-tilaussopimus.html">Tilaussopimus</a>
+    <a href="etj-testi.html">ETJ-testi</a>
+    <a href="etj-plus.html">Dashboard</a>
+  </nav>
+</footer>
+
+</body>
+</html>

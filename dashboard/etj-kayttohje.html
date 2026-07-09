@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spara ETJ+ — Käyttöohje</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #080F1C;
+      --bg2:     #0D1A30;
+      --bg3:     #132040;
+      --bg4:     #1a2d55;
+      --accent:  #2CE879;
+      --accent2: #1fb85e;
+      --text:    #E8EDF5;
+      --text2:   #8A9BBF;
+      --text3:   #5A6D90;
+      --border:  #1E3060;
+      --red:     #EF5350;
+      --orange:  #FFA726;
+      --blue:    #42A5F5;
+      --radius:  10px;
+      --sidebar: 240px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent); }
+    a:hover { text-decoration: underline; }
+
+    /* ── Header ── */
+    .site-header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+    }
+    .logo {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: #080F1C;
+      flex-shrink: 0;
+    }
+    .site-header h1 { font-size: 15px; font-weight: 600; }
+    .site-header h1 span { color: var(--accent); }
+    .header-right { margin-left: auto; display: flex; gap: 16px; font-size: 13px; }
+    .header-right a { color: var(--text2); text-decoration: none; transition: color .2s; }
+    .header-right a:hover { color: var(--accent); }
+    .btn-sm {
+      background: var(--accent); color: #080F1C;
+      border: none; border-radius: 7px;
+      padding: 6px 14px; font-size: 12px; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 60px);
+      margin-top: 60px;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar);
+      flex-shrink: 0;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 60px; left: 0;
+      bottom: 0;
+      overflow-y: auto;
+      padding: 24px 0 40px;
+    }
+    .sidebar-section {
+      margin-bottom: 20px;
+    }
+    .sidebar-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text3);
+      padding: 0 16px 8px;
+    }
+    .sidebar a {
+      display: block;
+      padding: 7px 16px;
+      font-size: 13px; color: var(--text2);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+    .sidebar a:hover { color: var(--text); background: var(--bg3); }
+    .sidebar a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(44,232,121,.05); }
+
+    /* ── Main content ── */
+    .main-content {
+      margin-left: var(--sidebar);
+      flex: 1;
+      max-width: 860px;
+      padding: 48px 48px 80px;
+    }
+
+    /* ── Sections ── */
+    .doc-section {
+      margin-bottom: 64px;
+      scroll-margin-top: 80px;
+    }
+    .doc-section h2 {
+      font-size: 24px; font-weight: 700;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .doc-section h3 {
+      font-size: 17px; font-weight: 700;
+      margin: 28px 0 10px;
+      color: var(--text);
+    }
+    .doc-section h4 {
+      font-size: 14px; font-weight: 700;
+      margin: 20px 0 8px;
+      color: var(--text2);
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .doc-section p {
+      font-size: 14px; color: var(--text2);
+      line-height: 1.75; margin-bottom: 14px;
+    }
+    .doc-section p strong { color: var(--text); }
+
+    /* ── Info callout ── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13px; line-height: 1.6;
+    }
+    .callout-info { background: rgba(66,165,245,.1); border-left: 3px solid #42A5F5; color: #90CAF9; }
+    .callout-tip  { background: rgba(44,232,121,.08); border-left: 3px solid var(--accent); color: #6EF5A6; }
+    .callout-warn { background: rgba(255,167,38,.1); border-left: 3px solid #FFA726; color: #FFB74D; }
+    .callout strong { color: inherit; font-weight: 700; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); margin: 16px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--bg2); }
+    thead tr { background: var(--bg3); border-bottom: 1px solid var(--border); }
+    th {
+      padding: 10px 14px; text-align: left;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .4px;
+      color: var(--text2); white-space: nowrap;
+    }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg3); }
+    td code { background: var(--bg3); padding: 1px 5px; border-radius: 4px; font-size: 12px; font-family: 'Menlo', 'Consolas', monospace; }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      font-family: 'Menlo', 'Consolas', monospace;
+      font-size: 12px; line-height: 1.7;
+      overflow-x: auto;
+      margin: 12px 0;
+      color: #A5D8A5;
+    }
+
+    /* ── Step list ── */
+    .steps-list { list-style: none; counter-reset: step-counter; margin: 12px 0; }
+    .steps-list li {
+      counter-increment: step-counter;
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: 14px; line-height: 1.6;
+    }
+    .steps-list li:last-child { border-bottom: none; }
+    .steps-list li::before {
+      content: counter(step-counter);
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; flex-shrink: 0;
+      background: rgba(44,232,121,.12);
+      color: var(--accent);
+      border-radius: 50%;
+      font-size: 12px; font-weight: 800;
+    }
+    .steps-list li p { margin: 0; color: var(--text2); }
+    .steps-list li strong { color: var(--text); }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-block; padding: 2px 8px;
+      border-radius: 6px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .4px;
+    }
+    .badge-admin  { background: rgba(239,83,80,.2);   color: #e57373; }
+    .badge-muni   { background: rgba(66,165,245,.2);  color: #64b5f6; }
+    .badge-cust   { background: rgba(44,232,121,.15); color: var(--accent); }
+    .badge-yes    { background: rgba(44,232,121,.15); color: var(--accent); }
+    .badge-no     { background: rgba(255,167,38,.15); color: #ffb74d; }
+
+    /* ── Tab nav (mobile) ── */
+    .mobile-nav {
+      display: none;
+      overflow-x: auto;
+      gap: 0;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 8px;
+    }
+    .mobile-nav a {
+      display: inline-block;
+      padding: 10px 14px;
+      font-size: 12px; color: var(--text2);
+      text-decoration: none; white-space: nowrap;
+      border-bottom: 2px solid transparent;
+    }
+    .mobile-nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-left: var(--sidebar);
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 20px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 13px;
+    }
+    .footer-links { display: flex; gap: 18px; }
+    .footer-links a { color: var(--text2); text-decoration: none; transition: color .2s; }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-copy { color: var(--text3); }
+
+    /* ── FAQ accordion ── */
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-q {
+      width: 100%; text-align: left;
+      background: none; border: none; color: var(--text);
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      padding: 14px 0; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px;
+    }
+    .faq-q:hover { color: var(--accent); }
+    .faq-icon { flex-shrink: 0; font-size: 18px; color: var(--text3); transition: transform .2s; }
+    .faq-a {
+      max-height: 0; overflow: hidden;
+      font-size: 13px; color: var(--text2); line-height: 1.7;
+      transition: max-height .3s ease;
+    }
+    .faq-a.open { max-height: 300px; padding-bottom: 14px; }
+    .faq-icon.open { transform: rotate(45deg); color: var(--accent); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .mobile-nav { display: flex; position: fixed; top: 60px; left: 0; right: 0; z-index: 150; }
+      .layout { margin-top: 104px; }
+      .main-content { margin-left: 0; padding: 24px 20px 60px; }
+      .site-footer { margin-left: 0; padding: 16px 20px; }
+      .doc-section { scroll-margin-top: 120px; }
+    }
+
+    /* ── Print ── */
+    @media print {
+      :root {
+        --bg: #fff; --bg2: #f5f7fa; --bg3: #eef1f7; --bg4: #e0e5ef;
+        --text: #111827; --text2: #374151; --text3: #6B7280;
+        --border: #d1d5db; --accent: #15803d;
+      }
+      body { background: #fff; color: #111; font-size: 11pt; }
+      .site-header { position: static; }
+      .sidebar, .mobile-nav { display: none; }
+      .layout { display: block; margin-top: 0; }
+      .main-content { margin: 0; padding: 0; max-width: 100%; }
+      .site-footer { margin: 0; }
+      .doc-section { page-break-inside: avoid; }
+      @page { margin: 20mm; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="site-header">
+  <div class="logo">S</div>
+  <h1>Spara <span>ETJ+</span> — Käyttöohje</h1>
+  <div class="header-right">
+    <a href="etj-palvelukuvaus.html">Palvelukuvaus</a>
+    <a href="etj-tilaussopimus.html">Sopimus</a>
+    <a href="etj-plus.html" class="btn-sm">Avaa dashboard</a>
+  </div>
+</header>
+
+<!-- ── Mobile nav ── -->
+<nav class="mobile-nav">
+  <a href="#johdanto">Johdanto</a>
+  <a href="#roolit">Roolit</a>
+  <a href="#yhteenveto">Yhteenveto</a>
+  <a href="#kulutus">Kulutus</a>
+  <a href="#tunnusluvut">Tunnusluvut</a>
+  <a href="#toimenpiteet">Toimenpiteet</a>
+  <a href="#raportit">Raportit</a>
+  <a href="#hallinta">Hallinta</a>
+  <a href="#integraatiot">Integraatiot</a>
+  <a href="#ukk">UKK</a>
+</nav>
+
+<!-- ── Layout ── -->
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Aloitus</div>
+      <a href="#johdanto">Mikä on ETJ+?</a>
+      <a href="#kirjautuminen">Kirjautuminen</a>
+      <a href="#roolit">Roolit ja käyttöoikeudet</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Välilehdet</div>
+      <a href="#yhteenveto">Yhteenveto</a>
+      <a href="#kulutus">Kulutus</a>
+      <a href="#tunnusluvut">Tunnusluvut</a>
+      <a href="#toimenpiteet">Toimenpiteet</a>
+      <a href="#raportit">Raportit</a>
+      <a href="#hallinta">Hallinta</a>
+      <a href="#asetukset">Asetukset</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Integraatiot</div>
+      <a href="#datahub">Datahub</a>
+      <a href="#csv-tuonti">CSV-tuonti</a>
+      <a href="#lasku-ai">Lasku-AI</a>
+      <a href="#spara-yhteys">Spara-yhteys</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tuki</div>
+      <a href="#ukk">UKK / FAQ</a>
+    </div>
+  </nav>
+
+  <!-- ── Main ── -->
+  <main class="main-content">
+
+    <!-- Johdanto -->
+    <section class="doc-section" id="johdanto">
+      <h2>Mikä on Spara ETJ+?</h2>
+      <p>Spara ETJ+ on pilvipalvelu, jonka avulla suomalaiset yritykset täyttävät
+         Energiatehokkuuslain (1429/2014, muutos 1279/2022) velvoitteet ilman erillistä
+         energiakatselmusta tai ISO 50001 -standardia.</p>
+      <p>Palvelu koostuu energiaseurantadashboardista, viranomaisraporttien tuottamisesta
+         ja toimenpiteiden hallinnasta. Kaikki oleellinen lakimääräinen raportointi
+         hoituu suoraan ETJ+:n kautta.</p>
+      <div class="callout callout-tip">
+        <strong>Kohderyhmä:</strong> Yritykset, joiden vuosikulutus on 2 700–23 600 MWh.
+        Alle 2 700 MWh:n yritykset eivät ole velvoitteen piirissä, yli 23 600 MWh:n
+        yritykset tarvitsevat lisäksi ISO 50001 -järjestelmän.
+      </div>
+    </section>
+
+    <!-- Kirjautuminen -->
+    <section class="doc-section" id="kirjautuminen">
+      <h2>Kirjautuminen</h2>
+      <p>ETJ+-dashboardiin kirjaudutaan osoitteessa <strong>etj-plus.html</strong>
+         (tai Sparan asiakasportaalin kautta). Ensimmäiset tunnukset luo Sparan
+         asiakaspalvelu sopimuksen allekirjoittamisen jälkeen.</p>
+
+      <h3>Kirjautumistunnukset</h3>
+      <ul class="steps-list">
+        <li><strong>Sähköposti:</strong> <p>Käytä sopimuksessa ilmoittamaasi sähköpostiosoitetta.</p></li>
+        <li><strong>Salasana:</strong> <p>Spara lähettää väliaikaisen salasanan sähköpostiin. Vaihda se heti Asetukset-välilehdellä.</p></li>
+        <li><strong>Kaksivaiheinen tunnistus:</strong> <p>Suositellaan Admin-roolin käyttäjille.</p></li>
+      </ul>
+
+      <div class="callout callout-warn">
+        <strong>Huom:</strong> Jos tunnukset eivät toimi, ota yhteyttä
+        <a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a>.
+        Salasanan voi myös nollata kirjautumisnäkymässä.
+      </div>
+    </section>
+
+    <!-- Roolit -->
+    <section class="doc-section" id="roolit">
+      <h2>Roolit ja käyttöoikeudet</h2>
+      <p>ETJ+:ssa on kolme käyttäjäroolia. Roolit määräävät, mitä tietoja käyttäjä
+         näkee ja mitä toimintoja hänellä on käytettävissään.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Toiminto</th>
+              <th><span class="badge badge-admin">Admin</span></th>
+              <th><span class="badge badge-muni">Kunta</span></th>
+              <th><span class="badge badge-cust">Asiakas</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Oman yrityksen tiedot</td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+              <td>—</td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+            </tr>
+            <tr>
+              <td>Kaikkien yritysten tiedot</td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+              <td><span class="badge badge-no">Vain oma kunta</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>Kulutustietojen muokkaus</td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+              <td>—</td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+            </tr>
+            <tr>
+              <td>Toimenpiteiden hallinta</td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+              <td>—</td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+            </tr>
+            <tr>
+              <td>Raporttien luonti</td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+            </tr>
+            <tr>
+              <td>Käyttäjien hallinta</td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>Sopimusasetukset</td>
+              <td><span class="badge badge-yes">Kyllä</span></td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Yhteenveto -->
+    <section class="doc-section" id="yhteenveto">
+      <h2>Välilehti: Yhteenveto</h2>
+      <p>Yhteenveto-välilehti on dashboardin etusivu ja tarjoaa kokonaiskuvan
+         vaatimustenmukaisuustilanteesta.</p>
+
+      <h3>Vaatimustenmukaisuustaulukko</h3>
+      <p>Taulukossa näkyvät kaikki yritykset (Admin-rooli) tai oman kunnan yritykset
+         (Kunta-rooli). Sarakkeet: yritysnimi, vuosikulutus MWh, velvoitestatus,
+         ETJ+-sopimuksen tila, seuraava deadline.</p>
+      <p>Statukset:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Status</th><th>Merkitys</th></tr></thead>
+          <tbody>
+            <tr><td><code>compliant</code> — Ei velvoitetta</td><td>Kulutus alle 2 700 MWh/v</td></tr>
+            <tr><td><code>exempt</code> — Sopimuksella vapautettu</td><td>ETJ+-sopimus voimassa, velvoite täyttyy</td></tr>
+            <tr><td><code>non_compliant</code> — Velvoite täyttämättä</td><td>Kulutus 2 700–23 600 MWh, ei sopimusta</td></tr>
+            <tr><td><code>non_compliant</code> — ISO vaaditaan</td><td>Kulutus yli 23 600 MWh</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>KPI-kortit</h3>
+      <p>Yhteenvedon yläosassa näkyvät kokonaistilan tiivistykset:
+         kokonaiskulutus, velvoite täyttynyt / täyttämättä, toimenpiteistä todennetut
+         säästöt. <strong>Klikkaa KPI-korttia</strong> siirtyäksesi kyseiselle välilehdelle.</p>
+
+      <h3>Konsernipuu</h3>
+      <p>Jos yritykselläsi on useita käyttöpaikkoja tai tytäryhtiöitä, Yhteenveto-näyttää
+         hierarkkisen konsernikaavion. Klikkaa yritystä vaihtaaksesi näkymää.</p>
+    </section>
+
+    <!-- Kulutus -->
+    <section class="doc-section" id="kulutus">
+      <h2>Välilehti: Kulutus</h2>
+      <p>Kulutus-välilehti on päänäkymä kuukausittaiselle energiankulutukselle.</p>
+
+      <h3>Kulutustietojen lisääminen</h3>
+      <ul class="steps-list">
+        <li><strong>Manuaalinen syöttö:</strong> <p>Klikkaa "Lisää kulutus" -painiketta. Valitse vuosi, kuukausi ja energiatyyppi (sähkö, kaukolämpö, kaasu, öljy). Syötä arvo MWh:na.</p></li>
+        <li><strong>CSV-tuonti:</strong> <p>Lataa CSV-tiedosto Kulutus-välilehden tuontinapista. Katso <a href="#csv-tuonti">CSV-formaatin ohjeet</a>.</p></li>
+        <li><strong>Datahub-yhteys:</strong> <p>Automaattinen tuonti sähkönkulutukselle. Katso <a href="#datahub">Datahub-ohjeet</a>.</p></li>
+        <li><strong>Lasku-AI:</strong> <p>Lataa energialasku (PDF tai kuva). Tekoäly tunnistaa kulutuksen automaattisesti.</p></li>
+      </ul>
+
+      <h3>Kaaviot</h3>
+      <p>Kulutus-kaavio näyttää kuukausittaisen kulutuksen energiatyypeittäin (pinottuna).
+         Voit vaihtaa näkymää: kuukausi / vuosi, kaikki tyypit / yksittäinen.
+         Hover-tila näyttää tarkat arvot.</p>
+
+      <h3>Kynnysarvojana</h3>
+      <p>Janan avulla näet, kuinka lähellä olet 2 700 MWh:n ja 23 600 MWh:n velvoiterajoja.
+         Palkki muuttuu värin mukaan: vihreä (alle rajan), oranssi (lähellä), punainen (ylitetty).</p>
+
+      <h3>Ennuste</h3>
+      <p>ETJ+ laskee automaattisesti vuosiennusteen perustuen viimeisimpiin kuukausitietoihin.
+         Ennuste näytetään katkoviivalla kaaviossa.</p>
+    </section>
+
+    <!-- Tunnusluvut -->
+    <section class="doc-section" id="tunnusluvut">
+      <h2>Välilehti: Tunnusluvut</h2>
+      <p>Tunnusluvut-välilehti esittää laskennalliset KPI-mittarit yrityksen
+         energiatehokkuudesta.</p>
+
+      <h3>KPI-kortit</h3>
+      <p>Jokainen kortti näyttää mittarin arvon, muutoksen edelliseen vuoteen ja
+         selitteen. <strong>Klikkaamalla korttia</strong> siirryt suoraan kyseiseen
+         aiheeseen liittyvään välilehteen.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>KPI</th><th>Laskentakaava</th><th>Yksikkö</th></tr></thead>
+          <tbody>
+            <tr><td>Kokonaiskulutus</td><td>Sähkö + lämpö + kaasu + öljy (vuosi)</td><td>MWh/v</td></tr>
+            <tr><td>Energiaintensiteetti</td><td>Kokonaiskulutus / lattiapinta-ala</td><td>kWh/m²</td></tr>
+            <tr><td>Henkilöstökohtainen kulutus</td><td>Kokonaiskulutus / henkilöstömäärä</td><td>MWh/hlö</td></tr>
+            <tr><td>Säästöpotentiaali</td><td>Avoimien toimenpiteiden arvioitu MWh-säästö</td><td>MWh/v</td></tr>
+            <tr><td>Todennetut säästöt</td><td>Valmistuneiden toimenpiteiden MWh-säästö</td><td>MWh/v</td></tr>
+            <tr><td>Sähkön osuus</td><td>Sähkökulutus / kokonaiskulutus</td><td>%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Toimenpiteet -->
+    <section class="doc-section" id="toimenpiteet">
+      <h2>Välilehti: Toimenpiteet</h2>
+      <p>Toimenpiteet-välilehti on toimenpidesuunnitelman hallintanäkymä.
+         Tavoitteena on kirjata kaikki energiatehokkuuden parantamiseen tähtäävät
+         toimenpiteet ja seurata niiden etenemistä.</p>
+
+      <h3>Kanban-näkymä</h3>
+      <p>Toimenpiteet järjestetään kolmeen sarakkeeseen:
+         <strong>Avoin</strong> (suunnitellut), <strong>Käynnissä</strong> (toteutusvaiheessa)
+         ja <strong>Valmis</strong> (todennettu).</p>
+      <p>Vedä toimenpide sarakkeesta toiseen tai käytä kortin vaihtopainikkeita statuksen muuttamiseen.</p>
+
+      <h3>Toimenpiteen lisääminen</h3>
+      <ul class="steps-list">
+        <li><strong>Nimi ja kuvaus:</strong> <p>Anna toimenpiteelle selkeä nimi (esim. "LED-valaistus varastoon") ja kuvaus.</p></li>
+        <li><strong>Prioriteetti:</strong> <p>Valitse Korkea / Normaali / Matala.</p></li>
+        <li><strong>Arvioitu säästö (MWh):</strong> <p>Syötä arvio vuosittaisesta energiasäästöstä MWh:na.</p></li>
+        <li><strong>Kustannussäästö (€):</strong> <p>Laske tai syötä arvioitu vuosisäästö euroina.</p></li>
+        <li><strong>Vastuuhenkilö ja määräaika:</strong> <p>Lisää vastuuhenkilö ja tavoiteaikataulu.</p></li>
+      </ul>
+
+      <h3>AI-suositukset</h3>
+      <p>ETJ+ analysoi kulutusprofiilisi ja ehdottaa automaattisesti toimenpiteitä,
+         joilla on suurin säästöpotentiaali. AI-suositukset näkyvät omalla alueellaan
+         Toimenpiteet-välilehdellä. Voit hyväksyä suosituksen yhdellä klikkauksella,
+         jolloin se lisätään Kanban-tauluun avoimeksi toimenpiteeksi.</p>
+
+      <h3>Säästöyhteenveto</h3>
+      <p>Toimenpiteet-välilehden yläosassa näkyy tilannekatsaus:
+         <strong>Todennetut säästöt</strong> (valmiit toimenpiteet) ja
+         <strong>Arvioitu säästöpotentiaali</strong> (avoimet toimenpiteet).
+         Klikkaa lukuja siirtyäksesi suoraan kyseiseen Kanban-sarakkeeseen.</p>
+    </section>
+
+    <!-- Raportit -->
+    <section class="doc-section" id="raportit">
+      <h2>Välilehti: Raportit</h2>
+      <p>Raportit-välilehti tuottaa kaikki Energiaviraston edellyttämät raportit
+         sekä sisäisen johdon katselmuksen.</p>
+
+      <h3>Kategoria-ilmoitus</h3>
+      <p>Energiatyyppien ja käyttöpaikkojen luokittelu. Täytetään kerran vuodessa tai
+         kun yrityksen toiminta muuttuu merkittävästi. Tulostettavissa PDF:nä.</p>
+
+      <h3>Vuosi-ilmoitus Energiavirastolle</h3>
+      <p>Lakimääräinen vuosittainen ilmoitus yrityksen energiankulutuksesta.
+         ETJ+ koostaa ilmoituksen automaattisesti syötetyistä kulutustiedoista.</p>
+      <div class="callout callout-warn">
+        <strong>Deadline:</strong> Vuosi 2025 → ilmoitettava 31.12.2026 mennessä.
+        Vuodesta 2026 alkaen deadline on 30.4. (edellisvuoden tiedot).
+      </div>
+      <p>Latausmuodot:</p>
+      <ul class="steps-list">
+        <li><strong>PDF:</strong> <p>Tulostettava versio allekirjoitettavaksi tai arkistoitavaksi. Klikkaa "Lataa PDF".</p></li>
+        <li><strong>JSON:</strong> <p>Koneluettava formaatti Energiaviraston sähköistä järjestelmää varten.</p></li>
+        <li><strong>CSV:</strong> <p>Taulukkomuoto kirjanpitoa tai omia järjestelmiä varten.</p></li>
+      </ul>
+
+      <h3>Katselmusraportti</h3>
+      <p>Laajempi raportti, joka korvaa perinteisen energiakatselmuksen ETJ+-sopimuksen
+         asiakkaille. Sisältää kulutusanalyysin, toimenpidesuunnitelman ja KPI-kehityksen.
+         Laaditaan vuosittain tai enintään neljän vuoden välein.</p>
+
+      <h3>Johdon katselmus</h3>
+      <p>Sisäinen yhteenveto johdolle: energiatehokkuuden kehitys, toimenpiteiden
+         tulokset ja seuraavan kauden tavoitteet. Tulostettavissa PDF:nä.</p>
+    </section>
+
+    <!-- Hallinta -->
+    <section class="doc-section" id="hallinta">
+      <h2>Välilehti: Hallinta</h2>
+      <p>Hallinta-välilehti on käytettävissä vain <span class="badge badge-admin">Admin</span>-roolin käyttäjille.</p>
+
+      <h3>Käyttäjien hallinta</h3>
+      <ul class="steps-list">
+        <li><strong>Lisää käyttäjä:</strong> <p>Syötä sähköpostiosoite ja valitse rooli (Admin / Kunta / Asiakas). Käyttäjä saa kutsuviestin sähköpostiin.</p></li>
+        <li><strong>Muokkaa roolia:</strong> <p>Klikkaa käyttäjän riviä listalla ja valitse uusi rooli alasvetovalikosta.</p></li>
+        <li><strong>Poista käyttäjä:</strong> <p>Klikkaa roskakorikuvaketta. Toimintoa ei voi peruuttaa.</p></li>
+      </ul>
+
+      <h3>Kategoriat</h3>
+      <p>Luo ja hallinnoi energiankäytön kategorioita (esim. tuotanto, valaistus,
+         LVIS, ajoneuvokalusto). Kategoriat helpottavat kulutuksen seurantaa ja
+         toimenpiteiden kohdistamista.</p>
+
+      <h3>Konsernirakenne</h3>
+      <p>Lisää tytäryhtiöitä ja käyttöpaikkoja konsernipuuhun.
+         Aseta pääyhtiö–tytäryhtiö-suhteet hierarkianäkymässä.
+         Konsernitasolla kulutukset lasketaan yhteen automaattisesti.</p>
+    </section>
+
+    <!-- Asetukset -->
+    <section class="doc-section" id="asetukset">
+      <h2>Välilehti: Asetukset</h2>
+
+      <h3>Profiilin päivitys</h3>
+      <p>Muokkaa näyttönimeäsi ja sähköpostiosoitettasi. Tallenna muutokset
+         "Päivitä profiili" -painikkeella.</p>
+
+      <h3>Salasanan vaihto</h3>
+      <p>Syötä nykyinen salasana, uusi salasana ja vahvistus. Salasanan tulee olla
+         vähintään 8 merkkiä pitkä. Käytä vahvaa salasanaa: kirjaimia, numeroita
+         ja erikoismerkkejä.</p>
+
+      <h3>Tietokantayhteyden testi</h3>
+      <p>Asetukset-välilehden alaosassa on tietokantayhteyden testipainike.
+         Klikkaa "Testaa yhteys" varmistaaksesi, että yhteys Supabase-tietokantaan
+         toimii. Vihreä tulos = yhteys kunnossa.</p>
+    </section>
+
+    <!-- Integraatiot -->
+    <section class="doc-section" id="integraatiot">
+      <h2>Integraatiot</h2>
+
+      <section id="datahub" style="scroll-margin-top:80px;">
+        <h3>Datahub-integraatio</h3>
+        <p>Datahub on Fingridin ylläpitämä sähkönkulutusdatan välityspalvelu.
+           ETJ+ voi hakea sähkönkulutuksesi automaattisesti Datahubista.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Vaihe</th><th>Toimenpide</th></tr></thead>
+            <tbody>
+              <tr><td>1. GSRN-numero</td><td>Löydät GSRN-numeron sähkölaskulta (18-numeroinen koodi, alkaa 643...)</td></tr>
+              <tr><td>2. Valtuutus</td><td>Kirjaudu Datahub-portaaliin ja myönnä ETJ+:lle lukuoikeus kulutustietoihin</td></tr>
+              <tr><td>3. Syötä tunnus</td><td>Syötä GSRN-numero ETJ+:n Asetukset-välilehdelle ja klikkaa "Testaa yhteys"</td></tr>
+              <tr><td>4. Automaattinen synkronointi</td><td>ETJ+ hakee kulutusdatan automaattisesti kerran vuorokaudessa</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout-info">
+          <strong>Huom:</strong> Datahub sisältää vain sähkönkulutuksen (GSRN-pisteet).
+          Kaukolämpö, kaasu ja muut energiamuodot lisätään manuaalisesti tai CSV:nä.
+        </div>
+      </section>
+
+      <section id="csv-tuonti" style="scroll-margin-top:80px; margin-top:32px;">
+        <h3>CSV-tuonti</h3>
+        <p>Voit tuoda kulutustietoja CSV-tiedostona. Tuettu formaatti:</p>
+        <div class="code-block">vuosi,kuukausi,tyyppi,maara_mwh
+2025,1,sahko,42.5
+2025,1,kaukolampo,31.2
+2025,1,kaasu,8.1
+2025,2,sahko,39.8</div>
+        <p>Sarakkeet: <code>vuosi</code> (kokonaisluku), <code>kuukausi</code> (1–12),
+           <code>tyyppi</code> (sahko / kaukolampo / kaasu / oljy), <code>maara_mwh</code> (desimaaliluku).</p>
+        <p><strong>Virheen käsittely:</strong> Jos rivi on virheellinen (puuttuu kenttä,
+           tuntematon tyyppi, negatiivinen arvo), ETJ+ näyttää virheen ja ohittaa
+           kyseisen rivin. Muut rivit tuodaan normaalisti.</p>
+      </section>
+
+      <section id="lasku-ai" style="scroll-margin-top:80px; margin-top:32px;">
+        <h3>Lasku-AI</h3>
+        <p>Lasku-AI tunnistaa energialaskun kuva- tai PDF-tiedostosta kulutusmäärän
+           automaattisesti.</p>
+        <p>Tuetut tiedostomuodot: <code>PDF</code>, <code>JPG</code>, <code>PNG</code>, <code>WEBP</code></p>
+        <p>Enimmäiskoko: 10 MB per tiedosto.</p>
+        <div class="callout callout-warn">
+          <strong>Tarkkuus:</strong> Lasku-AI on apuväline, ei korvaa manuaalista
+          tarkistusta. Tarkista aina tunnistettu arvo ennen tallentamista.
+        </div>
+      </section>
+
+      <section id="spara-yhteys" style="scroll-margin-top:80px; margin-top:32px;">
+        <h3>Spara-yhteys</h3>
+        <p>Jos olet Sparan sähkönmyyntiasiakas, voit linkittää käyttöpaikkasi
+           Sparan järjestelmään käyttöpaikan ID:n avulla.</p>
+        <p>Linkityksen jälkeen Spara voi automaattisesti päivittää laskutusdatan
+           ETJ+:aan kuukausittain. Kysy oman asiakaspalvelijasi yhteystiedot
+           <a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a> -osoitteesta.</p>
+      </section>
+    </section>
+
+    <!-- UKK -->
+    <section class="doc-section" id="ukk">
+      <h2>UKK — Usein kysytyt kysymykset</h2>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Miten tiedän, olenko energiatehokkuuslain velvoitteiden piirissä?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Velvoite koskee yritystä, jonka vuotuinen energiankulutus ylittää 2 700 MWh. Voit tehdä
+          ilmaisen <a href="etj-testi.html">ETJ-testin</a>, joka arvioi tilanteesi viidessä minuutissa.
+          Spara ETJ+ laskee myös automattisesti velvoitetilanteen syötettyjen kulutustietojen perusteella.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Korvaaako ETJ+-sopimus energiakatselmuksen kokonaan?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Kyllä, 2 700–23 600 MWh:n yrityksille. ETJ+-sopimus on Energiatehokkuuslain mukainen
+          energianhallintasopimus, joka vapauttaa perinteisestä neljän vuoden välein tehtävästä
+          energiakatselmuksesta. Yli 23 600 MWh:n yrityksiltä vaaditaan lisäksi ISO 50001
+          tai vastaava energianhallintajärjestelmä.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Milloin minun pitää viimeistään tehdä toimenpiteitä?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Kriittiset deadlinet: <strong>11.10.2026</strong> (ensimmäinen katselmus tai ETJ+-sopimus)
+          ja <strong>31.12.2026</strong> (vuosi-ilmoitus kulutusvuodelta 2025).
+          Suosittelemme aloittamaan ETJ+ -palvelun käyttöönoton hyvissä ajoin, jotta ensimmäiset
+          kulutustiedot ehditään syöttää ja raportti tuottaa ajoissa.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Mitkä energiamuodot otetaan huomioon kulutuksessa?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Kaikki energiamuodot, myös polttoaineet. ETJ+ tukee: sähkö, kaukolämpö, maakaasu,
+          öljy, diesel, bensiini, biopolttoaineet. Syöttötavat: suorana MWh-lukuna, litroja,
+          neliömetreinä tai euroina (ETJ+ muuntaa automaattisesti MWh:ksi muuntokertoimilla).
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Voiko kunta seurata alueensa yritysten velvoitetilannetta?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Kyllä. Kunta-roolin käyttäjä näkee kaikki kunnan alueella sijaitsevat ETJ+:aan
+          rekisteröityneet yritykset ja niiden velvoitetilanteen. Kunta ei pysty muokkaamaan
+          yritysten tietoja — pelkästään lukemaan yhteenvedon.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Onko tiedot turvassa? Missä data säilytetään?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          ETJ+ käyttää Supabase-pilvipalvelua tietojen tallentamiseen. Data sijaitsee
+          EU:n alueella (Frankfurt). Käyttöoikeuksien hallinta perustuu Row Level
+          Security -suojaukseen: jokainen käyttäjä näkee vain omaan rooliinsa kuuluvat
+          tiedot. Lisätietoja: <a href="etj-tilaussopimus.html">Tilaussopimuksen §7–§8</a>.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Miten vuosi-ilmoitus toimitetaan Energiavirastolle?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          ETJ+ tuottaa vuosi-ilmoituksen PDF-, JSON- ja CSV-muodossa Raportit-välilehdellä.
+          JSON-tiedoston voi ladata suoraan Energiaviraston sähköiseen asiointipalveluun.
+          PDF soveltuu arkistointiin ja mahdolliseen postilähetykseen.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Voinko lisätä useita käyttäjiä samaan yritykseen?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Kyllä. Käyttäjämäärä riippuu sopimuksesta. Tilaussopimuksen mukaisesti
+          [TÄYDENNETÄÄN] käyttäjää sisältyy perushintaan; lisäkäyttäjiä voidaan
+          lisätä erikseen. Katso Hallinta-välilehti → Käyttäjien hallinta.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Mitä tapahtuu, jos kulutus ylittää 23 600 MWh:n rajan?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          ETJ+ ilmoittaa hälytyksen, kun kulutus lähestyy tai ylittää 23 600 MWh:n rajan.
+          Tällöin yritykseltä vaaditaan ISO 50001 tai vastaava energianhallintajärjestelmä
+          viimeistään 11.10.2027. ETJ+-sopimus yksin ei riitä; ota yhteyttä Sparaan
+          jatkotoimenpiteistä.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Miten otan yhteyttä tukeen?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Sähköposti: <a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a>.
+          Vasteaika: 1 arkipäivä. Kiireellisissä asioissa mainitse sähköpostin
+          otsikossa "KIIREELLINEN". Tukipalvelu on avoinna arkisin klo 8–16.
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<!-- ── Footer ── -->
+<footer class="site-footer">
+  <span class="footer-copy">© 2026 Spara Energia Oy</span>
+  <nav class="footer-links">
+    <a href="etj-palvelukuvaus.html">Palvelukuvaus</a>
+    <a href="etj-tilaussopimus.html">Tilaussopimus</a>
+    <a href="etj-testi.html">ETJ-testi</a>
+    <a href="etj-plus.html">Dashboard</a>
+  </nav>
+</footer>
+
+<script>
+  function toggleFaq(btn) {
+    const a = btn.nextElementSibling;
+    const icon = btn.querySelector('.faq-icon');
+    const open = a.classList.toggle('open');
+    icon.classList.toggle('open', open);
+  }
+
+  // Highlight active sidebar link on scroll
+  const sections = document.querySelectorAll('.doc-section[id], section[id]');
+  const sideLinks = document.querySelectorAll('.sidebar a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        sideLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.sidebar a[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
