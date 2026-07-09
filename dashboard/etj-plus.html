@@ -333,6 +333,10 @@
     .role-card .rc-role { font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px; }
     .role-card .rc-name { font-size:15px;font-weight:700;margin-bottom:3px; }
     .role-card .rc-desc { font-size:12px;color:var(--text2);line-height:1.4; }
+    .muni-section-label { font-size:11px;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;margin:20px 0 10px; }
+    .muni-card-grid { display:grid;grid-template-columns:repeat(5,1fr);gap:8px; }
+    .muni-card { background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 6px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text);transition:border-color .2s,background .2s;font-family:inherit;text-align:center; }
+    .muni-card:hover { border-color:var(--accent);background:var(--bg3); }
 
     /* ── Spara logo in header ── */
     .header-wordmark {
@@ -546,12 +550,6 @@
         <div class="rc-name">Ylläpitäjä</div>
         <div class="rc-desc">Näkee kaikki yritykset ja hallintapaneelin</div>
       </button>
-      <button class="role-card" onclick="selectRole('municipality')">
-        <span class="rc-icon">🏛️</span>
-        <div class="rc-role">Kunta</div>
-        <div class="rc-name">Espoon kaupunki</div>
-        <div class="rc-desc">Näkee Espoo-alueen yritykset</div>
-      </button>
       <button class="role-card" onclick="selectRole('customer_large')">
         <span class="rc-icon">🏭</span>
         <div class="rc-role">Asiakas</div>
@@ -564,6 +562,20 @@
         <div class="rc-name">Teollisuus Oy</div>
         <div class="rc-desc">Yritys kahdella toimipaikalla</div>
       </button>
+      <button class="role-card" onclick="selectRole('customer_c5')">
+        <span class="rc-icon">🔬</span>
+        <div class="rc-role">Asiakas</div>
+        <div class="rc-name">Biopharma Turku</div>
+        <div class="rc-desc">Kasvuyritys — ETJ-sopimus puuttuu</div>
+      </button>
+    </div>
+    <div class="muni-section-label">Kunta-portaali</div>
+    <div class="muni-card-grid">
+      <button class="muni-card" onclick="selectRole('municipality')">🏛️<br>Espoo</button>
+      <button class="muni-card" onclick="selectRole('municipality_oulu')">🏛️<br>Oulu</button>
+      <button class="muni-card" onclick="selectRole('municipality_turku')">🏛️<br>Turku</button>
+      <button class="muni-card" onclick="selectRole('municipality_jkl')">🏛️<br>Jyväskylä</button>
+      <button class="muni-card" onclick="selectRole('municipality_lahti')">🏛️<br>Lahti</button>
     </div>
   </div>
 </div>
@@ -1378,6 +1390,26 @@ const DEMO_COMPANIES = [
     city: 'Vantaa', etj_agreement_active: true, etj_agreement_date: '2023-09-15',
     contact_name: 'Jukka Mäkinen', contact_email: 'jukka@logistics.fi'
   },
+  {
+    id: 'c4', name: 'Oulu Metalli Oy', y_tunnus: '4567890-1', sector: 'Metalliteollisuus',
+    city: 'Oulu', etj_agreement_active: true, etj_agreement_date: '2024-06-01',
+    contact_name: 'Heikki Saarinen', contact_email: 'heikki@oulumetalli.fi'
+  },
+  {
+    id: 'c5', name: 'Biopharma Turku Oy', y_tunnus: '5678901-2', sector: 'Bioteknologia',
+    city: 'Turku', etj_agreement_active: false, etj_agreement_date: null,
+    contact_name: 'Leena Mäkäräinen', contact_email: 'leena@biopharma.fi'
+  },
+  {
+    id: 'c6', name: 'Jyväskylän Kuitu Oy', y_tunnus: '6789012-3', sector: 'Metsäteollisuus',
+    city: 'Jyväskylä', etj_agreement_active: false, etj_agreement_date: null,
+    contact_name: 'Pasi Hämäläinen', contact_email: 'pasi@jklkuitu.fi'
+  },
+  {
+    id: 'c7', name: 'Lahden Kiinteistöt Oy', y_tunnus: '7890123-4', sector: 'Kiinteistöpalvelut',
+    city: 'Lahti', etj_agreement_active: false, etj_agreement_date: null,
+    contact_name: 'Riitta Nieminen', contact_email: 'riitta@lahdenkiinteistot.fi'
+  },
 ];
 
 // Kulutus MWh/kk, vuodet 2023-2025
@@ -1397,16 +1429,40 @@ const DEMO_MONTHLY = {
     2024: [1310,1185,1142,1042,945,868,888,922,1018,1128,1218,1342],
     2025: [1295,1172,1132,1028,935,858,878,912,1008,1118,1205,1328],
   },
+  c4: {
+    2023: [468,420,405,368,335,308,312,322,348,382,412,452],
+    2024: [490,440,422,382,348,320,325,338,362,398,432,475],
+    2025: [480,430,415,375,340,315,320,330,355,390,425,465],
+  },
+  c5: {
+    2023: [712,640,618,592,575,562,568,575,592,625,670,722],
+    2024: [738,662,640,612,594,582,588,596,612,648,695,748],
+    2025: [720,648,625,598,580,570,575,582,598,632,680,732],
+  },
+  c6: {
+    2023: [1648,1492,1422,1295,1162,1058,1078,1118,1240,1392,1530,1685],
+    2024: [1712,1548,1478,1345,1208,1102,1122,1162,1290,1448,1590,1752],
+    2025: [1680,1520,1450,1320,1185,1080,1100,1140,1265,1420,1560,1720],
+  },
+  c7: {
+    2023: [118,105,98,85,70,60,62,65,75,88,104,120],
+    2024: [125,112,105,90,75,64,67,70,80,95,112,128],
+    2025: [122,108,102,88,72,62,65,68,78,92,108,125],
+  },
 };
 
 const DEMO_BREAKDOWN = {
   c1: { electricity: 55, heat: 32, gas: 8, oil: 5 },
   c2: { electricity: 78, heat: 18, gas: 0, oil: 4 },
   c3: { electricity: 45, heat: 25, gas: 22, oil: 8 },
+  c4: { electricity: 65, heat: 28, gas: 7, oil: 0 },
+  c5: { electricity: 72, heat: 25, gas: 3, oil: 0 },
+  c6: { electricity: 38, heat: 42, gas: 14, oil: 6 },
+  c7: { electricity: 60, heat: 38, gas: 0, oil: 2 },
 };
 
-const DEMO_FLOOR = { c1: 8500, c2: 12000, c3: 42000 };
-const DEMO_EMPLOYEES = { c1: 85, c2: 120, c3: 380 };
+const DEMO_FLOOR = { c1: 8500, c2: 12000, c3: 42000, c4: 6500, c5: 18000, c6: 35000, c7: 22000 };
+const DEMO_EMPLOYEES = { c1: 85, c2: 120, c3: 380, c4: 65, c5: 280, c6: 195, c7: 45 };
 
 // Per-energy-type monthly breakdown (populated lazily from DEMO_BREAKDOWN or CSV import)
 const DEMO_ENERGY_MONTHLY = {};
@@ -1467,6 +1523,14 @@ const DEMO_ACTIONS = [
   { id:'a6', company_id:'c3', title:'Aurinkovoimalat kattopinta-alalle', category:'uusiutuva', priority:'medium', estimated_savings_mwh:280, estimated_savings_eur:19600, investment_eur:320000, payback_years:16.3, status:'open', responsible_person:'Jukka M.', due_date:'2026-12-31' },
   { id:'a7', company_id:'c3', title:'Varastolämmityksen lämpöpumput', category:'lviv', priority:'high', estimated_savings_mwh:420, estimated_savings_eur:33600, investment_eur:180000, payback_years:5.4, status:'in_progress', responsible_person:'Pekka L.', due_date:'2025-12-31' },
   { id:'a8', company_id:'c3', title:'Trukkilaivueen sähköistäminen', category:'prosessit', priority:'medium', estimated_savings_mwh:160, estimated_savings_eur:11200, investment_eur:250000, payback_years:22.3, status:'open', responsible_person:'Jukka M.', due_date:'2027-06-30' },
+  { id:'a9',  company_id:'c4', title:'LED-valaistus tuotantotiloihin', category:'valaistus', priority:'high', estimated_savings_mwh:38, estimated_savings_eur:3800, investment_eur:22000, payback_years:5.8, status:'open', responsible_person:'Heikki S.', due_date:'2025-12-31' },
+  { id:'a10', company_id:'c4', title:'Paineilmaverkon vuotokartoitus ja korjaus', category:'prosessit', priority:'medium', estimated_savings_mwh:52, estimated_savings_eur:5200, investment_eur:14000, payback_years:2.7, status:'open', responsible_person:'Heikki S.', due_date:'2026-06-30' },
+  { id:'a11', company_id:'c5', title:'Laboratorioilmastoinnin VAV-optimointi', category:'lviv', priority:'high', estimated_savings_mwh:95, estimated_savings_eur:9500, investment_eur:42000, payback_years:4.4, status:'open', responsible_person:'Leena M.', due_date:'2026-03-31' },
+  { id:'a12', company_id:'c5', title:'Puhdastila-ilmanvaihdon yöaika-alennos', category:'lviv', priority:'medium', estimated_savings_mwh:68, estimated_savings_eur:6800, investment_eur:28000, payback_years:4.1, status:'in_progress', responsible_person:'Leena M.', due_date:'2025-12-31' },
+  { id:'a13', company_id:'c6', title:'Kuivaamoprosessin hukkalämmön talteenotto', category:'prosessit', priority:'high', estimated_savings_mwh:420, estimated_savings_eur:33600, investment_eur:185000, payback_years:5.5, status:'in_progress', responsible_person:'Pasi H.', due_date:'2026-06-30' },
+  { id:'a14', company_id:'c6', title:'Prosessikuivauksen optimointi (kosteusanturit)', category:'prosessit', priority:'medium', estimated_savings_mwh:280, estimated_savings_eur:22400, investment_eur:95000, payback_years:4.2, status:'open', responsible_person:'Pasi H.', due_date:'2026-12-31' },
+  { id:'a15', company_id:'c7', title:'LED-ulkovalaistus ja käytävävalot', category:'valaistus', priority:'low', estimated_savings_mwh:18, estimated_savings_eur:1800, investment_eur:12000, payback_years:6.7, status:'open', responsible_person:'Riitta N.', due_date:'2026-06-30' },
+  { id:'a16', company_id:'c7', title:'Lämmöntalteenotto ilmanvaihdosta', category:'lviv', priority:'medium', estimated_savings_mwh:32, estimated_savings_eur:2560, investment_eur:18000, payback_years:7.0, status:'open', responsible_person:'Riitta N.', due_date:'2026-12-31' },
 ];
 
 // Sector benchmarks used for savings potential calculation (MWh/year median for similar-sized companies)
@@ -1478,6 +1542,10 @@ const DEMO_BENCHMARKS = {
   c1b: { median_mwh: 750,  label: 'Teollisuus (pk-yritykset)' },
   c3a: { median_mwh: 2400, label: 'Logistiikka & varastointi' },
   c3b: { median_mwh: 2400, label: 'Logistiikka & varastointi' },
+  c4:  { median_mwh: 3800, label: 'Metalliteollisuus (pk-yritykset)' },
+  c5:  { median_mwh: 6500, label: 'Bioteknologia / tutkimuslaitokset' },
+  c6:  { median_mwh: 18000, label: 'Metsäteollisuus' },
+  c7:  { median_mwh: 850,  label: 'Kiinteistöpalvelut' },
 };
 const EUR_PER_MWH = 100;
 
@@ -1491,6 +1559,14 @@ const DEMO_ACTION_SUGGESTIONS = {
   a6: { solution:'Katon koko pinta-alan hyödyntäminen aurinkopaneelistolla. Ylijäämäsähkö myydään verkkoon tai varastoidaan akustoon yöaikaista kulutusta varten.', products:[{type:'Laite',name:'Aurinkopaneelit 200–300 kWp (monikide)',provider:'Hanwha Q CELLS'},{type:'Palvelu',name:'Aurinkosähkön avaimet käteen -asennus',provider:'Fortum Solar'},{type:'Rahoitus',name:'PPA-sopimus (ei alkuinvestointia)',provider:'Helen Oy'}], diy:'Paneelit + invertterit + asennus ~250 000–320 000 €. Tarvitaan sähkösuunnitelma ja lupa.', outsource:'PPA (Power Purchase Agreement): nolla investointia, maksat tuotetusta kWh:sta ~7 v ajan.' },
   a7: { solution:'Kylmävarastojen lauhdelämpö ohjataan lämpöpumpun avulla kuumavesikiertoon lämmitystä ja lämminvesijärjestelmää varten. Hukkalämpö täysin hyödynnetty.', products:[{type:'Laite',name:'Hukkalämmön talteenottoyksikkö',provider:'Star Refrigeration'},{type:'Palvelu',name:'Prosessi-insinöörityö ja suunnittelu',provider:'Granlund Oy'},{type:'Rahoitus',name:'Business Finland energiatuki (tyypillisesti 25–40 %)',provider:'Business Finland'}], diy:'Laitteisto ~150 000–180 000 €, asennus 2–3 kk. Vaatii prosessi- ja LVI-suunnittelun.', outsource:'ESCO-rahoitusmalli: ei alkuinvestointia, takaisinmaksu säästöistä 5–7 v.' },
   a8: { solution:'Li-ion-trukkilaivue eliminoi dieselkulut ja vähentää sisäilman pakokaasuja. Lataus yöllä halpasähköllä + aurinkosähkö optimoi käyttökustannuksia.', products:[{type:'Laite',name:'Li-ion-vastapainotrukki 1,5–3,5 t',provider:'Toyota Material Handling'},{type:'Laite',name:'3-vaihe-latauspisteet varastoihin',provider:'Ensto Chago'},{type:'Rahoitus',name:'Trukkileasingsopimus huoltoineen',provider:'Toyota Financial Services'}], diy:'Trukit ~30 000–50 000 €/kpl + latausjärjestelmä. Leasing 1 200 €/kk/trukki.', outsource:'Kokonaispalvelu: trukki, lataus, huolto, renkaat — yhdellä kuukausimaksulla.' },
+  a9:  { solution:'Teollisuushallien LED-uusinta pienentää valaistussähköä 60–70 %. Liikeanturiohjaus lisää säästön 10–15 % — erityisesti varastotiloissa, joissa valoja pidetään turhaan päällä.', products:[{type:'Laite',name:'Teollisuus-LED 150–200 W highbay',provider:'Glamox Industrial'},{type:'Laite',name:'Läsnäolotunnistimet DALI',provider:'Helvar'},{type:'Palvelu',name:'Valaistusauditointi ja suunnittelu',provider:'Eniram Oy'}], diy:'Laitteet + asennus ~18 000–22 000 €. Yleensä 1–2 vkon työ.', outsource:'Avaimet käteen -paketti sis. suunnittelu, asennus ja takuuhuolto ~26 000 €.' },
+  a10: { solution:'Ultraäänikartoituksella löytyvät paineilmavuodot — tyypillisesti 20–30 % kompressorisähköstä menee hukkaan. Vuodot tiivistetään systemaattisesti ja kompressori säädetään oikealle paineelle.', products:[{type:'Palvelu',name:'Ultraäänivuodontunnistus',provider:'Eneria Finland Oy'},{type:'Laite',name:'Taajuusmuuttaja kompressorille',provider:'Kaeser Kompressoren'},{type:'Tuote',name:'Pikaliitintiivisteet ja korjausmateriaalit',provider:'Festo'}], diy:'Ultraäänimittaus vuokralaitteella ~800 €/vko + tiivisteet ~1 500 €. Kesto 2–3 pv.', outsource:'Kokonaispalvelu: mittaus, raportti ja korjaukset ~7 000–10 000 €. Takaisinmaksu alle 3 kk.' },
+  a11: { solution:'Laboratorioiden vetokaapit ja ilmanvaihto kuluttavat jopa 70 % kiinteistösähköstä. VAV-säätö (Variable Air Volume) tiputtaa ilmavirtaa käyttöajan ulkopuolella 40–60 %.', products:[{type:'Laite',name:'VAV-vetokaappijärjestelmä',provider:'Waldner Laboreinrichtungen'},{type:'Palvelu',name:'Rakennusautomaation päivitys',provider:'Siemens Smart Infrastructure'},{type:'Palvelu',name:'Laboratorioilmastoinnin auditointi',provider:'Granlund Oy'}], diy:'Automaatiomodeernisaatio ~35 000–42 000 €. Vaatii LVIA-suunnittelijan.', outsource:'Energiakatsastus + optimointipalvelu tulospohjaisella hinnoittelulla ~15 000 €.' },
+  a12: { solution:'Puhdastilat pyörivät usein yöllä täydellä ilmaviralla turhaan. Yöaika-alennos (Clean Idle -tila) 30–40 % vähentää sähkönkulutusta merkittävästi — puhtausluokka säilyy.', products:[{type:'Laite',name:'Cleanroom-yhteensopivat VAV-pellit',provider:'Trox GmbH'},{type:'Palvelu',name:'Puhdastila-automaation ohjelmointi',provider:'Schneider Electric'},{type:'Palvelu',name:'GMP-vaikutusarviointi',provider:'Pharmalex Finland'}], diy:'Ohjelmistomuutos + pellit ~22 000–28 000 €. Vaatii GMP-validoinnin.', outsource:'Toimittaja hoitaa validoinnin ja dokumentaation avaimet käteen ~38 000 €.' },
+  a13: { solution:'Kuivaamoprosessissa poistuva lämmin kostea ilma voidaan johtaa lämmönvaihtimen läpi ja hyödyntää prosessilämpönä tai kiinteistölämmityksessä. Tyypillinen hyötysuhde 65–80 %.', products:[{type:'Laite',name:'Lämpöpyörä tai levylämmönvaihdin',provider:'Swegon Finland Oy'},{type:'Palvelu',name:'Prosessi-insinöörityö ja mitoitus',provider:'Etteplan Oyj'},{type:'Rahoitus',name:'Business Finland energiatuki (25–40 %)',provider:'Business Finland'}], diy:'Laitteet + asennus ~160 000–185 000 €. Kesto 3–4 kk. Vaatii prosessisuunnittelun.', outsource:'ESCO-malli: nolla alkuinvestointia, takaisinmaksu toteutuneista säästöistä 5–7 v.' },
+  a14: { solution:'Kosteusanturit ja reaaliaikaohjaus lyhentävät kuivausaikaa 15–25 % — paperi tai levy ei yli- eikä alikuivu. Säästö syntyy lyhyemmistä ajosykleistä eikä vain energiatehokkuudesta.', products:[{type:'Laite',name:'Langaton kosteusanturointi (IIoT)',provider:'Vaisala Oyj'},{type:'Palvelu',name:'Prosessidata-analyysi ja optimointimalli',provider:'Neste Engineering Solutions'},{type:'Palvelu',name:'Energianhallintajärjestelmä (ISO 50001 -valmis)',provider:'Enerdoc Oy'}], diy:'Anturit + integraatio ~75 000–95 000 €. Kesto 6–8 vko.', outsource:'Avaimet käteen -ratkaisu sis. asennus, kalibrointi ja käyttöönotto ~115 000 €.' },
+  a15: { solution:'LED-ulkovalaistus ja käytävävalot lyhentävät takaisinmaksuajan alle 7 vuoteen. Liiketunnistimet pihavaloihin vähentävät kulutusta edelleen 30–40 %.', products:[{type:'Laite',name:'LED-ulkovalaistus, IP66',provider:'Philips Signify'},{type:'Laite',name:'Liiketunnistimet ulkokäyttöön',provider:'ESYLUX'},{type:'Palvelu',name:'Valaistussuunnittelu (DIALux)',provider:'Ainoa Oy'}], diy:'Laitteet + asennus ~10 000–12 000 €. Kesto 3–5 pv.', outsource:'Kokonaispalvelu sis. suunnittelu ja asennustakuu ~15 000 €.' },
+  a16: { solution:'Ilmanvaihdon poistoilman lämpöenergia hyödynnetään tuloilman esilämmitykseen. Ristivirtavaihdin tai lämpöpyörä palauttaa 70–80 % poistolämmöstä — lämmityskustannukset laskevat selvästi.', products:[{type:'Laite',name:'Ristivirtainen lämmönvaihdin',provider:'Swegon Finland Oy'},{type:'Laite',name:'LTO-yksikkö saneerausasennukseen',provider:'Fläkt Group'},{type:'Palvelu',name:'LVI-suunnittelu ja asennus avaimet käteen',provider:'Caverion Suomi Oy'}], diy:'Laite + asennus ~15 000–18 000 €. Vaatii LVI-ammattilaisen.', outsource:'Avaimet käteen sis. suunnittelu, asennus ja huoltosopimus ~22 000 €.' },
 };
 
 const DEMO_ALERTS = [
@@ -1498,6 +1574,9 @@ const DEMO_ALERTS = [
   { id:'al2', company_id:'c2', severity:'warning', title:'Energiavirasto-ilmoitus tekemättä (2025)', message:'Vuoden 2025 kulutustiedot on ilmoitettava Energiavirastolle viimeistään 31.12.2026.', triggered_at:'2026-05-01', is_active:true },
   { id:'al3', company_id:'c3', severity:'warning', title:'EHS-järjestelmävelvoite – eräpäivä 11.10.2027', message:'Logistics Nordic Oy ylittää 23 600 MWh/v rajan. Sertifioitu ETJ+ tai ISO 50001 vaadittu.', triggered_at:'2026-06-01', is_active:true },
   { id:'al4', company_id:'c1', severity:'info', title:'ETJ+-sopimus voimassa', message:'Teollisuus Oy on vapautettu katselmusvelvoitteesta ETJ+-sopimuksen perusteella.', triggered_at:'2026-01-15', is_active:true },
+  { id:'al5', company_id:'c5', severity:'warning', title:'ETJ-velvoite – sopimus puuttuu', message:'Biopharma Turku Oy ylittää 2 700 MWh/v rajan. ETJ+-sopimus puuttuu — energiakatselmus on tehtävä viimeistään 11.10.2026.', triggered_at:'2026-05-01', is_active:true },
+  { id:'al6', company_id:'c6', severity:'critical', title:'ISO 50001 -velvoite lähestyy (2027)', message:'Jyväskylän Kuitu Oy ylittää 23 600 MWh/v rajan. Sertifioitu energianhallintajärjestelmä (ISO 50001 tai vastaava) vaaditaan viimeistään 11.10.2027.', triggered_at:'2026-06-01', is_active:true },
+  { id:'al7', company_id:'c7', severity:'info', title:'Lähestymässä velvoiterajaa', message:'Lahden Kiinteistöt Oy kuluttaa ~1 090 MWh/v. Kulutus on 60 % matkalla 2 700 MWh:n velvoiterajaan — suositellaan varhaista kartoitusta.', triggered_at:'2026-04-15', is_active:true },
 ];
 
 // Tags – yrityskohtaiset energian käyttökohdeleimat
@@ -1510,7 +1589,16 @@ let DEMO_TAGS = [
   { id:'t6', company_id:'c3', name:'Toimistot',             color:'#42A5F5', description:'Toimistorakennukset' },
   { id:'t7', company_id:'c3', name:'Sulattamo',             color:'#FFA726', description:'Sulattamoprosessi' },
   { id:'t8', company_id:'c2', name:'Kauppakeskuksen valaistus', color:'#66BB6A', description:'LED-valaistus' },
-  { id:'t9', company_id:'c2', name:'Kylmäkojeet',           color:'#29B6F6', description:'Kylmälaitteet' },
+  { id:'t9',  company_id:'c2', name:'Kylmäkojeet',      color:'#29B6F6', description:'Kylmälaitteet' },
+  { id:'t10', company_id:'c4', name:'Sulatusuunit',      color:'#EF5350', description:'Metallien sulatusprosessi' },
+  { id:'t11', company_id:'c4', name:'Paineilmaverkko',   color:'#AB47BC', description:'Paineilmajärjestelmä ja kompressorit' },
+  { id:'t12', company_id:'c4', name:'Toimistot',         color:'#42A5F5', description:'Toimistorakennukset' },
+  { id:'t13', company_id:'c5', name:'Laboratoriot',      color:'#29B6F6', description:'Tutkimuslaboratoriot ja vetokaapistot' },
+  { id:'t14', company_id:'c5', name:'Puhdastilat',       color:'#66BB6A', description:'ISO-luokitellut puhdastilat' },
+  { id:'t15', company_id:'c6', name:'Tuotantolinja',     color:'#EF5350', description:'Kuidun valmistusprosessi' },
+  { id:'t16', company_id:'c6', name:'Kuivaamo',          color:'#FFA726', description:'Tuotteen kuivausyksikkö' },
+  { id:'t17', company_id:'c7', name:'Kiinteistö A',      color:'#42A5F5', description:'Toimistotalo, Lahti keskusta' },
+  { id:'t18', company_id:'c7', name:'Kiinteistö B',      color:'#4CAF50', description:'Liiketila, Lahti pohjoinen' },
 ];
 
 // Tag allocations – pre-generated for all 12 months of 2025
@@ -1567,7 +1655,15 @@ const DEMO_SITES = [
   { id:'s4', company_id:'c3',  name:'Päävarasto',          city:'Vantaa',  floor_area_m2:25000,site_type:'warehouse',  active:true, spara_usage_point_id:'FI003' },
   { id:'s5', company_id:'c3',  name:'Terminaali',          city:'Helsinki',floor_area_m2:17000,site_type:'warehouse',  active:true, spara_usage_point_id:'FI004' },
   { id:'s6', company_id:'c3a', name:'Helsinki-Varasto',    city:'Helsinki',floor_area_m2:8000, site_type:'warehouse',  active:true, spara_usage_point_id:'FI005' },
-  { id:'s7', company_id:'c3b', name:'Vantaa-Varasto 2',   city:'Vantaa',  floor_area_m2:9500, site_type:'warehouse',  active:true, spara_usage_point_id:'FI006' },
+  { id:'s7',  company_id:'c3b', name:'Vantaa-Varasto 2',    city:'Vantaa',     floor_area_m2:9500,  site_type:'warehouse',  active:true, spara_usage_point_id:'FI006' },
+  { id:'s8',  company_id:'c4',  name:'Päätehdas',           city:'Oulu',       floor_area_m2:5000,  site_type:'production', active:true, spara_usage_point_id:'FI007' },
+  { id:'s9',  company_id:'c4',  name:'Raaka-ainevarasto',   city:'Oulu',       floor_area_m2:1500,  site_type:'warehouse',  active:true, spara_usage_point_id:null },
+  { id:'s10', company_id:'c5',  name:'Laboratoriorakennus', city:'Turku',      floor_area_m2:12000, site_type:'research',   active:true, spara_usage_point_id:'FI008' },
+  { id:'s11', company_id:'c5',  name:'Toimistokiinteistö',  city:'Turku',      floor_area_m2:6000,  site_type:'office',     active:true, spara_usage_point_id:null },
+  { id:'s12', company_id:'c6',  name:'Tehdas (päärakennus)',city:'Jyväskylä',  floor_area_m2:28000, site_type:'production', active:true, spara_usage_point_id:'FI009' },
+  { id:'s13', company_id:'c6',  name:'Kuivaamo',            city:'Jyväskylä',  floor_area_m2:7000,  site_type:'production', active:true, spara_usage_point_id:'FI010' },
+  { id:'s14', company_id:'c7',  name:'Toimistotalo A',      city:'Lahti',      floor_area_m2:8000,  site_type:'office',     active:true, spara_usage_point_id:'FI011' },
+  { id:'s15', company_id:'c7',  name:'Liiketila B',         city:'Lahti',      floor_area_m2:14000, site_type:'retail',     active:true, spara_usage_point_id:'FI012' },
 ];
 
 const DEMO_PERSONAS = {
@@ -1587,13 +1683,38 @@ const DEMO_PERSONAS = {
     id:'demo-cust-sm', email:'matti@teollisuus.fi',
     display_name:'Matti Virtanen', role:'customer', municipality:null, company_ids:['c1','c1a','c1b']
   },
+  customer_c5: {
+    id:'demo-cust-c5', email:'leena@biopharma.fi',
+    display_name:'Leena Mäkäräinen', role:'customer', municipality:null, company_ids:['c5']
+  },
+  municipality_oulu: {
+    id:'demo-muni-oulu', email:'energia@oulu.fi',
+    display_name:'Oulun kaupunki', role:'municipality', municipality:'Oulu', company_ids:null
+  },
+  municipality_turku: {
+    id:'demo-muni-turku', email:'energia@turku.fi',
+    display_name:'Turun kaupunki', role:'municipality', municipality:'Turku', company_ids:null
+  },
+  municipality_jkl: {
+    id:'demo-muni-jkl', email:'energia@jyvaskyla.fi',
+    display_name:'Jyväskylän kaupunki', role:'municipality', municipality:'Jyväskylä', company_ids:null
+  },
+  municipality_lahti: {
+    id:'demo-muni-lahti', email:'energia@lahti.fi',
+    display_name:'Lahden kaupunki', role:'municipality', municipality:'Lahti', company_ids:null
+  },
 };
 
 const DEMO_USERS = [
   { display_name:'Spara Admin',    role:'spara_admin',   scope:'Kaikki yritykset',    created_at:'2024-01-01' },
-  { display_name:'Espoon kaupunki',role:'municipality',   scope:'Kunta: Espoo',        created_at:'2024-02-15' },
-  { display_name:'Jukka Mäkinen',  role:'customer',       scope:'Logistics Nordic -konserni', created_at:'2024-03-10' },
-  { display_name:'Matti Virtanen', role:'customer',       scope:'Teollisuus Oy -konserni',     created_at:'2024-04-01' },
+  { display_name:'Espoon kaupunki',   role:'municipality', scope:'Kunta: Espoo',                created_at:'2024-02-15' },
+  { display_name:'Jukka Mäkinen',    role:'customer',     scope:'Logistics Nordic -konserni',   created_at:'2024-03-10' },
+  { display_name:'Matti Virtanen',   role:'customer',     scope:'Teollisuus Oy -konserni',      created_at:'2024-04-01' },
+  { display_name:'Leena Mäkäräinen', role:'customer',     scope:'Biopharma Turku Oy',           created_at:'2024-09-15' },
+  { display_name:'Oulun kaupunki',   role:'municipality', scope:'Kunta: Oulu',                  created_at:'2025-01-10' },
+  { display_name:'Turun kaupunki',   role:'municipality', scope:'Kunta: Turku',                 created_at:'2025-01-10' },
+  { display_name:'Jyväskylän kaupunki', role:'municipality', scope:'Kunta: Jyväskylä',         created_at:'2025-03-01' },
+  { display_name:'Lahden kaupunki',  role:'municipality', scope:'Kunta: Lahti',                 created_at:'2025-03-01' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
