@@ -646,7 +646,7 @@ const ECOMPS = {
   lampo:[
     { id:'kaukolampo',lbl:'Kaukolämpö',
       hint:'Luku löytyy suoraan kaukolämpölaskulta',
-      units:[{u:'MWh',f:1000,s:'MWh/vuosi (katso lasku)'},{u:'€',f:16.7,s:'€/vuosi (÷ ~60 €/MWh)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+      units:[{u:'m²',f:100,s:'lattiapinta-ala (m²) — n. 100 kWh/m²/v toimisto, 150 kWh/m²/v kauppa'},{u:'MWh',f:1000,s:'MWh/vuosi (katso lasku)'},{u:'€',f:16.7,s:'€/vuosi (÷ ~60 €/MWh)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
     { id:'oljy',      lbl:'Kevyt polttoöljy (lämmitysöljy)',
       hint:'1 000 l ≈ 10 MWh',
       units:[{u:'l',f:10,s:'litraa/vuosi'},{u:'€',f:8.3,s:'€/vuosi (÷ ~1,2 €/l)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
@@ -675,7 +675,7 @@ const ECOMPS = {
       units:[{u:'l',f:10,s:'polttoainetta yhteensä l/v'},{u:'km',f:0.9,s:'km/vuosi yhteensä'},{u:'€',f:8.3,s:'polttoainekulut €/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
     { id:'ka',       lbl:'Kuorma-autot ja bussit',
       hint:'n. 35 l/100 km · 1 000 km ≈ 3,5 MWh',
-      units:[{u:'l',f:10,s:'diesel yhteensä l/v'},{u:'km',f:3.3,s:'km/vuosi yhteensä'},{u:'€',f:8.3,s:'polttoainekulut €/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+      units:[{u:'kpl',f:250000,s:'ajoneuvojen lukumäärä (n. 250 MWh/kpl/v)'},{u:'l',f:10,s:'diesel yhteensä l/v'},{u:'km',f:3.3,s:'km/vuosi yhteensä'},{u:'€',f:8.3,s:'polttoainekulut €/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
     { id:'tyokone',  lbl:'Työkoneet (kaivukoneet, pyöräkuormaajat, trukit, mobiilityökoneet)',
       hint:'Kaivinkone n. 15–25 l/h · trukki n. 2–5 l/h',
       units:[{u:'l',f:10,s:'polttoainetta yhteensä l/v'},{u:'h',f:200,s:'käyttötunteja/v (×20 l/h)'},{u:'€',f:8.3,s:'polttoainekulut €/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
@@ -811,34 +811,15 @@ function buildEnergySub() {
   if (eSub >= ESUBS.length) {
     // ── Summary ─────────────────────────────────────
     const total = calcTotalKwh();
-    const mwh = total/1000;
-    const bandColor = total===0?'var(--text3)':mwh<500?'var(--accent)':mwh<2700?'var(--warn)':'var(--danger)';
-    const bandLabel = total===0?'Syötä arvioita alla':mwh<500?'Alle 500 MWh/v — selvästi rajan alla':
-      mwh<2700?'500–2 700 MWh/v — lähellä velvoiterajaa':
-      mwh<5000?'2 700–5 000 MWh/v — ylittää velvoiterajan':
-      mwh<23600?'5 000–23 600 MWh/v — selvästi velvoiterajojen yläpuolella':
-      'Yli 23 600 MWh/v — ISO 50001 pakollinen';
     if (total>0) {
       const m=total/1000;
       A.consumption=m<500?'<500':m<2700?'500-2700':m<5000?'2700-5000':m<23600?'5000-23600':'23600+';
     }
-    const brkd = ESUBS.map(sub=>{
-      const t = Object.entries(A.ed)
-        .filter(([k])=>k.startsWith(sub.id+'_')&&A.ed[k].on)
-        .reduce((s,[,d])=>s+(parseFloat(d.kwh)||0),0);
-      return t>0?`<div class="summary-row"><span>${sub.icon} ${sub.name}</span><span style="font-weight:700;font-variant-numeric:tabular-nums">${fmtKwh(t)}</span></div>`:'';
-    }).join('');
     return `
       <div class="card-eyebrow">Vaihe 2 / 4 — Energiamäärät</div>
       ${esubPills()}
       <h2>📊 Kulutusyhteenveto</h2>
-      <div class="card-desc">Alla laskettu arvio syöttämiesi tietojen pohjalta. Voit palata täydentämään tai jatkaa eteenpäin.</div>
-      <div style="text-align:center;padding:24px 0 16px">
-        <div style="font-size:40px;font-weight:900;font-variant-numeric:tabular-nums;color:${bandColor}">${total>0?fmtKwh(total):'—'}</div>
-        <div style="font-size:13px;margin-top:8px;color:${bandColor}">${bandLabel}</div>
-      </div>
-      ${brkd?`<div class="summary-brkd">${brkd}</div>`:''}
-      ${total===0?`<p style="font-size:13px;color:var(--text3);text-align:center;padding:0 0 12px">Ei arvioita syötetty — voit silti jatkaa tai palata täydentämään.</p>`:''}
+      <div class="card-desc">Arviot tallennettu. Saat tarkan analyysin ja tulokset kun olet antanut yhteystietosi.</div>
       <div class="field" style="margin-top:12px"><label>Tarkista tai korjaa kulutusluokka <span class="req">*</span></label>
         ${radio('consumption',[
           {v:'<500',      l:'Alle 500 MWh / vuosi',   s:'Selvästi rajan alla'},
@@ -858,16 +839,11 @@ function buildEnergySub() {
   // ── Normal energy sub-step ──────────────────────
   const sub = ESUBS[eSub];
   const comps = ECOMPS[sub.id];
-  const total = calcTotalKwh();
   return `
     <div class="card-eyebrow">Vaihe 2 / 4 — ${sub.icon} ${sub.name}</div>
     ${esubPills()}
     <h2>${sub.icon} ${sub.name}</h2>
     <div class="card-desc">${subDesc(sub.id)} Rastita kohteet ja anna arvio — valitse sinulle tutuin yksikkö.</div>
-    <div class="energy-running-total">
-      <span class="ert-label">Laskettu kulutus tähän mennessä</span>
-      <span class="ert-val" id="ert_val">${total>0?fmtKwh(total):'—'}</span>
-    </div>
     ${comps.map(c=>buildEComp(sub.id,c)).join('')}
     <div class="muu-trigger" onclick="muuToggle('${sub.id}')">
       <input type="checkbox" ${A.ed[sub.id+'_muu']?.on?'checked':''} onclick="event.stopPropagation();muuToggle('${sub.id}')">
