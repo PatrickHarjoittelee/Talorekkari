@@ -174,10 +174,15 @@
     .divider { height:1px;background:var(--border);margin:20px 0; }
 
     /* ── Savings row ── */
-    .savings-summary { display:flex;gap:14px;flex-wrap:wrap;margin-top:16px; }
-    .savings-box { background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;flex:1;min-width:160px; }
-    .savings-box label { font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px; }
+    .savings-summary { display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px; }
+    .savings-box { background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;flex:1;min-width:160px;cursor:pointer;transition:border-color .2s; }
+    .savings-box:hover { border-color:var(--accent); }
+    .savings-box label { font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;cursor:pointer; }
     .savings-box .val  { font-size:20px;font-weight:700; }
+    .law-cite { background:rgba(44,232,121,.06);border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;padding:14px 18px;margin:14px 0;font-size:13px;line-height:1.6; }
+    .law-cite strong { color:var(--accent);display:block;margin-bottom:6px;font-size:12px;letter-spacing:.4px;text-transform:uppercase; }
+    .law-cite p { margin:0 0 8px;color:var(--text2); }
+    .law-cite p:last-child { margin-bottom:0; }
 
     /* ── Year selector ── */
     .year-btns { display:flex;gap:6px;margin-bottom:16px; }
@@ -773,6 +778,8 @@
     </div>
   </div>
 
+  <div class="savings-summary" id="savings-summary"></div>
+
   <div class="kanban-board" id="kanban-board"></div>
 
   <div class="table-wrap" id="action-list-wrap" style="display:none">
@@ -787,8 +794,6 @@
       <tbody id="tbody-actions"></tbody>
     </table>
   </div>
-
-  <div class="savings-summary" id="savings-summary"></div>
 </div>
 
 <!-- ══ Tab 5: Raportit ══ -->
@@ -811,10 +816,17 @@
   <div class="report-card">
     <h3>📋 Energiaviraston vuosi-ilmoitus</h3>
     <p>Yrityksen on ilmoitettava Energiavirastolle, jos energian loppukulutus ylittää 2 700 tai 23 600 MWh. Ilmoitus vuodelta 2025 on tehtävä viimeistään <strong>31.12.2026</strong>. Vuodesta 2026 eteenpäin ilmoitus tehdään vuosittain <strong>30.4. mennessä</strong>.</p>
+    <div class="law-cite">
+      <strong>⚖️ Lain minimivaatimukset — Energiatehokkuuslaki (1429/2014, muutos 1279/2022)</strong>
+      <p><strong style="color:var(--text)">§ 5 — Energiakatselmus (> 2 700 MWh/v):</strong> Suuryrityksen on tehtävä energiakatselmus vähintään neljän vuoden välein. Ensimmäinen katselmus on tehtävä <em>viimeistään 11.10.2026</em>. ETJ+-sopimus vapauttaa velvoitteesta.</p>
+      <p><strong style="color:var(--text)">§ 6 — Vuosi-ilmoitus Energiavirastolle:</strong> Velvoitteen piirissä oleva yritys ilmoittaa vuosittain Energiavirastolle energiankulutuksensa. Vuosi 2025: ilmoitusraja <em>31.12.2026</em>. Vuodesta 2026: ilmoitus <em>30.4. mennessä</em>.</p>
+      <p><strong style="color:var(--text)">§ 8 — Energianhallintajärjestelmä (> 23 600 MWh/v):</strong> Erittäin suuryritys on velvollinen ottamaan käyttöön sertifioidun EMS:n (ISO 50001 tai vastaava). Siirtymäaika päättyy <em>11.10.2027</em>.</p>
+    </div>
     <div class="report-meta" id="report-meta-fields"></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="generateEnergiaviraReport()">Generoi ilmoitus (JSON)</button>
       <button class="btn btn-secondary" onclick="downloadCsvReport()">Lataa kulutusdata (CSV)</button>
+      <button class="btn btn-secondary" onclick="printEtjReport('vuosi-ilmoitus')" style="border-color:#e57373;color:#e57373">🖨️ Tulosta / PDF</button>
     </div>
   </div>
 
@@ -824,6 +836,7 @@
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="generateAuditTemplate()">Generoi raporttipohja (JSON)</button>
       <button class="btn btn-secondary" onclick="exportActionsReport()">Lataa toimenpiteet (CSV)</button>
+      <button class="btn btn-secondary" onclick="printEtjReport('katselmus')" style="border-color:#e57373;color:#e57373">🖨️ Tulosta / PDF</button>
     </div>
   </div>
 
@@ -834,6 +847,7 @@
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
       <button class="btn btn-secondary" onclick="renderMgmtReport()">Näytä johdon raportti</button>
       <button class="btn btn-secondary" onclick="exportMgmtReport()">Lataa johdon raportti (CSV)</button>
+      <button class="btn btn-secondary" onclick="printEtjReport('johdon-katselmus')" style="border-color:#e57373;color:#e57373">🖨️ Tulosta / PDF</button>
     </div>
   </div>
 
@@ -1470,7 +1484,7 @@ const DEMO_ENERGY_MONTHLY = {};
 // Energy type display config
 const ENERGY_COLORS = {
   electricity: { bg:'rgba(66,165,245,.8)',   border:'#42A5F5', label:'Sähkö' },
-  heat:        { bg:'rgba(255,167,38,.8)',   border:'#FFA726', label:'Lämpö' },
+  heat:        { bg:'rgba(255,167,38,.8)',   border:'#FFA726', label:'Kaukolämpö' },
   gas:         { bg:'rgba(171,71,188,.8)',   border:'#AB47BC', label:'Kaasu' },
   oil:         { bg:'rgba(239,83,80,.8)',    border:'#EF5350', label:'Öljy' },
   other:       { bg:'rgba(120,144,156,.75)', border:'#78909C', label:'Muu' },
@@ -2120,12 +2134,13 @@ function renderKpiSummary() {
   const compliant  = companies.filter(c => ['compliant','exempt'].includes(complianceStatus(c).status)).length;
 
   grid.innerHTML = [
-    { label:'Seurannassa', value:totalCompanies, sub:'yritystä' },
-    { label:'Katselmusvelv. piirissä', value:obligated, sub:'> 2 700 MWh/v', color:'orange' },
-    { label:'ETJ+-sopimus aktiivinen', value:etjActive, sub:'vapautettu katselmusvelv.', color:'accent' },
-    { label:'Vaatimustenmukaisia', value:compliant+'/'+totalCompanies, sub:'compliant + exempt', color:'accent' },
+    { label:'Seurannassa', value:totalCompanies, sub:'yritystä', click:'' },
+    { label:'Katselmusvelv. piirissä', value:obligated, sub:'> 2 700 MWh/v', color:'orange', click:"document.getElementById('tbl-compliance')?.scrollIntoView({behavior:'smooth'})" },
+    { label:'ETJ+-sopimus aktiivinen', value:etjActive, sub:'vapautettu katselmusvelv.', color:'accent', click:"document.getElementById('tbl-compliance')?.scrollIntoView({behavior:'smooth'})" },
+    { label:'Vaatimustenmukaisia', value:compliant+'/'+totalCompanies, sub:'compliant + exempt', color:'accent', click:"document.getElementById('tbl-compliance')?.scrollIntoView({behavior:'smooth'})" },
   ].map(k => `
-    <div class="kpi-card">
+    <div class="kpi-card" ${k.click?`onclick="${k.click}" style="cursor:pointer" title="Siirry vaatimustenmukaisuustaulukkoon"`:''}
+      ${k.click?`onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'"`:''}>
       <div class="kpi-label">${k.label}</div>
       <div class="kpi-value" style="color:var(--${k.color||'text'})">${k.value}</div>
       <div class="kpi-sub">${k.sub}</div>
@@ -2275,14 +2290,15 @@ function renderKpiGrid() {
 
   const grid = document.getElementById('kpi-grid');
   grid.innerHTML = [
-    { label:'Kulutus 2025', value:Math.round(annual25).toLocaleString('fi-FI') + ' MWh', sub:'vuosikulutus', delta:change ? (change<0?'▼ '+Math.abs(change)+'% vs. 2024':'▲ '+change+'% vs. 2024') : null, up:change>0 },
-    { label:'3v. keskiarvo', value:Math.round(avg3yr).toLocaleString('fi-FI') + ' MWh', sub:'2023–2025 keskiarvo' },
-    { label:'Energiaintensiteetti', value:intensity ? intensity + ' kWh/m²' : '–', sub:'vuosikeskiarvo' },
-    { label:'Kulutus / hlö', value:perEmpl ? perEmpl.toLocaleString('fi-FI') + ' kWh/hlö' : '–', sub:'vuosikeskiarvo' },
-    { label:'Vähenemä 2023→2025', value: (((annual23-annual25)/annual23)*100).toFixed(1) + ' %', sub:'absoluuttinen vähenemä', color:annual25<annual23?'accent':'red' },
-    { label:'Säästöpotentiaali', value: allActions.filter(a=>a.company_id===c.id&&a.status!=='completed').reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI') + ' MWh', sub:'avoimista toimenpiteistä' },
+    { label:'Kulutus 2025', value:Math.round(annual25).toLocaleString('fi-FI') + ' MWh', sub:'vuosikulutus', delta:change ? (change<0?'▼ '+Math.abs(change)+'% vs. 2024':'▲ '+change+'% vs. 2024') : null, up:change>0, tab:'kulutus' },
+    { label:'3v. keskiarvo', value:Math.round(avg3yr).toLocaleString('fi-FI') + ' MWh', sub:'2023–2025 keskiarvo', tab:'kulutus' },
+    { label:'Energiaintensiteetti', value:intensity ? intensity + ' kWh/m²' : '–', sub:'vuosikeskiarvo', tab:'tunnusluvut' },
+    { label:'Kulutus / hlö', value:perEmpl ? perEmpl.toLocaleString('fi-FI') + ' kWh/hlö' : '–', sub:'vuosikeskiarvo', tab:'tunnusluvut' },
+    { label:'Vähenemä 2023→2025', value: (((annual23-annual25)/annual23)*100).toFixed(1) + ' %', sub:'absoluuttinen vähenemä', color:annual25<annual23?'accent':'red', tab:'kulutus' },
+    { label:'Säästöpotentiaali', value: allActions.filter(a=>a.company_id===c.id&&a.status!=='completed').reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI') + ' MWh', sub:'avoimista toimenpiteistä — klikkaa', tab:'toimenpiteet' },
   ].map(k => `
-    <div class="kpi-card">
+    <div class="kpi-card" onclick="goToTab('${k.tab}')" style="cursor:pointer" title="Siirry: ${k.tab}"
+      onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
       <div class="kpi-label">${k.label}</div>
       <div class="kpi-value" style="color:var(--${k.color||'text'})">${k.value}</div>
       ${k.delta ? `<div class="kpi-delta ${k.up?'delta-up':'delta-down'}">${k.delta}</div>` : ''}
@@ -2352,10 +2368,22 @@ function filterActions() {
   const completed = actions.filter(a => a.status==='completed');
   const open      = actions.filter(a => a.status==='in_progress' || a.status==='open');
   document.getElementById('savings-summary').innerHTML = `
-    <div class="savings-box"><label>Todennettuja säästöjä</label><div class="val accent">${completed.reduce((s,a)=>s+(a.actual_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
-    <div class="savings-box"><label>Arvioitu säästöpotentiaali</label><div class="val">${open.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div></div>
-    <div class="savings-box"><label>Investoinnit yhteensä</label><div class="val">${actions.reduce((s,a)=>s+(a.investment_eur||0),0).toLocaleString('fi-FI')} €</div></div>
-    <div class="savings-box"><label>Toimenpiteitä yhteensä</label><div class="val">${actions.length} kpl</div></div>`;
+    <div class="savings-box" onclick="scrollKanbanCol('completed')" title="Näytä valmiit toimenpiteet">
+      <label>Todennettuja säästöjä</label><div class="val accent">${completed.reduce((s,a)=>s+(a.actual_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">${completed.length} valmista →</div>
+    </div>
+    <div class="savings-box" onclick="scrollKanbanCol('open')" title="Näytä avoimet toimenpiteet">
+      <label>Arvioitu säästöpotentiaali</label><div class="val">${open.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI')} MWh</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">${open.length} avointa →</div>
+    </div>
+    <div class="savings-box" onclick="scrollKanbanCol('in_progress')" title="Näytä käynnissä olevat toimenpiteet">
+      <label>Investoinnit yhteensä</label><div class="val">${actions.reduce((s,a)=>s+(a.investment_eur||0),0).toLocaleString('fi-FI')} €</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">${actions.filter(a=>a.status==='in_progress').length} käynnissä →</div>
+    </div>
+    <div class="savings-box" onclick="document.getElementById('kanban-board').scrollIntoView({behavior:'smooth'})" title="Näytä kaikki toimenpiteet">
+      <label>Toimenpiteitä yhteensä</label><div class="val">${actions.length} kpl</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">klikkaa nähdäksesi →</div>
+    </div>`;
 }
 
 const _ACT_ICONS = { valaistus:'💡', lviv:'🌡️', prosessit:'⚙️', kuori:'🏠', uusiutuva:'☀️', kayttaytyminen:'👥' };
@@ -4214,6 +4242,122 @@ document.querySelectorAll('.tab').forEach(tab => {
     if (t === 'asetukset')    openSettingsTab();
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Navigation helpers
+// ═══════════════════════════════════════════════════════════════════════════
+function goToTab(name) {
+  const el = document.querySelector(`.tab[data-tab="${name}"]`);
+  if (el) el.click();
+}
+
+function scrollKanbanCol(status) {
+  const board = document.getElementById('kanban-board');
+  const KEYS = { open:0, in_progress:1, completed:2 };
+  const cols = board?.querySelectorAll('.kanban-col');
+  const col  = cols?.[KEYS[status] ?? 0];
+  if (col) {
+    col.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    col.style.outline = '2px solid var(--accent)';
+    setTimeout(() => col.style.outline = '', 1400);
+  }
+}
+
+// ─── PDF / Print ────────────────────────────────────────────────────────────
+function printEtjReport(type) {
+  const cId = activeCompanyId || companies.find(c=>!c.parent_id)?.id || companies[0]?.id;
+  const c   = companies.find(x => x.id === cId) || companies[0];
+  if (!c) return;
+
+  const avg      = calcAvg3yr(c.id);
+  const annual25 = calcAnnual(c.id, 2025);
+  const annual24 = calcAnnual(c.id, 2024);
+  const annual23 = calcAnnual(c.id, 2023);
+  const acts     = allActions.filter(a => a.company_id === c.id);
+  const now      = new Date().toLocaleDateString('fi-FI');
+  const etjBand  = avg > 23600 ? '> 23 600 MWh/v — ISO 50001 pakollinen' :
+                   avg > 2700  ? '2 700–23 600 MWh/v — Kevyt raportointi' :
+                   '< 2 700 MWh/v — Ei velvoitetta';
+
+  const titles = {
+    'vuosi-ilmoitus': 'Energiaviraston vuosi-ilmoitus 2025',
+    'katselmus':      'Energiakatselmusraportin pohja',
+    'johdon-katselmus': 'Johdon katselmus – energiatiivistelmä',
+  };
+
+  const bodyContent = {
+    'vuosi-ilmoitus': `
+      <h2>Kulutustiedot</h2>
+      <table>
+        <tr><th>Vuosi</th><th>Kulutus (MWh)</th></tr>
+        <tr><td>2023</td><td>${Math.round(annual23).toLocaleString('fi-FI')}</td></tr>
+        <tr><td>2024</td><td>${Math.round(annual24).toLocaleString('fi-FI')}</td></tr>
+        <tr><td>2025</td><td>${Math.round(annual25).toLocaleString('fi-FI')}</td></tr>
+        <tr><td><strong>3v. keskiarvo</strong></td><td><strong>${Math.round(avg).toLocaleString('fi-FI')}</strong></td></tr>
+      </table>
+      <h2>Vaatimustenmukaisuus</h2>
+      <p>Kulutusluokka: <strong>${etjBand}</strong><br>
+      ETJ+-sopimus: <strong>${c.etj_agreement_active ? 'Aktiivinen – vapautettu katselmusvelvoitteesta' : 'Ei aktiivinen'}</strong><br>
+      Ilmoitusdeadline: <strong>${avg > 2700 ? '31.12.2026' : '–'}</strong></p>
+      <h2>⚖️ Lain minimivaatimukset</h2>
+      <p><strong>§ 5</strong> — Energiakatselmus (> 2 700 MWh/v): Tehtävä 4 vuoden välein. Ensimmäinen viimeistään 11.10.2026. ETJ+-sopimus vapauttaa.</p>
+      <p><strong>§ 6</strong> — Vuosi-ilmoitus Energiavirastolle: Vuosi 2025 deadline 31.12.2026. Vuodesta 2026: ilmoitus 30.4. mennessä.</p>
+      <p><strong>§ 8</strong> — EMS-velvoite (> 23 600 MWh/v): ISO 50001 tai vastaava viimeistään 11.10.2027.</p>`,
+    'katselmus': `
+      <h2>Energiankulutus</h2>
+      <table>
+        <tr><th>Vuosi</th><th>Kulutus (MWh)</th></tr>
+        <tr><td>2023</td><td>${Math.round(annual23).toLocaleString('fi-FI')}</td></tr>
+        <tr><td>2024</td><td>${Math.round(annual24).toLocaleString('fi-FI')}</td></tr>
+        <tr><td>2025</td><td>${Math.round(annual25).toLocaleString('fi-FI')}</td></tr>
+        <tr><td><strong>3v. ka</strong></td><td><strong>${Math.round(avg).toLocaleString('fi-FI')}</strong></td></tr>
+      </table>
+      <h2>Energiatehokkuustoimenpiteet</h2>
+      <table>
+        <tr><th>Toimenpide</th><th>Kategoria</th><th>Säästö MWh</th><th>Investointi €</th><th>Status</th></tr>
+        ${acts.map(a=>`<tr><td>${a.title}</td><td>${CAT_LABELS[a.category]||a.category}</td><td>${a.estimated_savings_mwh||0}</td><td>${(a.investment_eur||0).toLocaleString('fi-FI')}</td><td>${STATUS_FI[a.status]||a.status}</td></tr>`).join('')}
+      </table>
+      <p><strong>Kokonaissäästöpotentiaali:</strong> ${acts.reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI')} MWh/v</p>`,
+    'johdon-katselmus': `
+      <h2>Energian kulutustilanne</h2>
+      <table>
+        <tr><th>Vuosi</th><th>Kulutus (MWh)</th><th>Muutos</th></tr>
+        <tr><td>2023</td><td>${Math.round(annual23).toLocaleString('fi-FI')}</td><td>–</td></tr>
+        <tr><td>2024</td><td>${Math.round(annual24).toLocaleString('fi-FI')}</td><td>${annual23>0?(((annual24-annual23)/annual23*100).toFixed(1)+'%'):'–'}</td></tr>
+        <tr><td>2025</td><td>${Math.round(annual25).toLocaleString('fi-FI')}</td><td>${annual24>0?(((annual25-annual24)/annual24*100).toFixed(1)+'%'):'–'}</td></tr>
+      </table>
+      <h2>Toimenpiteiden yhteenveto</h2>
+      <table>
+        <tr><th>Status</th><th>kpl</th><th>MWh säästö</th></tr>
+        <tr><td>Valmis</td><td>${acts.filter(a=>a.status==='completed').length}</td><td>${acts.filter(a=>a.status==='completed').reduce((s,a)=>s+(a.actual_savings_mwh||0),0).toLocaleString('fi-FI')}</td></tr>
+        <tr><td>Käynnissä</td><td>${acts.filter(a=>a.status==='in_progress').length}</td><td>${acts.filter(a=>a.status==='in_progress').reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI')}</td></tr>
+        <tr><td>Avoin</td><td>${acts.filter(a=>a.status==='open').length}</td><td>${acts.filter(a=>a.status==='open').reduce((s,a)=>s+(a.estimated_savings_mwh||0),0).toLocaleString('fi-FI')}</td></tr>
+      </table>
+      <p><strong>ETJ+-sopimus:</strong> ${c.etj_agreement_active?'Aktiivinen':'Ei aktiivinen'} | <strong>Kulutusluokka:</strong> ${etjBand}</p>`,
+  }[type] || '';
+
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(`<!DOCTYPE html><html lang="fi"><head><meta charset="utf-8">
+    <title>${titles[type]||'ETJ+ Raportti'}</title>
+    <style>
+      body{font-family:Arial,sans-serif;font-size:13px;color:#111;margin:32px 40px;line-height:1.5}
+      h1{font-size:20px;border-bottom:2px solid #2CE879;padding-bottom:8px;margin-bottom:4px}
+      h2{font-size:14px;margin:20px 0 8px;color:#333}
+      p{margin:0 0 10px}
+      table{width:100%;border-collapse:collapse;margin-bottom:16px}
+      th,td{border:1px solid #ddd;padding:6px 10px;text-align:left;font-size:12px}
+      th{background:#f5f5f5;font-weight:600}
+      .meta{font-size:12px;color:#666;margin-bottom:24px}
+      @media print{body{margin:16px 20px}}
+    </style>
+  </head><body>
+    <h1>${titles[type]||'ETJ+ Raportti'}</h1>
+    <div class="meta">Yritys: <strong>${c.name}</strong> &nbsp;|&nbsp; Y-tunnus: ${c.y_tunnus||'–'} &nbsp;|&nbsp; Luotu: ${now}</div>
+    ${bodyContent}
+    <script>window.onload=()=>window.print();<\/script>
+  </body></html>`);
+  win.document.close();
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Create user modal
