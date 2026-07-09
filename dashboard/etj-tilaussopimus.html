@@ -1083,7 +1083,7 @@
       if (!companies.length) { drop.style.display = 'none'; return; }
       drop.innerHTML = companies.map(c => {
         const name = _prhName(c);
-        const bid  = c.businessId || '';
+        const bid  = _prhStr(c.businessId);
         const city = _prhCity(c);
         const ns   = JSON.stringify(name), bs = JSON.stringify(bid), cs = JSON.stringify(city);
         const postal = JSON.stringify(_prhPostal(c));
@@ -1108,6 +1108,25 @@
     if (drop) drop.style.display = 'none';
     const hint = document.getElementById('prh-hint');
     if (hint) hint.style.display = 'none';
+    // Sync contract document immediately with what we have
+    syncDocFromForm();
+    // Then fetch full details by businessId for complete address data
+    if (bid) {
+      fetch(`${PRH_V3}?businessId=${encodeURIComponent(bid)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          const full = (d && (d.companies || d.results || []));
+          if (!full || !full[0]) return;
+          const co = full[0];
+          setV('of_yritys',      _prhName(co) || name);
+          setV('of_ytunnus',     _prhStr(co.businessId) || bid);
+          setV('of_kaupunki',    _prhCity(co) || city);
+          setV('of_postinumero', _prhPostal(co) || postal);
+          setV('of_osoite',      _prhStreet(co) || street);
+          syncDocFromForm();
+        })
+        .catch(() => {});
+    }
   }
 
   // ── Sync contract document from form fields ─────────────────────────────
