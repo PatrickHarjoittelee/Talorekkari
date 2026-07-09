@@ -1813,6 +1813,34 @@ async function handleAuthUser(user) {
   hideLoginScreen();
   showUserInfo();
   await loadData();
+  // Authenticated customer with no company data → prompt onboarding
+  if (DEMO_MODE && !user.id.startsWith('demo-') && currentProfile.role !== 'spara_admin') {
+    showOnboardingBanner();
+  }
+}
+
+function showOnboardingBanner() {
+  if (document.getElementById('onboarding-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'onboarding-banner';
+  banner.style.cssText = [
+    'position:fixed;top:0;left:0;right:0;z-index:9999',
+    'background:#1B2D4E;color:#fff;padding:12px 20px',
+    'display:flex;align-items:center;justify-content:center;gap:16px',
+    'font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,.25)',
+    'flex-wrap:wrap;text-align:center',
+  ].join(';');
+  banner.innerHTML = `
+    <span>Tilisi ei ole vielä yhdistetty yrityksesi ETJ+-tiliin.</span>
+    <a href="etj-onboarding.html"
+       style="background:#2CE879;color:#1B2D4E;font-weight:700;border-radius:6px;padding:7px 18px;text-decoration:none;font-size:13px;white-space:nowrap">
+      Yhdistä tilisi →
+    </a>
+    <button onclick="this.parentElement.remove()"
+      style="background:none;border:none;color:rgba(255,255,255,.55);font-size:20px;cursor:pointer;line-height:1;padding:0 4px"
+      aria-label="Sulje">&times;</button>
+  `;
+  document.body.prepend(banner);
 }
 
 async function doLogin() {

@@ -71,11 +71,13 @@ serve(async (req: Request) => {
       userId = created.user.id
     } else {
       // Send magic-link invite — user sets own password on first login
-      const siteUrl = Deno.env.get('SITE_URL') ??
+      const siteUrl  = Deno.env.get('SITE_URL') ??
         'https://patrickharjoittelee.github.io/Talorekkari/dashboard/etj-plus.html'
+      const baseDir  = siteUrl.replace(/\/[^/]+\.html(\?.*)?$/, '')
+      const redirectTo = `${baseDir}/etj-onboarding.html`
       const { data: invited, error: invErr } = await adminClient.auth.admin.inviteUserByEmail(email, {
         data: meta,
-        redirectTo: siteUrl,
+        redirectTo,
       })
       if (invErr) throw invErr
       userId = invited.user.id

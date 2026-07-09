@@ -536,8 +536,9 @@
       <h2 style="font-size:24px;font-weight:800;color:var(--navy);margin-bottom:10px">Sopimus allekirjoitettu!</h2>
       <p style="font-size:15px;color:var(--text2);max-width:480px;margin:0 auto 28px;line-height:1.7">
         Kiitos! Sähköinen allekirjoitus on tallennettu ja sopimus on voimassa.
-        Spara lähettää vahvistuksen ja sopimuksen kopion osoitteeseen
-        <strong id="confirm-email" style="color:var(--navy)"></strong> <strong>1 arkipäivän</strong> kuluessa.
+        Kutsulink­ki ETJ+-palveluun on lähetetty osoitteeseen
+        <strong id="confirm-email" style="color:var(--navy)"></strong>.
+        Avaa linkki sähköpostistasi ja luo salasanasi — tilisi aktivoituu automaattisesti.
       </p>
       <a href="mailto:etj@sparaenergia.com" style="display:inline-block;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 24px;font-size:13px;color:var(--text2);text-decoration:none;">
         Kysymyksiä? <strong style="color:var(--navy)">etj@sparaenergia.com</strong>
@@ -1504,6 +1505,23 @@
 
       if (res.ok || res.status === 201) {
         document.getElementById('confirm-email').textContent = email;
+
+        // Send invite email automatically (non-fatal — fire-and-forget)
+        const etjCode = (document.getElementById('of_koodi')?.value || '').toUpperCase().trim();
+        fetch(`${SUPA_URL}/functions/v1/invite-etj-user`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: SUPA_ANON,
+          },
+          body: JSON.stringify({
+            email:        email,
+            display_name: henkilo || email,
+            etj_code:     etjCode || undefined,
+            company_name: yritys,
+          }),
+        }).catch(() => {});
+
         document.getElementById('form-view').style.display = 'none';
         document.getElementById('confirm-view').style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
