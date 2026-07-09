@@ -289,6 +289,8 @@
       .clause + .clause, .appendix + .appendix { border-top: none; }
       .signatures { border-top: 2px solid #111; }
       .ph { border: 1px solid #b45309; }
+      #order-section { display: none; }
+      #contract-terms { display: none; }
       .site-footer { display: none; }
       .btn-print { display: none; }
       @page { margin: 18mm 20mm; size: A4; }
@@ -296,6 +298,26 @@
       h3 { page-break-after: avoid; }
       .sig-row { gap: 60pt; }
       .sig-line { border-bottom: 1px solid #111; }
+    }
+
+    /* ── Order Form ── */
+    .of-field { display: flex; flex-direction: column; gap: 5px; }
+    .of-label { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; }
+    .of-req { color: var(--red); }
+    .of-input {
+      font-family: inherit; font-size: 14px;
+      background: var(--bg); color: var(--text);
+      border: 1.5px solid var(--border);
+      border-radius: 7px; padding: 9px 13px;
+      width: 100%; transition: border-color .2s, box-shadow .2s;
+    }
+    .of-input:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(27,45,78,.12); }
+    .of-input::placeholder { color: var(--text3); }
+    textarea.of-input { resize: vertical; min-height: 72px; }
+    #order-section fieldset { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 24px 28px; margin-bottom: 16px; }
+    #order-section legend { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--navy); padding: 0 8px; }
+    @media (max-width: 640px) {
+      #order-section .of-grid { grid-template-columns: 1fr !important; }
     }
   </style>
 </head>
@@ -313,6 +335,154 @@
     <button class="btn-print" onclick="window.print()">🖨 Tulosta / Tallenna PDF</button>
   </div>
 </header>
+
+<!-- ── Order Form Section ── -->
+<section id="order-section" style="background:var(--bg2);border-bottom:2px solid var(--border);padding:40px 24px">
+  <div style="max-width:680px;margin:0 auto">
+
+    <!-- Form view -->
+    <div id="form-view">
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px">Palvelutilaus</div>
+        <h2 style="font-size:24px;font-weight:800;color:var(--navy);margin-bottom:8px">Tilaa Spara ETJ+ -palvelu</h2>
+        <p style="font-size:14px;color:var(--text2);max-width:560px">Täytä tiedot ja lähetä tilaus. Spara vahvistaa tilauksen ja lähettää sopimuksen sähköisellä allekirjoitusjärjestelmällä <strong>1 arkipäivän</strong> kuluessa.</p>
+      </div>
+
+      <!-- ETJ code badge (shown if ?koodi= param) -->
+      <div id="code-box" style="display:none;background:rgba(44,232,121,.1);border:1px solid rgba(44,232,121,.35);border-radius:var(--radius);padding:14px 20px;margin-bottom:24px;align-items:center;gap:16px">
+        <div style="background:var(--accent);color:#080F1C;font-weight:800;font-size:15px;border-radius:7px;padding:7px 16px;letter-spacing:.12em;flex-shrink:0" id="code-display"></div>
+        <div style="font-size:13px;color:var(--text2)">ETJ-testikoodi tunnistettu — yritystietosi on esitäytetty lomakkeelle</div>
+      </div>
+
+      <form id="order-form" novalidate>
+        <!-- Tilaajan tiedot -->
+        <fieldset>
+          <legend>Tilaajan tiedot</legend>
+          <div class="of-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="of-field">
+              <label class="of-label" for="of_yritys">Yrityksen virallinen nimi <span class="of-req">*</span></label>
+              <input class="of-input" type="text" id="of_yritys" placeholder="Oy Esimerkki Ab" autocomplete="organization" required>
+            </div>
+            <div class="of-field">
+              <label class="of-label" for="of_ytunnus">Y-tunnus</label>
+              <input class="of-input" type="text" id="of_ytunnus" placeholder="1234567-8">
+            </div>
+            <div class="of-field">
+              <label class="of-label" for="of_osoite">Katuosoite</label>
+              <input class="of-input" type="text" id="of_osoite" placeholder="Esimerkkikatu 1" autocomplete="street-address">
+            </div>
+            <div style="display:grid;grid-template-columns:110px 1fr;gap:10px">
+              <div class="of-field">
+                <label class="of-label" for="of_postinumero">Postinumero</label>
+                <input class="of-input" type="text" id="of_postinumero" placeholder="00100" autocomplete="postal-code">
+              </div>
+              <div class="of-field">
+                <label class="of-label" for="of_kaupunki">Postitoimipaikka</label>
+                <input class="of-input" type="text" id="of_kaupunki" placeholder="Helsinki" autocomplete="address-level2">
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Yhteyshenkilö -->
+        <fieldset>
+          <legend>Yhteyshenkilö</legend>
+          <div class="of-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="of-field">
+              <label class="of-label" for="of_henkilo">Nimi <span class="of-req">*</span></label>
+              <input class="of-input" type="text" id="of_henkilo" placeholder="Etunimi Sukunimi" autocomplete="name" required>
+            </div>
+            <div class="of-field">
+              <label class="of-label" for="of_nimike">Tehtävänimike</label>
+              <input class="of-input" type="text" id="of_nimike" placeholder="Toimitusjohtaja" autocomplete="organization-title">
+            </div>
+            <div class="of-field">
+              <label class="of-label" for="of_email">Sähköposti <span class="of-req">*</span></label>
+              <input class="of-input" type="email" id="of_email" placeholder="etunimi@yritys.fi" autocomplete="email" required>
+            </div>
+            <div class="of-field">
+              <label class="of-label" for="of_puhelin">Puhelin</label>
+              <input class="of-input" type="tel" id="of_puhelin" placeholder="+358 40 000 0000" autocomplete="tel">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Laskutustiedot -->
+        <fieldset>
+          <legend>Laskutustiedot</legend>
+          <div class="of-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="of-field">
+              <label class="of-label" for="of_laskuemail">Laskutussähköposti</label>
+              <input class="of-input" type="email" id="of_laskuemail" placeholder="laskutus@yritys.fi">
+            </div>
+            <div class="of-field">
+              <label class="of-label" for="of_ovt">Verkkolasku OVT / Finvoice</label>
+              <input class="of-input" type="text" id="of_ovt" placeholder="003712345678">
+            </div>
+            <div class="of-field">
+              <label class="of-label" for="of_viite">Laskutusviite / kustannuspaikka</label>
+              <input class="of-input" type="text" id="of_viite" placeholder="Viite tai kustannuspaikka">
+            </div>
+            <div class="of-field">
+              <label class="of-label" for="of_koodi">ETJ-testikoodi (jos tehty)</label>
+              <input class="of-input" type="text" id="of_koodi" placeholder="esim. 34J7JK" maxlength="6" style="text-transform:uppercase;letter-spacing:.12em;font-weight:600">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Lisätiedot -->
+        <fieldset>
+          <legend>Lisätiedot (vapaaehtoinen)</legend>
+          <div class="of-field">
+            <label class="of-label" for="of_lisatiedot">Lisätietoja</label>
+            <textarea class="of-input" id="of_lisatiedot" rows="3" placeholder="Erityistoiveet, aikataulutoiveet tai muuta huomioitavaa…"></textarea>
+          </div>
+        </fieldset>
+
+        <!-- Hyväksyntä -->
+        <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;gap:14px;align-items:flex-start">
+          <input type="checkbox" id="of_agree" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--navy)">
+          <label for="of_agree" style="font-size:13px;color:var(--text2);cursor:pointer;line-height:1.6">
+            Olen lukenut ja hyväksyn <a href="#contract-terms" style="color:var(--navy);font-weight:600;text-decoration:underline">alla olevat sopimusehdot</a> (§1–§12)
+            sekä Liite B:n mukaisen tietojenkäsittelysopimuksen (GDPR).
+            Hyväksyn, että Spara Energia Oy lähettää allekirjoitettavan sopimuksen sähköisellä allekirjoitusjärjestelmällä.
+            <span style="color:var(--red)">*</span>
+          </label>
+        </div>
+
+        <!-- Error -->
+        <div id="of-err" style="display:none;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.3);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:16px"></div>
+
+        <!-- Submit -->
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+          <button type="submit" id="of-submit-btn"
+            style="background:var(--navy);color:#fff;font-weight:700;border:none;border-radius:8px;padding:13px 32px;font-size:15px;cursor:pointer;font-family:inherit;transition:background .2s;white-space:nowrap">
+            Lähetä tilaus →
+          </button>
+          <span style="font-size:12px;color:var(--text3)">Käsittelemme tilaukset 1 arkipäivässä · etj@sparaenergia.com</span>
+        </div>
+      </form>
+    </div>
+
+    <!-- Confirmation view (hidden until submit) -->
+    <div id="confirm-view" style="display:none;text-align:center;padding:48px 20px">
+      <div style="width:64px;height:64px;border-radius:50%;background:rgba(44,232,121,.15);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px">✓</div>
+      <h2 style="font-size:24px;font-weight:800;color:var(--navy);margin-bottom:10px">Tilaus vastaanotettu!</h2>
+      <p style="font-size:15px;color:var(--text2);max-width:480px;margin:0 auto 28px;line-height:1.7">
+        Kiitos tilauksesta. Spara Energia Oy lähettää allekirjoitettavan sopimuksen sähköisellä allekirjoitusjärjestelmällä
+        osoitteeseen <strong id="confirm-email" style="color:var(--navy)"></strong> <strong>1 arkipäivän</strong> kuluessa.
+      </p>
+      <a href="mailto:etj@sparaenergia.com" style="display:inline-block;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 24px;font-size:13px;color:var(--text2);text-decoration:none;">
+        Kysymyksiä? <strong style="color:var(--navy)">etj@sparaenergia.com</strong>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- anchor for terms -->
+<div id="contract-terms"></div>
+
 
 <!-- ── Document ── -->
 <div class="doc-wrapper">
@@ -734,6 +904,151 @@
     <a href="etj-plus.html">Spara ETJ -palvelu</a>
   </nav>
 </footer>
+
+<script>
+(function() {
+  const SUPA_URL  = 'https://ggkuodyaddngzskpgvlt.supabase.co';
+  const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3VvZHlhZGRuZ3pza3Bndmx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4OTAzMTksImV4cCI6MjA5ODQ2NjMxOX0.Zq_33WUts-Io07HLeHuktACTxKenyuRY--ZHOXZoVlw';
+
+  function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el && val) el.value = val;
+  }
+
+  async function init() {
+    const params = new URLSearchParams(location.search);
+    const koodi  = (params.get('koodi') || '').toUpperCase().trim();
+
+    // Pre-fill from URL params
+    setVal('of_yritys',   params.get('yritys'));
+    setVal('of_ytunnus',  params.get('ytunnus'));
+    setVal('of_email',    params.get('email'));
+    setVal('of_puhelin',  params.get('puhelin'));
+    setVal('of_henkilo',  params.get('henkilo'));
+    setVal('of_nimike',   params.get('nimike'));
+    setVal('of_kaupunki', params.get('kaupunki'));
+
+    if (koodi) {
+      setVal('of_koodi', koodi);
+      document.getElementById('code-display').textContent = koodi;
+      document.getElementById('code-box').style.display = 'flex';
+      // Enrich from Supabase lead record
+      try {
+        const res = await fetch(
+          `${SUPA_URL}/rest/v1/etj_leads?lead_code=eq.${encodeURIComponent(koodi)}&select=company_name,y_tunnus,city,contact_name,contact_email,contact_phone,contact_title&limit=1`,
+          { headers: { apikey: SUPA_ANON, Authorization: 'Bearer ' + SUPA_ANON } }
+        );
+        const rows = await res.json();
+        const lead = Array.isArray(rows) ? rows[0] : null;
+        if (lead) {
+          setVal('of_yritys',   lead.company_name);
+          setVal('of_ytunnus',  lead.y_tunnus);
+          setVal('of_kaupunki', lead.city);
+          setVal('of_henkilo',  lead.contact_name);
+          setVal('of_email',    lead.contact_email);
+          setVal('of_puhelin',  lead.contact_phone);
+          setVal('of_nimike',   lead.contact_title);
+        }
+      } catch (_) {}
+    }
+  }
+
+  init();
+
+  document.getElementById('order-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const err = document.getElementById('of-err');
+    err.style.display = 'none';
+
+    const yritys  = document.getElementById('of_yritys').value.trim();
+    const henkilo = document.getElementById('of_henkilo').value.trim();
+    const email   = document.getElementById('of_email').value.trim();
+    const agree   = document.getElementById('of_agree').checked;
+
+    function showErr(msg) {
+      err.textContent = msg; err.style.display = 'block';
+      err.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function fallbackMailto() {
+      const subject = encodeURIComponent('ETJ+ tilaus: ' + yritys);
+      const body = encodeURIComponent(
+        'Yritys: ' + yritys + '\n' +
+        'Y-tunnus: ' + document.getElementById('of_ytunnus').value.trim() + '\n' +
+        'Osoite: ' + document.getElementById('of_osoite').value.trim() + ' ' +
+                     document.getElementById('of_postinumero').value.trim() + ' ' +
+                     document.getElementById('of_kaupunki').value.trim() + '\n' +
+        'Yhteyshenkilö: ' + henkilo + '\n' +
+        'Tehtävänimike: ' + document.getElementById('of_nimike').value.trim() + '\n' +
+        'Sähköposti: ' + email + '\n' +
+        'Puhelin: ' + document.getElementById('of_puhelin').value.trim() + '\n' +
+        'Laskutus: ' + document.getElementById('of_laskuemail').value.trim() + '\n' +
+        'OVT: ' + document.getElementById('of_ovt').value.trim() + '\n' +
+        'Viite: ' + document.getElementById('of_viite').value.trim() + '\n' +
+        'ETJ-koodi: ' + document.getElementById('of_koodi').value.trim() + '\n' +
+        'Lisätiedot: ' + document.getElementById('of_lisatiedot').value.trim()
+      );
+      window.location.href = 'mailto:etj@sparaenergia.com?subject=' + subject + '&body=' + body;
+    }
+
+    if (!yritys)  { showErr('Yrityksen nimi on pakollinen.'); return; }
+    if (!henkilo) { showErr('Yhteyshenkilön nimi on pakollinen.'); return; }
+    if (!email || !email.includes('@')) { showErr('Tarkista sähköpostiosoite.'); return; }
+    if (!agree)   { showErr('Hyväksy sopimusehdot ennen tilauksen lähettämistä.'); return; }
+
+    const btn = document.getElementById('of-submit-btn');
+    btn.disabled = true; btn.textContent = 'Lähetetään…';
+
+    try {
+      const res = await fetch(`${SUPA_URL}/rest/v1/etj_orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPA_ANON,
+          Authorization: 'Bearer ' + SUPA_ANON,
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({
+          company_name:      yritys,
+          y_tunnus:          document.getElementById('of_ytunnus').value.trim(),
+          street_address:    document.getElementById('of_osoite').value.trim(),
+          postal_code:       document.getElementById('of_postinumero').value.trim(),
+          city:              document.getElementById('of_kaupunki').value.trim(),
+          contact_name:      henkilo,
+          contact_email:     email,
+          contact_phone:     document.getElementById('of_puhelin').value.trim(),
+          contact_title:     document.getElementById('of_nimike').value.trim(),
+          billing_email:     document.getElementById('of_laskuemail').value.trim(),
+          billing_ovt:       document.getElementById('of_ovt').value.trim(),
+          billing_reference: document.getElementById('of_viite').value.trim(),
+          etj_code:          document.getElementById('of_koodi').value.trim().toUpperCase(),
+          notes:             document.getElementById('of_lisatiedot').value.trim(),
+          status:            'new',
+        }),
+      });
+
+      if (res.ok || res.status === 201) {
+        document.getElementById('confirm-email').textContent = email;
+        document.getElementById('form-view').style.display = 'none';
+        document.getElementById('confirm-view').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const body = await res.text();
+        if (body.includes('does not exist') || body.includes('relation')) {
+          // etj_orders table not yet created — fall back to mailto
+          fallbackMailto();
+        } else {
+          showErr('Lähetys epäonnistui. Yritä uudelleen tai ota yhteyttä: etj@sparaenergia.com');
+          btn.disabled = false; btn.textContent = 'Lähetä tilaus →';
+        }
+      }
+    } catch (_) {
+      showErr('Verkkovirhe. Tarkista yhteytesi ja yritä uudelleen.');
+      btn.disabled = false; btn.textContent = 'Lähetä tilaus →';
+    }
+  });
+})();
+</script>
 
 </body>
 </html>

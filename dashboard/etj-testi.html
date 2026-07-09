@@ -543,6 +543,7 @@ const A = {
   has_audit:'', has_ems:'', has_agreement:'', reported_to_ev:'',
   contact_name:'', contact_email:'', contact_phone:'', contact_title:'',
   wants_contact:false, wants_newsletter:false,
+  lead_code:'',    // 6-char code generated on submit, stored in etj_leads
 };
 
 let step = 0;
@@ -989,6 +990,77 @@ function buildStep() {
 
 function esc(s){ return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
+/* ── PRH API AUTOCOMPLETE ──────────────────────── */
+function setupCompanyStep() {
+  const nameInput = document.getElementById('f_name');
+  const ytInput   = document.getElementById('f_ytunnus');
+  const cityInput = document.getElementById('f_city');
+  if (!nameInput) return;
+
+  const wrap = nameInput.parentElement;
+  wrap.style.position = 'relative';
+  const drop = document.createElement('div');
+  drop.id = 'prh-drop';
+  drop.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:200;max-height:260px;overflow-y:auto;display:none';
+  wrap.appendChild(drop);
+
+  let timer;
+  nameInput.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = nameInput.value.trim();
+    if (q.length < 2) { drop.style.display = 'none'; return; }
+    timer = setTimeout(() => prhSearch(q, drop, nameInput, ytInput, cityInput), 350);
+  });
+  nameInput.addEventListener('keydown', e => { if (e.key === 'Escape') drop.style.display = 'none'; });
+
+  ytInput.addEventListener('blur', async () => {
+    const yt = ytInput.value.trim();
+    if (/^\d{7}-\d$/.test(yt) && !nameInput.value.trim()) {
+      try {
+        const res = await fetch(`https://avoindata.prh.fi/bis/v1/${encodeURIComponent(yt)}`);
+        const data = await res.json();
+        const co = data.results?.[0];
+        if (co) {
+          nameInput.value = co.name;
+          const addr = (co.addresses||[]).find(a=>a.type===2) || (co.addresses||[])[0];
+          if (addr?.city && !cityInput.value.trim()) cityInput.value = addr.city;
+        }
+      } catch {}
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (drop && !drop.contains(e.target) && e.target !== nameInput) drop.style.display = 'none';
+  });
+}
+
+async function prhSearch(q, drop, nameInput, ytInput, cityInput) {
+  try {
+    const res = await fetch(`https://avoindata.prh.fi/tr/v1/companies?name=${encodeURIComponent(q)}&maxResults=8`);
+    const data = await res.json();
+    const results = data.results || [];
+    if (!results.length) { drop.style.display = 'none'; return; }
+    drop.innerHTML = results.map(co =>
+      `<div class="prh-item" data-name="${esc(co.name)}" data-yt="${esc(co.businessId)}" data-city="${esc(co.registeredOffice||'')}"
+           style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:14px">
+        <strong style="color:var(--text)">${esc(co.name)}</strong><br>
+        <span style="color:var(--text2);font-size:12px">${esc(co.businessId)}${co.registeredOffice?' · '+esc(co.registeredOffice):''}</span>
+      </div>`
+    ).join('');
+    drop.style.display = 'block';
+    drop.querySelectorAll('.prh-item').forEach(item => {
+      item.addEventListener('mouseenter', () => item.style.background = 'var(--surface3)');
+      item.addEventListener('mouseleave', () => item.style.background = '');
+      item.addEventListener('click', () => {
+        nameInput.value = item.dataset.name;
+        ytInput.value   = item.dataset.yt;
+        if (item.dataset.city && !cityInput.value.trim()) cityInput.value = item.dataset.city;
+        drop.style.display = 'none';
+      });
+    });
+  } catch {}
+}
+
 /* ── SAVE TEXT FIELDS ──────────────────────────── */
 function saveTexts() {
   const g = id => document.getElementById(id)?.value ?? '';
@@ -1036,6 +1108,7 @@ function nav(dir) {
 function render() {
   renderProgress();
   document.getElementById('formWrap').innerHTML = buildStep();
+  if (STEPS[step].id === 'company') setupCompanyStep();
 }
 
 /* ── SUBMIT ────────────────────────────────────── */
@@ -1047,39 +1120,53 @@ async function submit() {
   showResult(result);
 }
 
+function genCode() {
+  return Math.random().toString(36).substring(2,8).toUpperCase();
+}
+
 async function storeLead(level) {
+  const code = genCode();
+  A.lead_code = code;
+  const payload = {
+    company_name:      A.company_name,
+    y_tunnus:          A.y_tunnus,
+    sector:            A.sector,
+    city:              A.city,
+    is_group:          A.is_group==='yes',
+    total_kwh:         Math.round(calcTotalKwh()),
+    energy_detail:     JSON.stringify(A.ed),
+    consumption:       A.consumption,
+    consumption_trend: A.consumption_trend,
+    has_audit:         A.has_audit,
+    has_ems:           A.has_ems,
+    has_agreement:     A.has_agreement,
+    reported_to_ev:    A.reported_to_ev,
+    contact_name:      A.contact_name,
+    contact_email:     A.contact_email,
+    contact_phone:     A.contact_phone,
+    contact_title:     A.contact_title,
+    wants_contact:     A.wants_contact,
+    wants_newsletter:  A.wants_newsletter,
+    result_level:      level,
+    lead_code:         code,
+  };
+  const headers = {
+    'Content-Type':'application/json',
+    'apikey': SUPABASE_ANON,
+    'Authorization': `Bearer ${SUPABASE_ANON}`,
+    'Prefer': 'return=minimal',
+  };
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/etj_leads`, {
-      method: 'POST',
-      headers: {
-        'Content-Type':'application/json',
-        'apikey': SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
-        'Prefer': 'return=minimal',
-      },
-      body: JSON.stringify({
-        company_name:      A.company_name,
-        y_tunnus:          A.y_tunnus,
-        sector:            A.sector,
-        city:              A.city,
-        is_group:          A.is_group==='yes',
-        total_kwh:         Math.round(calcTotalKwh()),
-        energy_detail:     JSON.stringify(A.ed),
-        consumption:       A.consumption,
-        consumption_trend: A.consumption_trend,
-        has_audit:         A.has_audit,
-        has_ems:           A.has_ems,
-        has_agreement:     A.has_agreement,
-        reported_to_ev:    A.reported_to_ev,
-        contact_name:      A.contact_name,
-        contact_email:     A.contact_email,
-        contact_phone:     A.contact_phone,
-        contact_title:     A.contact_title,
-        wants_contact:     A.wants_contact,
-        wants_newsletter:  A.wants_newsletter,
-        result_level:      level,
-      }),
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/etj_leads`, {
+      method:'POST', headers, body: JSON.stringify(payload),
     });
+    if (!res.ok) {
+      // Column lead_code may not exist yet — retry without it
+      const { lead_code: _, ...fallback } = payload;
+      await fetch(`${SUPABASE_URL}/rest/v1/etj_leads`, {
+        method:'POST', headers, body: JSON.stringify(fallback),
+      });
+    }
   } catch { /* non-fatal */ }
 }
 
@@ -1202,6 +1289,29 @@ const secLabel = {
 /* ── SHOW RESULT ───────────────────────────────── */
 function showResult(r) {
   document.getElementById('progressSection').style.display = 'none';
+
+  const code = A.lead_code || '';
+  const orderParams = new URLSearchParams({
+    ...(code && {koodi: code}),
+    yritys:   A.company_name,
+    ytunnus:  A.y_tunnus,
+    email:    A.contact_email,
+    puhelin:  A.contact_phone,
+    henkilo:  A.contact_name,
+    nimike:   A.contact_title,
+    kaupunki: A.city,
+  }).toString();
+  const orderUrl = `etj-tilaussopimus.html?${orderParams}`;
+
+  const showOrderBtn = r.level === 'velvoite_kevyt' || r.level === 'velvoite_ems';
+
+  const codeBox = code ? `
+    <div style="background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius);padding:16px 20px;margin:20px 0;text-align:center">
+      <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">ETJ-testikoodi</div>
+      <div style="font-size:30px;font-weight:700;letter-spacing:.2em;color:var(--accent);font-variant-numeric:tabular-nums">${code}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:6px">Käytä tätä koodia tilaussopimuksessa — tietosi täytetään automaattisesti</div>
+    </div>` : '';
+
   document.getElementById('formWrap').innerHTML = `
     <div class="result-card ${r.cls}">
       <div class="result-badge ${r.cls}"><span class="badge-dot"></span>${r.badge}</div>
@@ -1216,8 +1326,10 @@ function showResult(r) {
         Katselmus: ${A.has_audit==='yes'?'tehty':A.has_audit==='planned'?'suunnitteilla':A.has_audit==='no'?'ei tehty':'ei tiedossa'} ·
         EMS: ${A.has_ems==='yes'?'kyllä':'ei / ei tiedossa'}
       </div>
+      ${codeBox}
       <div class="cta-stack">
-        <a href="mailto:etj@sparaenergia.com?subject=ETJ-testi: ${encodeURIComponent(A.company_name)}&body=Yritys: ${encodeURIComponent(A.company_name)}%0ASähköposti: ${encodeURIComponent(A.contact_email)}%0ATulos: ${encodeURIComponent(r.badge)}%0AKulutus: ${encodeURIComponent(cLabel[A.consumption]||'')}%0A%0AHaluaisin lisätietoja ETJ-palveluistanne."
+        ${showOrderBtn ? `<a href="${orderUrl}" class="btn-cta btn-cta-ok">Tilaa Spara ETJ+ -palvelu →</a>` : ''}
+        <a href="mailto:etj@sparaenergia.com?subject=ETJ-testi: ${encodeURIComponent(A.company_name)}&body=Yritys: ${encodeURIComponent(A.company_name)}%0ASähköposti: ${encodeURIComponent(A.contact_email)}%0ATulos: ${encodeURIComponent(r.badge)}%0AKulutus: ${encodeURIComponent(cLabel[A.consumption]||'')}${code?`%0AETJ-testikoodi: ${code}`:''}%0A%0AHaluaisin lisätietoja ETJ-palveluistanne."
            class="btn-cta ${r.ctaCls}">${r.cta}</a>
         <a href="etj-plus.html" class="btn-cta btn-cta-outline">Kirjaudu ETJ+ -palveluun</a>
         <button onclick="restart()" class="btn-cta btn-cta-outline">Tee testi uudelleen</button>
@@ -1233,7 +1345,7 @@ function restart() {
     ed:{},consumption:'',consumption_trend:'',
     has_audit:'',has_ems:'',has_agreement:'',reported_to_ev:'',
     contact_name:'',contact_email:'',contact_phone:'',contact_title:'',
-    wants_contact:false,wants_newsletter:false,
+    wants_contact:false,wants_newsletter:false,lead_code:'',
   });
   step=0; goingBack=false; eSub=0;
   document.getElementById('progressSection').style.display='';
