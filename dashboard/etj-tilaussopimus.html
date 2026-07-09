@@ -319,6 +319,16 @@
     @media (max-width: 640px) {
       #order-section .of-grid { grid-template-columns: 1fr !important; }
     }
+    /* signature tabs */
+    .sig-tab {
+      background: var(--bg); color: var(--text3);
+      border: 1.5px solid var(--border); border-radius: 7px;
+      padding: 6px 14px; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .sig-tab:hover { border-color: var(--navy); color: var(--navy); }
+    .sig-tab.sig-tab-active { background: var(--navy); color: #fff; border-color: var(--navy); }
+    @media print { #sig-fieldset .sig-tab, #sig-fieldset button { display: none; } }
   </style>
 </head>
 <body>
@@ -439,25 +449,69 @@
           </div>
         </fieldset>
 
-        <!-- Hyväksyntä -->
-        <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;gap:14px;align-items:flex-start">
-          <input type="checkbox" id="of_agree" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--navy)">
-          <label for="of_agree" style="font-size:13px;color:var(--text2);cursor:pointer;line-height:1.6">
-            Olen lukenut ja hyväksyn <a href="#contract-terms" style="color:var(--navy);font-weight:600;text-decoration:underline">alla olevat sopimusehdot</a> (§1–§12)
-            sekä Liite B:n mukaisen tietojenkäsittelysopimuksen (GDPR).
-            Hyväksyn, että Spara Energia Oy lähettää allekirjoitettavan sopimuksen sähköisellä allekirjoitusjärjestelmällä.
-            <span style="color:var(--red)">*</span>
-          </label>
-        </div>
+        <!-- ── Sähköinen allekirjoitus ── -->
+        <fieldset id="sig-fieldset">
+          <legend>Sähköinen allekirjoitus</legend>
+
+          <!-- Luettu ja hyväksytty -->
+          <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:var(--bg2);border-radius:8px;margin-bottom:20px">
+            <input type="checkbox" id="of_agree" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--navy)">
+            <label for="of_agree" style="font-size:13px;color:var(--text2);cursor:pointer;line-height:1.65">
+              Olen lukenut <a href="#contract-terms" style="color:var(--navy);font-weight:600;text-decoration:underline">sopimuksen ehdot</a> (§1–§12)
+              sekä Liite B:n tietojenkäsittelysopimuksen ja hyväksyn ne.
+              <span style="color:var(--red)">*</span>
+            </label>
+          </div>
+
+          <!-- Allekirjoittajan nimi -->
+          <div class="of-field" style="margin-bottom:16px">
+            <label class="of-label" for="sig_name">Allekirjoittajan nimi <span class="of-req">*</span></label>
+            <input class="of-input" type="text" id="sig_name" placeholder="Etunimi Sukunimi" autocomplete="name">
+          </div>
+
+          <!-- Tab-valinnat -->
+          <div style="margin-bottom:8px">
+            <label class="of-label">Allekirjoitus <span class="of-req">*</span></label>
+            <div style="display:flex;gap:6px;margin-top:6px;margin-bottom:8px">
+              <button type="button" id="sig-tab-draw" class="sig-tab sig-tab-active" onclick="sigSetTab('draw')">✍ Piirrä</button>
+              <button type="button" id="sig-tab-type" class="sig-tab" onclick="sigSetTab('type')">Aa&nbsp;&nbsp;Kirjoita</button>
+              <button type="button" onclick="sigClear()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--text3);cursor:pointer;font-family:inherit" onmouseover="this.style.borderColor='var(--navy)'" onmouseout="this.style.borderColor='var(--border)'">Tyhjennä</button>
+            </div>
+
+            <!-- Piirruskenttä -->
+            <div id="sig-draw-mode">
+              <canvas id="sig-canvas"
+                style="display:block;width:100%;height:140px;border:1.5px solid var(--border);border-radius:8px;background:#fff;cursor:crosshair;touch-action:none;box-sizing:border-box">
+              </canvas>
+              <div style="font-size:11px;color:var(--text3);margin-top:5px">Piirrä allekirjoituksesi yllä olevalle alueelle (hiiri tai sormi)</div>
+            </div>
+
+            <!-- Kirjoituskenttä -->
+            <div id="sig-type-mode" style="display:none">
+              <div id="sig-typed-preview"
+                style="min-height:100px;display:flex;align-items:center;padding:0 20px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-style:italic;font-size:38px;color:var(--navy);font-family:Georgia,'Times New Roman',serif;letter-spacing:.01em">
+              </div>
+              <div style="font-size:11px;color:var(--text3);margin-top:5px">Nimesi näkyy allekirjoituksena</div>
+            </div>
+          </div>
+
+          <!-- Allekirjoitustiedot (SHA-256, IP, aikaleima) -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:16px;font-size:11px;color:var(--text3);font-family:'Menlo','Consolas',monospace;line-height:1.9">
+            <div style="display:flex;gap:8px"><span style="min-width:130px;color:var(--text3)">SHA-256 (dokumentti):</span><span id="sig-hash" style="word-break:break-all;color:var(--text2)">lasketaan…</span></div>
+            <div style="display:flex;gap:8px"><span style="min-width:130px;color:var(--text3)">Allekirjoitusaika:</span><span id="sig-time" style="color:var(--text2)">—</span></div>
+            <div style="display:flex;gap:8px"><span style="min-width:130px;color:var(--text3)">IP-osoite:</span><span id="sig-ip" style="color:var(--text2)">haetaan…</span></div>
+            <div style="display:flex;gap:8px"><span style="min-width:130px;color:var(--text3)">Selain/laite:</span><span id="sig-ua" style="color:var(--text2);word-break:break-all"></span></div>
+          </div>
+        </fieldset>
 
         <!-- Error -->
         <div id="of-err" style="display:none;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.3);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:16px"></div>
 
-        <!-- Submit -->
+        <!-- Allekirjoita -->
         <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
           <button type="submit" id="of-submit-btn"
-            style="background:var(--navy);color:#fff;font-weight:700;border:none;border-radius:8px;padding:13px 32px;font-size:15px;cursor:pointer;font-family:inherit;transition:background .2s;white-space:nowrap">
-            Lähetä tilaus →
+            style="background:var(--navy);color:#fff;font-weight:700;border:none;border-radius:8px;padding:14px 36px;font-size:15px;cursor:pointer;font-family:inherit;transition:background .2s;white-space:nowrap">
+            Allekirjoita ja tilaa palvelu →
           </button>
           <span style="font-size:12px;color:var(--text3)">Käsittelemme tilaukset 1 arkipäivässä · etj@sparaenergia.com</span>
         </div>
@@ -467,10 +521,11 @@
     <!-- Confirmation view (hidden until submit) -->
     <div id="confirm-view" style="display:none;text-align:center;padding:48px 20px">
       <div style="width:64px;height:64px;border-radius:50%;background:rgba(44,232,121,.15);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px">✓</div>
-      <h2 style="font-size:24px;font-weight:800;color:var(--navy);margin-bottom:10px">Tilaus vastaanotettu!</h2>
+      <h2 style="font-size:24px;font-weight:800;color:var(--navy);margin-bottom:10px">Sopimus allekirjoitettu!</h2>
       <p style="font-size:15px;color:var(--text2);max-width:480px;margin:0 auto 28px;line-height:1.7">
-        Kiitos tilauksesta. Spara Energia Oy lähettää allekirjoitettavan sopimuksen sähköisellä allekirjoitusjärjestelmällä
-        osoitteeseen <strong id="confirm-email" style="color:var(--navy)"></strong> <strong>1 arkipäivän</strong> kuluessa.
+        Kiitos! Sähköinen allekirjoitus on tallennettu ja sopimus on voimassa.
+        Spara lähettää vahvistuksen ja sopimuksen kopion osoitteeseen
+        <strong id="confirm-email" style="color:var(--navy)"></strong> <strong>1 arkipäivän</strong> kuluessa.
       </p>
       <a href="mailto:etj@sparaenergia.com" style="display:inline-block;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 24px;font-size:13px;color:var(--text2);text-decoration:none;">
         Kysymyksiä? <strong style="color:var(--navy)">etj@sparaenergia.com</strong>
@@ -910,16 +965,17 @@
   const SUPA_URL  = 'https://ggkuodyaddngzskpgvlt.supabase.co';
   const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3VvZHlhZGRuZ3pza3Bndmx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4OTAzMTksImV4cCI6MjA5ODQ2NjMxOX0.Zq_33WUts-Io07HLeHuktACTxKenyuRY--ZHOXZoVlw';
 
+  // ── Helpers ──────────────────────────────────────────────────
   function setVal(id, val) {
     const el = document.getElementById(id);
     if (el && val) el.value = val;
   }
 
+  // ── Pre-fill from URL params + Supabase lead ─────────────────
   async function init() {
     const params = new URLSearchParams(location.search);
     const koodi  = (params.get('koodi') || '').toUpperCase().trim();
 
-    // Pre-fill from URL params
     setVal('of_yritys',   params.get('yritys'));
     setVal('of_ytunnus',  params.get('ytunnus'));
     setVal('of_email',    params.get('email'));
@@ -928,11 +984,28 @@
     setVal('of_nimike',   params.get('nimike'));
     setVal('of_kaupunki', params.get('kaupunki'));
 
+    // Mirror contact name → signer name field
+    const hName = document.getElementById('of_henkilo');
+    if (hName) {
+      setVal('sig_name', hName.value);
+      hName.addEventListener('input', () => { if (!sigNameTouched) setVal('sig_name', hName.value); });
+    }
+    let sigNameTouched = false;
+    const sigNameEl = document.getElementById('sig_name');
+    if (sigNameEl) {
+      sigNameEl.addEventListener('input', function() {
+        sigNameTouched = true;
+        if (_sigTab === 'type') {
+          const p = document.getElementById('sig-typed-preview');
+          if (p) p.textContent = this.value;
+        }
+      });
+    }
+
     if (koodi) {
       setVal('of_koodi', koodi);
       document.getElementById('code-display').textContent = koodi;
       document.getElementById('code-box').style.display = 'flex';
-      // Enrich from Supabase lead record
       try {
         const res = await fetch(
           `${SUPA_URL}/rest/v1/etj_leads?lead_code=eq.${encodeURIComponent(koodi)}&select=company_name,y_tunnus,city,contact_name,contact_email,contact_phone,contact_title&limit=1`,
@@ -948,11 +1021,139 @@
           setVal('of_email',    lead.contact_email);
           setVal('of_puhelin',  lead.contact_phone);
           setVal('of_nimike',   lead.contact_title);
+          if (!sigNameTouched) setVal('sig_name', lead.contact_name);
         }
       } catch (_) {}
     }
+
+    sigInitCanvas();
+    loadSigMeta();
   }
 
+  // ── Canvas signature ─────────────────────────────────────────
+  let _sigCtx = null, _sigDrawing = false;
+  window._sigTab = 'draw';
+
+  window.sigInitCanvas = function() {
+    const canvas = document.getElementById('sig-canvas');
+    if (!canvas) return;
+    _sigCtx = null;
+    const rect  = canvas.getBoundingClientRect();
+    const dpr   = window.devicePixelRatio || 1;
+    canvas.width  = rect.width  * dpr;
+    canvas.height = rect.height * dpr;
+    _sigCtx = canvas.getContext('2d');
+    _sigCtx.scale(dpr, dpr);
+    _sigCtx.strokeStyle = '#111827';
+    _sigCtx.lineWidth   = 2;
+    _sigCtx.lineCap     = 'round';
+    _sigCtx.lineJoin    = 'round';
+
+    const pos = (e) => {
+      const r = canvas.getBoundingClientRect();
+      const s = e.touches ? e.touches[0] : e;
+      return { x: s.clientX - r.left, y: s.clientY - r.top };
+    };
+    canvas.addEventListener('mousedown',  e => { _sigDrawing=true; _sigCtx.beginPath(); const p=pos(e); _sigCtx.moveTo(p.x,p.y); });
+    canvas.addEventListener('mousemove',  e => { if(!_sigDrawing)return; const p=pos(e); _sigCtx.lineTo(p.x,p.y); _sigCtx.stroke(); });
+    canvas.addEventListener('mouseup',    () => _sigDrawing=false);
+    canvas.addEventListener('mouseleave', () => _sigDrawing=false);
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); _sigDrawing=true; _sigCtx.beginPath(); const p=pos(e); _sigCtx.moveTo(p.x,p.y); }, {passive:false});
+    canvas.addEventListener('touchmove',  e => { e.preventDefault(); if(!_sigDrawing)return; const p=pos(e); _sigCtx.lineTo(p.x,p.y); _sigCtx.stroke(); }, {passive:false});
+    canvas.addEventListener('touchend',   () => _sigDrawing=false);
+  };
+
+  window.sigSetTab = function(tab) {
+    window._sigTab = tab;
+    document.getElementById('sig-draw-mode').style.display = tab==='draw' ? 'block' : 'none';
+    document.getElementById('sig-type-mode').style.display = tab==='type' ? 'block' : 'none';
+    document.getElementById('sig-tab-draw').classList.toggle('sig-tab-active', tab==='draw');
+    document.getElementById('sig-tab-type').classList.toggle('sig-tab-active', tab==='type');
+    if (tab==='draw') setTimeout(sigInitCanvas, 40);
+    if (tab==='type') {
+      const n = document.getElementById('sig_name');
+      const p = document.getElementById('sig-typed-preview');
+      if (n && p) p.textContent = n.value;
+    }
+  };
+
+  window.sigClear = function() {
+    if (_sigCtx) {
+      const c = document.getElementById('sig-canvas');
+      _sigCtx.clearRect(0, 0, c.offsetWidth * (window.devicePixelRatio||1),
+                               c.offsetHeight * (window.devicePixelRatio||1));
+    }
+    if (window._sigTab === 'type') {
+      const p = document.getElementById('sig-typed-preview');
+      if (p) p.textContent = '';
+    }
+  };
+
+  function sigIsEmpty() {
+    if (window._sigTab === 'type') {
+      const p = document.getElementById('sig-typed-preview');
+      return !p || !p.textContent.trim();
+    }
+    const canvas = document.getElementById('sig-canvas');
+    if (!canvas) return true;
+    const ctx = canvas.getContext('2d');
+    const d   = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    return !d.some(v => v !== 0);
+  }
+
+  function sigGetImage() {
+    if (window._sigTab === 'type') {
+      const name = document.getElementById('sig_name')?.value.trim() || '';
+      if (!name) return '';
+      const c = document.createElement('canvas'); c.width=440; c.height=100;
+      const cx = c.getContext('2d');
+      cx.fillStyle='#fff'; cx.fillRect(0,0,440,100);
+      cx.fillStyle='#1B2D4E'; cx.font='italic 38px Georgia,serif';
+      cx.fillText(name, 16, 62);
+      return c.toDataURL('image/png');
+    }
+    const canvas = document.getElementById('sig-canvas');
+    return (canvas && !sigIsEmpty()) ? canvas.toDataURL('image/png') : '';
+  }
+
+  // ── Document hash, IP, timestamps ───────────────────────────
+  let _docHash = '', _sigIP = '';
+
+  async function loadSigMeta() {
+    // SHA-256 of the contract clause text
+    try {
+      const el = document.querySelector('.doc-wrapper');
+      const txt = el ? el.innerText : '';
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+      _docHash = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      const el2 = document.getElementById('sig-hash');
+      if (el2) el2.textContent = _docHash;
+    } catch { _docHash = ''; }
+
+    // Aikaleima (Helsinki time)
+    const now = new Date();
+    const ts = now.toLocaleString('fi-FI', {timeZone:'Europe/Helsinki',
+      year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const el3 = document.getElementById('sig-time');
+    if (el3) el3.textContent = ts + ' (Helsinki)';
+
+    // IP-osoite via ipify
+    try {
+      const r = await fetch('https://api.ipify.org?format=json');
+      const d = await r.json();
+      _sigIP = d.ip || '';
+    } catch { _sigIP = ''; }
+    const el4 = document.getElementById('sig-ip');
+    if (el4) el4.textContent = _sigIP || 'ei saatavilla';
+
+    // Selain
+    const ua = navigator.userAgent;
+    const el5 = document.getElementById('sig-ua');
+    if (el5) el5.textContent = ua.length > 90 ? ua.substring(0,87)+'…' : ua;
+  }
+
+  // ── Form submit ──────────────────────────────────────────────
   init();
 
   document.getElementById('order-form').addEventListener('submit', async function(e) {
@@ -960,10 +1161,11 @@
     const err = document.getElementById('of-err');
     err.style.display = 'none';
 
-    const yritys  = document.getElementById('of_yritys').value.trim();
-    const henkilo = document.getElementById('of_henkilo').value.trim();
-    const email   = document.getElementById('of_email').value.trim();
-    const agree   = document.getElementById('of_agree').checked;
+    const yritys    = document.getElementById('of_yritys').value.trim();
+    const henkilo   = document.getElementById('of_henkilo').value.trim();
+    const email     = document.getElementById('of_email').value.trim();
+    const sigName   = document.getElementById('sig_name').value.trim();
+    const agree     = document.getElementById('of_agree').checked;
 
     function showErr(msg) {
       err.textContent = msg; err.style.display = 'block';
@@ -971,7 +1173,7 @@
     }
 
     function fallbackMailto() {
-      const subject = encodeURIComponent('ETJ+ tilaus: ' + yritys);
+      const subject = encodeURIComponent('ETJ+ tilaus (allekirjoitettu): ' + yritys);
       const body = encodeURIComponent(
         'Yritys: ' + yritys + '\n' +
         'Y-tunnus: ' + document.getElementById('of_ytunnus').value.trim() + '\n' +
@@ -982,10 +1184,13 @@
         'Tehtävänimike: ' + document.getElementById('of_nimike').value.trim() + '\n' +
         'Sähköposti: ' + email + '\n' +
         'Puhelin: ' + document.getElementById('of_puhelin').value.trim() + '\n' +
+        'Allekirjoittaja: ' + sigName + '\n' +
         'Laskutus: ' + document.getElementById('of_laskuemail').value.trim() + '\n' +
         'OVT: ' + document.getElementById('of_ovt').value.trim() + '\n' +
         'Viite: ' + document.getElementById('of_viite').value.trim() + '\n' +
         'ETJ-koodi: ' + document.getElementById('of_koodi').value.trim() + '\n' +
+        'IP: ' + _sigIP + '\n' +
+        'Dokumentin SHA-256: ' + _docHash + '\n' +
         'Lisätiedot: ' + document.getElementById('of_lisatiedot').value.trim()
       );
       window.location.href = 'mailto:etj@sparaenergia.com?subject=' + subject + '&body=' + body;
@@ -994,10 +1199,15 @@
     if (!yritys)  { showErr('Yrityksen nimi on pakollinen.'); return; }
     if (!henkilo) { showErr('Yhteyshenkilön nimi on pakollinen.'); return; }
     if (!email || !email.includes('@')) { showErr('Tarkista sähköpostiosoite.'); return; }
-    if (!agree)   { showErr('Hyväksy sopimusehdot ennen tilauksen lähettämistä.'); return; }
+    if (!agree)   { showErr('Rastita "Olen lukenut ja hyväksyn sopimusehdot" ennen allekirjoitusta.'); return; }
+    if (!sigName) { showErr('Kirjoita allekirjoittajan nimi.'); return; }
+    if (sigIsEmpty()) { showErr('Piirrä tai kirjoita allekirjoituksesi.'); return; }
 
     const btn = document.getElementById('of-submit-btn');
-    btn.disabled = true; btn.textContent = 'Lähetetään…';
+    btn.disabled = true; btn.textContent = 'Tallennetaan…';
+
+    const sigImage = sigGetImage();
+    const signedAt = new Date().toISOString();
 
     try {
       const res = await fetch(`${SUPA_URL}/rest/v1/etj_orders`, {
@@ -1023,7 +1233,14 @@
           billing_reference: document.getElementById('of_viite').value.trim(),
           etj_code:          document.getElementById('of_koodi').value.trim().toUpperCase(),
           notes:             document.getElementById('of_lisatiedot').value.trim(),
-          status:            'new',
+          signer_name:       sigName,
+          signature_image:   sigImage,
+          document_hash:     _docHash,
+          ip_address:        _sigIP,
+          user_agent:        navigator.userAgent,
+          signed_at:         signedAt,
+          agreed:            true,
+          status:            'signed',
         }),
       });
 
@@ -1035,16 +1252,15 @@
       } else {
         const body = await res.text();
         if (body.includes('does not exist') || body.includes('relation')) {
-          // etj_orders table not yet created — fall back to mailto
           fallbackMailto();
         } else {
-          showErr('Lähetys epäonnistui. Yritä uudelleen tai ota yhteyttä: etj@sparaenergia.com');
-          btn.disabled = false; btn.textContent = 'Lähetä tilaus →';
+          showErr('Tallennus epäonnistui. Yritä uudelleen tai ota yhteyttä: etj@sparaenergia.com');
+          btn.disabled = false; btn.textContent = 'Allekirjoita ja tilaa palvelu →';
         }
       }
     } catch (_) {
       showErr('Verkkovirhe. Tarkista yhteytesi ja yritä uudelleen.');
-      btn.disabled = false; btn.textContent = 'Lähetä tilaus →';
+      btn.disabled = false; btn.textContent = 'Allekirjoita ja tilaa palvelu →';
     }
   });
 })();
