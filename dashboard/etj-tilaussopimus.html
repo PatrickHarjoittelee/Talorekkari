@@ -571,27 +571,27 @@
       </div>
       <div>
         <dt>Y-tunnus</dt>
-        <dd class="placeholder">[TÄYDENNETÄÄN]</dd>
+        <dd>3449571-8</dd>
       </div>
       <div>
         <dt>Asiakas (tilaaja)</dt>
-        <dd class="placeholder">[TÄYDENNETÄÄN — yrityksen nimi]</dd>
+        <dd id="doc-asiakas-nimi" class="placeholder">[TÄYDENNETÄÄN — yrityksen nimi]</dd>
       </div>
       <div>
         <dt>Y-tunnus (asiakas)</dt>
-        <dd class="placeholder">[TÄYDENNETÄÄN]</dd>
+        <dd id="doc-asiakas-ytunnus" class="placeholder">[TÄYDENNETÄÄN]</dd>
       </div>
       <div>
         <dt>Sopimusnumero</dt>
-        <dd class="placeholder">[TÄYDENNETÄÄN]</dd>
+        <dd id="doc-sopimusnumero" class="placeholder">[TÄYDENNETÄÄN]</dd>
       </div>
       <div>
         <dt>Sopimuspäivä</dt>
-        <dd class="placeholder">[TÄYDENNETÄÄN]</dd>
+        <dd id="doc-sopimuspvm" class="placeholder">[TÄYDENNETÄÄN]</dd>
       </div>
       <div>
         <dt>Sopimuksen alkaminen</dt>
-        <dd class="placeholder">[TÄYDENNETÄÄN]</dd>
+        <dd id="doc-sopimus-alkaa" class="placeholder">[TÄYDENNETÄÄN]</dd>
       </div>
       <div>
         <dt>Minimisopimuskausi</dt>
@@ -601,8 +601,8 @@
 
     <p class="cover-notice">
       Tämä sopimus on laadittu sähköistä tai fyysistä allekirjoitusta varten.
-      Täytä <span style="color:var(--orange)">[TÄYDENNETÄÄN]</span>-kohdat ennen allekirjoitusta.
-      Sopimus syntyy molempien osapuolten hyväksyttyä sen.
+      Täytä yllä oleva tilauslomake — sopimuksen tiedot päivittyvät automaattisesti.
+      Sopimus syntyy molempien osapuolten allekirjoitettua sen.
     </p>
   </div>
 
@@ -632,10 +632,10 @@
     <p><strong>Palveluntarjoaja:</strong> Spara Energia Oy (jäljempänä "Spara"),
        Y-tunnus <strong>3449571-8</strong>,
        osoite <span class="ph">[TÄYDENNETÄÄN]</span>.</p>
-    <p><strong>Tilaaja / Asiakas:</strong> <span class="ph">[TÄYDENNETÄÄN — yrityksen virallinen nimi]</span>
+    <p><strong>Tilaaja / Asiakas:</strong> <span id="doc-p1-asiakas-nimi" class="ph">[TÄYDENNETÄÄN — yrityksen virallinen nimi]</span>
        (jäljempänä "Asiakas"),
-       Y-tunnus <span class="ph">[TÄYDENNETÄÄN]</span>,
-       osoite <span class="ph">[TÄYDENNETÄÄN]</span>.</p>
+       Y-tunnus <span id="doc-p1-asiakas-ytunnus" class="ph">[TÄYDENNETÄÄN]</span>,
+       osoite <span id="doc-p1-asiakas-osoite" class="ph">[TÄYDENNETÄÄN]</span>.</p>
     <p>Spara ja Asiakas viittaavat yhdessä "osapuoliin".</p>
   </div>
 
@@ -667,8 +667,8 @@
     <h3>Käyttöoikeudet</h3>
     <p>Spara myöntää Asiakkaalle <strong>ei-yksinomaisen, ei-siirrettävän</strong>
        käyttöoikeuden Palveluun sopimuksen voimassaoloajaksi (SaaS-lisenssi).</p>
-    <p>Sopimukseen sisältyy <span class="ph">[TÄYDENNETÄÄN]</span> nimettyä käyttäjätiliä.
-       Lisäkäyttäjiä voidaan hankkia lisämaksusta erikseen sovittavalla hinnalla.</p>
+    <p>Sopimus kattaa <strong>rajoittamattoman</strong> määrän käyttäjätilejä
+       tilaajayrityksen sisällä. Yksittäisistä käyttäjätileistä ei peritä lisämaksua.</p>
     <p>Asiakas sitoutuu:</p>
     <ul>
       <li>Pitämään käyttäjätunnukset salassa ja suojaamaan ne luvattomalta käytöltä</li>
@@ -1110,6 +1110,74 @@
     if (hint) hint.style.display = 'none';
   }
 
+  // ── Sync contract document from form fields ─────────────────────────────
+  function fmtDate(d) {
+    return d.getDate() + '.' + (d.getMonth()+1) + '.' + d.getFullYear();
+  }
+
+  function genContractNum() {
+    const now = new Date();
+    const yy  = now.getFullYear();
+    const mm  = String(now.getMonth()+1).padStart(2,'0');
+    const rnd = Math.random().toString(36).substring(2,6).toUpperCase();
+    return 'ETJ-' + yy + mm + '-' + rnd;
+  }
+
+  let _contractNum = '';
+
+  function syncDocFromForm() {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    const yritys  = v('of_yritys');
+    const ytunnus = v('of_ytunnus');
+    const osoite  = v('of_osoite');
+    const posti   = v('of_postinumero');
+    const kaup    = v('of_kaupunki');
+
+    // Helper: update a dd or span — clear placeholder style when filled
+    function fillEl(id, val, empty) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (val) {
+        el.textContent = val;
+        el.classList.remove('placeholder');
+        el.classList.remove('ph');
+        el.style.color = '';
+        el.style.fontStyle = '';
+        el.style.background = '';
+        el.style.border = '';
+        el.style.borderRadius = '';
+        el.style.padding = '';
+      } else {
+        el.textContent = empty;
+        if (!el.classList.contains('placeholder') && !el.classList.contains('ph')) {
+          el.classList.add(el.tagName === 'SPAN' ? 'ph' : 'placeholder');
+        }
+      }
+    }
+
+    // Cover meta — Asiakas
+    fillEl('doc-asiakas-nimi',    yritys,  '[TÄYDENNETÄÄN — yrityksen nimi]');
+    fillEl('doc-asiakas-ytunnus', ytunnus, '[TÄYDENNETÄÄN]');
+
+    // Cover meta — Contract date / start (fill once on first sync)
+    const dateEl   = document.getElementById('doc-sopimuspvm');
+    const startEl  = document.getElementById('doc-sopimus-alkaa');
+    const numEl    = document.getElementById('doc-sopimusnumero');
+    const today    = new Date();
+    if (dateEl  && dateEl.classList.contains('placeholder'))  fillEl('doc-sopimuspvm',   fmtDate(today), '[TÄYDENNETÄÄN]');
+    if (startEl && startEl.classList.contains('placeholder')) fillEl('doc-sopimus-alkaa', fmtDate(today), '[TÄYDENNETÄÄN]');
+    if (numEl   && numEl.classList.contains('placeholder')) {
+      if (!_contractNum) _contractNum = genContractNum();
+      fillEl('doc-sopimusnumero', _contractNum, '[TÄYDENNETÄÄN]');
+    }
+
+    // §1 — Tilaaja / Asiakas
+    fillEl('doc-p1-asiakas-nimi',    yritys,  '[TÄYDENNETÄÄN — yrityksen virallinen nimi]');
+    fillEl('doc-p1-asiakas-ytunnus', ytunnus, '[TÄYDENNETÄÄN]');
+    const addrParts = [osoite, [posti, kaup].filter(Boolean).join(' ')].filter(Boolean);
+    fillEl('doc-p1-asiakas-osoite',  addrParts.join(', '), '[TÄYDENNETÄÄN]');
+  }
+
   // ── Pre-fill from URL params + Supabase lead ─────────────────
   async function init() {
     const params = new URLSearchParams(location.search);
@@ -1164,6 +1232,12 @@
         }
       } catch (_) {}
     }
+
+    syncDocFromForm();
+    // Wire contract doc to form fields (live sync on input)
+    ['of_yritys','of_ytunnus','of_osoite','of_postinumero','of_kaupunki'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', syncDocFromForm);
+    });
 
     sigInitCanvas();
     loadSigMeta();
