@@ -990,7 +990,42 @@ function buildStep() {
 
 function esc(s){ return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-/* ── PRH API AUTOCOMPLETE ──────────────────────── */
+/* ── PRH/YTJ API v3 — sama endpoint kuin ETJ+-palvelussa ── */
+const PRH_V3 = 'https://avoindata.prh.fi/opendata-ytj-api/v3/companies';
+
+function _prhStr(v) {
+  if (v == null) return '';
+  if (typeof v === 'string') return v;
+  if (Array.isArray(v)) {
+    const active = v.filter(x => !x.endDate);
+    const pick = active.find(x => (x.language||'').toUpperCase()==='FI') || active[0] || v[0];
+    return pick ? _prhStr(pick.name || pick.value || pick) : '';
+  }
+  if (typeof v === 'object')
+    return _prhStr(v.name || v.value || v.fi || v.FI || Object.values(v).find(x=>x&&typeof x==='string') || '');
+  return String(v);
+}
+
+function _prhName(r) {
+  const top = _prhStr(r.name) || _prhStr(r.companyName);
+  if (top) return top;
+  const arr = (r.names||[]).filter(n=>!n.endDate).sort((a,b)=>(a.order||0)-(b.order||0));
+  return _prhStr((arr.find(n=>n.language==='FI')||arr[0]||{}).name);
+}
+
+function _prhCity(r) {
+  const addrs = (r.addresses||[]).filter(a=>!a.endDate);
+  const addr  = addrs.find(a=>a.type===1) || addrs[0] || {};
+  return _prhStr(addr.city) || _prhStr(addr.postOffice) || _prhStr(addr.municipality);
+}
+
+async function _prhFetch(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const d = await r.json();
+  return d.companies || d.results || [];
+}
+
 function setupCompanyStep() {
   const nameInput = document.getElementById('f_name');
   const ytInput   = document.getElementById('f_ytunnus');
@@ -1008,25 +1043,22 @@ function setupCompanyStep() {
   nameInput.addEventListener('input', () => {
     clearTimeout(timer);
     const q = nameInput.value.trim();
-    if (q.length < 2) { drop.style.display = 'none'; return; }
+    if (q.length < 3 || /^\d{7}-\d$/.test(q)) { drop.style.display = 'none'; return; }
     timer = setTimeout(() => prhSearch(q, drop, nameInput, ytInput, cityInput), 350);
   });
   nameInput.addEventListener('keydown', e => { if (e.key === 'Escape') drop.style.display = 'none'; });
 
   ytInput.addEventListener('blur', async () => {
     const yt = ytInput.value.trim();
-    if (/^\d{7}-\d$/.test(yt) && !nameInput.value.trim()) {
-      try {
-        const res = await fetch(`https://avoindata.prh.fi/bis/v1/${encodeURIComponent(yt)}`);
-        const data = await res.json();
-        const co = data.results?.[0];
-        if (co) {
-          nameInput.value = co.name;
-          const addr = (co.addresses||[]).find(a=>a.type===2) || (co.addresses||[])[0];
-          if (addr?.city && !cityInput.value.trim()) cityInput.value = addr.city;
-        }
-      } catch {}
-    }
+    if (!/^\d{7}-\d$/.test(yt)) return;
+    try {
+      const items = await _prhFetch(`${PRH_V3}?businessId=${encodeURIComponent(yt)}`);
+      const co = items[0];
+      if (!co) return;
+      if (!nameInput.value.trim()) nameInput.value = _prhName(co);
+      const city = _prhCity(co);
+      if (city && !cityInput.value.trim()) cityInput.value = city;
+    } catch {}
   });
 
   document.addEventListener('click', e => {
@@ -1036,26 +1068,40 @@ function setupCompanyStep() {
 
 async function prhSearch(q, drop, nameInput, ytInput, cityInput) {
   try {
-    const res = await fetch(`https://avoindata.prh.fi/tr/v1/companies?name=${encodeURIComponent(q)}&maxResults=8`);
-    const data = await res.json();
-    const results = data.results || [];
-    if (!results.length) { drop.style.display = 'none'; return; }
-    drop.innerHTML = results.map(co =>
-      `<div class="prh-item" data-name="${esc(co.name)}" data-yt="${esc(co.businessId)}" data-city="${esc(co.registeredOffice||'')}"
-           style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:14px">
-        <strong style="color:var(--text)">${esc(co.name)}</strong><br>
-        <span style="color:var(--text2);font-size:12px">${esc(co.businessId)}${co.registeredOffice?' · '+esc(co.registeredOffice):''}</span>
-      </div>`
-    ).join('');
+    const items = await _prhFetch(`${PRH_V3}?name=${encodeURIComponent(q)}&maxResults=10`);
+    if (!items.length) { drop.style.display = 'none'; return; }
+    drop.innerHTML = items.map(co => {
+      const name = _prhName(co);
+      const id   = _prhStr(co.businessId);
+      const city = _prhCity(co);
+      const meta = [id, city].filter(Boolean).join(' · ');
+      return `<div class="prh-item"
+        style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:14px"
+        data-name="${esc(name)}" data-yt="${esc(id)}" data-city="${esc(city)}">
+        <strong style="color:var(--text)">${esc(name)}</strong><br>
+        <span style="color:var(--text2);font-size:12px">${esc(meta)}</span>
+      </div>`;
+    }).join('');
     drop.style.display = 'block';
     drop.querySelectorAll('.prh-item').forEach(item => {
       item.addEventListener('mouseenter', () => item.style.background = 'var(--surface3)');
       item.addEventListener('mouseleave', () => item.style.background = '');
-      item.addEventListener('click', () => {
+      item.addEventListener('click', async () => {
+        drop.style.display = 'none';
         nameInput.value = item.dataset.name;
         ytInput.value   = item.dataset.yt;
         if (item.dataset.city && !cityInput.value.trim()) cityInput.value = item.dataset.city;
-        drop.style.display = 'none';
+        // Haetaan täydet tiedot y-tunnuksella (parempi osoitetieto)
+        if (item.dataset.yt) {
+          try {
+            const full = await _prhFetch(`${PRH_V3}?businessId=${encodeURIComponent(item.dataset.yt)}`);
+            if (full[0]) {
+              nameInput.value = _prhName(full[0]) || nameInput.value;
+              const city = _prhCity(full[0]);
+              if (city) cityInput.value = city;
+            }
+          } catch {}
+        }
       });
     });
   } catch {}
