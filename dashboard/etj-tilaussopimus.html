@@ -1097,7 +1097,7 @@
     } catch (_) { /* non-fatal */ }
   }
 
-  function prhPick(name, bid, city, postal, street) {
+  window.prhPick = function prhPick(name, bid, city, postal, street) {
     const setV = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
     setV('of_yritys',    name);
     setV('of_ytunnus',   bid);
