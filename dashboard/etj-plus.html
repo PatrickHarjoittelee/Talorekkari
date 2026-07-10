@@ -639,7 +639,6 @@
     <div style="font-size:13px;font-weight:700;color:#2CE879;letter-spacing:.01em;line-height:1.1">ETJ+<br><span style="font-size:10px;font-weight:500;color:var(--text2);letter-spacing:.02em">Energiatehokkuuspalvelu</span></div>
   </div>
   <div class="header-right">
-    <a class="back-link" href="index.html">← Kiinteistörekisteri</a>
     <div id="user-info" style="display:none;align-items:center;gap:8px">
       <span id="user-display-name" style="font-size:13px;color:var(--text2)"></span>
       <span id="user-role-badge" class="role-badge"></span>
@@ -1115,7 +1114,7 @@
     <div id="guided-content"></div>
 
     <!-- Nav buttons -->
-    <div style="display:flex;gap:8px;margin-top:18px" id="guided-nav"></div>
+    <div style="position:sticky;bottom:0;background:var(--bg2);padding-top:14px;border-top:1px solid var(--border);margin-top:18px" id="guided-nav"></div>
   </div>
 </div>
 
@@ -3887,7 +3886,10 @@ function gwRender() {
   document.getElementById('guided-content').innerHTML = gwBuildSubContent(GW_ESUBS[GW_sub].id);
   const prev = GW_sub > 0 ? `<button class="btn btn-secondary" onclick="gwNav(${GW_sub - 1})">← Edellinen</button>` : '';
   const next = GW_sub < GW_ESUBS.length - 1 ? `<button class="btn btn-secondary" onclick="gwNav(${GW_sub + 1})">Seuraava →</button>` : '';
-  document.getElementById('guided-nav').innerHTML = `${prev}${next}<button class="btn btn-primary" style="margin-left:auto" onclick="gwCommit()">✓ Tallenna kulutustiedot</button>`;
+  const saveBtn = `<button type="button" class="btn btn-primary" style="min-width:200px;font-size:14px;font-weight:700;padding:10px 20px" onclick="gwCommit()">✓ Tallenna kulutustiedot</button>`;
+  const prevBtn = prev ? prev.replace('<button ', '<button type="button" style="background:var(--bg3);color:var(--accent);border:1px solid var(--accent);font-weight:600" ') : '<span></span>';
+  const nextBtn = next ? next.replace('<button ', '<button type="button" style="background:var(--bg3);color:var(--accent);border:1px solid var(--accent);font-weight:600" ') : '<span></span>';
+  document.getElementById('guided-nav').innerHTML = `<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding-bottom:4px">${prevBtn}${saveBtn}${nextBtn}</div>`;
 }
 
 function gwNav(i) { GW_sub = i; gwRender(); }
