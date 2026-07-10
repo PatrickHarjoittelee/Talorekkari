@@ -449,22 +449,55 @@
 
     <!-- Kirjautuminen -->
     <section class="doc-section" id="kirjautuminen">
-      <h2>Kirjautuminen</h2>
-      <p>ETJ+-dashboardiin kirjaudutaan osoitteessa <strong>etj-plus.html</strong>
-         (tai Sparan asiakasportaalin kautta). Ensimmäiset tunnukset luo Sparan
-         asiakaspalvelu sopimuksen allekirjoittamisen jälkeen.</p>
+      <h2>Kirjautuminen ja käyttöönotto</h2>
+      <p>ETJ+-palvelu aktivoituu vaiheittain: ETJ-testistä sopimuksen kautta
+         sähköpostikutsuun. Alla on koko prosessi vaihe vaiheelta.</p>
 
-      <h3>Kirjautumistunnukset</h3>
-      <ul class="steps-list">
-        <li><strong>Sähköposti:</strong> <p>Käytä sopimuksessa ilmoittamaasi sähköpostiosoitetta.</p></li>
-        <li><strong>Salasana:</strong> <p>Spara lähettää väliaikaisen salasanan sähköpostiin. Vaihda se heti Asetukset-välilehdellä.</p></li>
-        <li><strong>Kaksivaiheinen tunnistus:</strong> <p>Suositellaan Admin-roolin käyttäjille.</p></li>
-      </ul>
+      <h3>Palvelun käyttöönotto</h3>
+      <ol class="steps-list">
+        <li>
+          <strong>Tee ETJ-testi</strong>
+          <p>Täytä ilmainen <a href="etj-testi.html">ETJ-testi</a>. Testi arvioi velvoitetilanteesi
+          ja luo yrityksellesi <strong>ETJ-koodin</strong> (6-merkkinen tunnus,
+          esim. <code>AB12CD</code>). Tallenna tämä koodi — tarvitset sitä sopimuksessa.</p>
+        </li>
+        <li>
+          <strong>Allekirjoita tilaussopimus</strong>
+          <p>Avaa <a href="etj-tilaussopimus.html">Spara ETJ+ -tilaussopimus</a> ja täytä
+          lomake. Syötä ETJ-koodi sopimukseen, vahvista yhteystietosi ja hyväksy ehdot.
+          Sopimus lähetetään Sparalle vahvistettavaksi.</p>
+        </li>
+        <li>
+          <strong>Vastaanota sähköpostikutsu</strong>
+          <p>Kun Spara käsittelee sopimuksen, palvelu lähettää sopimuksessa ilmoittamaasi
+          sähköpostiosoitteeseen <strong>aktivointilinkin</strong>. Tarkista myös
+          roskapostikansio, jos viestiä ei kuulu muutaman tunnin sisällä.</p>
+        </li>
+        <li>
+          <strong>Aseta salasana ja kirjaudu</strong>
+          <p>Klikkaa sähköpostiviestissä olevaa linkkiä. Sinut ohjataan sivulle, jossa
+          voit asettaa haluamasi salasanan. Tämän jälkeen kirjaudu sisään osoitteessa
+          <a href="etj-plus.html">ETJ+-dashboard</a> sähköpostisi ja asettamasi
+          salasanan avulla.</p>
+        </li>
+      </ol>
 
-      <div class="callout callout-warn">
-        <strong>Huom:</strong> Jos tunnukset eivät toimi, ota yhteyttä
+      <div class="callout callout-tip">
+        <strong>Vinkki:</strong> Aktivointilinkin voimassaoloaika on rajoitettu.
+        Jos linkki on vanhentunut, pyydä uusi kirjautumisnäkymän
+        "Unohditko salasanan?" -toiminnon kautta tai ottamalla yhteyttä
         <a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a>.
-        Salasanan voi myös nollata kirjautumisnäkymässä.
+      </div>
+
+      <h3>Salasanan nollaus</h3>
+      <p>Jos olet unohtanut salasanasi, klikkaa kirjautumisnäkymässä
+         <strong>"Unohditko salasanan?"</strong>. Syötä sähköpostiosoitteesi —
+         saat uuden aktivointilinkin sähköpostiin.</p>
+
+      <div class="callout callout-info">
+        <strong>Huom:</strong> Tunnukset on sidottu sopimuksessa ilmoitettuun
+        sähköpostiosoitteeseen. Jos osoite on väärä tai se täytyy vaihtaa,
+        ota yhteyttä <a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a>.
       </div>
     </section>
 
@@ -916,6 +949,99 @@
           Sähköposti: <a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a>.
           Vasteaika: 1 arkipäivä. Kiireellisissä asioissa mainitse sähköpostin
           otsikossa "KIIREELLINEN". Tukipalvelu on avoinna arkisin klo 8–16.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Mikä on sopimuksen vähimmäissitoumusaika?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Sopimuksen vähimmäissitoumusaika on <strong>12 kuukautta</strong> alkamispäivästä.
+          Sopimuskauden päätyttyä sopimus jatkuu automaattisesti toistaiseksi voimassa olevana,
+          kunnes se irtisanotaan. Voit tarkistaa sopimuksesi voimassaolon
+          <a href="etj-tilaussopimus.html">tilaussopimuksesta (§6)</a>.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Miten sopimus irtisanotaan?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Sopimus irtisanotaan <strong>kirjallisesti</strong> sähköpostilla osoitteeseen
+          <a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a>.
+          Irtisanomisaika on <strong>1 kuukausi</strong> ennen automaattisen jatkokauden alkua
+          tai <strong>3 kuukautta</strong> kesken sopimuskauden. Sopimusta ei voi irtisanoa
+          alkuperäisen 12 kuukauden vähimmäiskauden aikana.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Milloin lasku erääntyy ja mitä jos maksu myöhästyy?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Laskun maksuehto on <strong>14 päivää netto</strong> laskun päiväyksestä.
+          Myöhästyneestä maksusta peritään viivästyskorko korkolain mukaisesti.
+          Laskutusväli sovitaan sopimuksessa (kuukausittain tai vuosittain etukäteen).
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Kuka vastaa henkilötietojen käsittelystä GDPR:n mukaan?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          GDPR:n mukaan <strong>asiakas on rekisterinpitäjä</strong> ja Spara Energia Oy toimii
+          <strong>henkilötietojen käsittelijänä</strong>. Spara käsittelee henkilötietoja
+          ainoastaan palvelun tuottamiseen liittyviin tarkoituksiin. Data sijaitsee EU/ETA-alueella
+          (Supabase, Frankfurt). Lisätietoja: <a href="etj-tilaussopimus.html">tilaussopimuksen §7 ja Liite B (DPA)</a>.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Mikä on palvelun tavoitekäytettävyys (SLA)?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Spara tavoittelee <strong>99 %:n käytettävyyttä kuukaudessa</strong>.
+          Sovitut huoltoikkunat eivät laske käytettävyyttä. Huoltoikkunoista
+          tiedotetaan etukäteen sähköpostitse.
+          Ota yhteyttä <a href="mailto:etj@sparaenergia.com">etj@sparaenergia.com</a>,
+          jos kohtaat toistuvia katkoksia.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Mikä on Sparan vastuunrajoitus vahinkotilanteessa?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Sparan korvausvastuu on rajoitettu enintään <strong>yhden (1) kuukauden
+          palvelumaksun</strong> suuruiseen korvaukseen. Välillisiä vahinkoja
+          (kuten saamatta jäänyttä tuloa, liikearvon menetystä tai viranomaisseuraamuksia)
+          ei korvata. Lisätietoja: <a href="etj-tilaussopimus.html">tilaussopimuksen §10</a>.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Mitä lakia sopimukseen sovelletaan ja missä riidat ratkaistaan?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          Sopimukseen sovelletaan <strong>Suomen lakia</strong>. Erimielisyydet
+          ratkaistaan ensisijaisesti neuvottelemalla. Jos yhteisymmärrykseen ei
+          päästä, asia käsitellään <strong>Helsingin käräjäoikeudessa</strong>
+          tai osapuolten erikseen sopimassa välimiesmenettelyssä.
+          Lisätietoja: <a href="etj-tilaussopimus.html">tilaussopimuksen §12</a>.
         </div>
       </div>
 
