@@ -555,7 +555,16 @@
 <!-- ════ Login screen ════ -->
 <div id="login-screen">
   <div class="login-box" style="max-width:380px">
-    <h2 style="font-size:22px;font-weight:700;text-align:center;margin-bottom:28px;color:var(--text)">Kirjaudu</h2>
+    <div class="login-logo" style="justify-content:center;margin-bottom:28px">
+      <svg width="44" height="44" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="border-radius:8px">
+        <rect width="32" height="32" rx="7" fill="#080F1C"/>
+        <path d="M19 4L10 19h6.5L14 28l9-15h-6.5z" fill="#2CE879"/>
+      </svg>
+      <div>
+        <h2 style="font-size:18px;font-weight:800;letter-spacing:-.01em;margin:0;color:var(--text)">SPARA <span style="color:var(--accent)">ETJ+</span></h2>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Energiatehokkuushallinta</div>
+      </div>
+    </div>
     <div class="form-group">
       <label>Käyttäjätunnus</label>
       <input type="email" id="login-email" placeholder="tunnus@yritys.fi" autocomplete="username">
@@ -631,10 +640,10 @@
 <header>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="32" height="32" rx="7" fill="#4CAF50"/>
-      <path d="M19 4L10 19h6.5L14 28l9-15h-6.5z" fill="white"/>
+      <rect width="32" height="32" rx="7" fill="#080F1C"/>
+      <path d="M19 4L10 19h6.5L14 28l9-15h-6.5z" fill="#2CE879"/>
     </svg>
-    <div class="header-wordmark">SPARA<span>Energianhallinta</span></div>
+    <div class="header-wordmark">SPARA<span>ETJ+</span></div>
   </div>
   <div class="header-right">
     <a class="back-link" href="index.html">← Kiinteistörekisteri</a>
@@ -3238,28 +3247,40 @@ async function saveAnnualEntry() {
       newAllocs.push({
         id: 'ta_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
         company_id: cId, year: yr, month: mo,
-        energy_type: row.energy_type, amount_mwh: v, tag_id: tag.id
+        energy_type: row.energy_type, amount_mwh: v, tag_id: tag.id,
+        _tag_name: row.tag_name.trim()
       });
     }
   }
 
   if (!DEMO_MODE) {
     try {
+      // Upsert tags one-by-one (ignoreDuplicates = skip existing)
       for (const row of _annualRows) {
         if (!row.tag_name.trim()) continue;
         await db.from('etj_energy_tags')
           .upsert({ company_id:cId, name:row.tag_name.trim() }, { onConflict:'company_id,name', ignoreDuplicates:true });
       }
+      // Fetch real DB tags — their IDs may differ from the in-memory fake 't_...' ids
       const { data: freshTags } = await db.from('etj_energy_tags').select('*').eq('company_id', cId);
-      if (freshTags) freshTags.forEach(t => { if (!allTags.find(x=>x.id===t.id)) allTags.push(t); });
+      if (freshTags) {
+        freshTags.forEach(t => {
+          const idx = allTags.findIndex(x => x.company_id === cId && x.name.toLowerCase() === t.name.toLowerCase());
+          if (idx >= 0) allTags[idx] = t; else allTags.push(t);
+        });
+      }
+      // Replace any fake in-memory tag IDs with real DB UUIDs
+      const tagIdByName = {};
+      (freshTags || []).forEach(t => { tagIdByName[t.name.toLowerCase()] = t.id; });
+      newAllocs.forEach(a => { const rid = tagIdByName[a._tag_name?.toLowerCase()]; if (rid) a.tag_id = rid; });
 
       await db.from('etj_energy_tag_allocations').delete().eq('company_id',cId).eq('year',yr);
-      if (newAllocs.length) {
-        const toInsert = newAllocs.map(a => ({
-          company_id:a.company_id, year:a.year, month:a.month,
-          energy_type:a.energy_type, amount_mwh:a.amount_mwh, tag_id:a.tag_id
-        }));
-        await db.from('etj_energy_tag_allocations').insert(toInsert);
+      const valid = newAllocs.filter(a => a.tag_id && !String(a.tag_id).startsWith('t_'));
+      if (valid.length) {
+        await db.from('etj_energy_tag_allocations').insert(
+          valid.map(a => ({ company_id:a.company_id, year:a.year, month:a.month,
+            energy_type:a.energy_type, amount_mwh:a.amount_mwh, tag_id:a.tag_id }))
+        );
       }
     } catch(e) { console.warn('Supabase save error:', e); }
   }
