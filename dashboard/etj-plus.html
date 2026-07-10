@@ -3686,15 +3686,15 @@ async function saveNewCompany() {
     id:               'c_' + Date.now(),
     name,
     y_tunnus:          ytunnus || null,
-    sector:            document.getElementById('cf_sector')?.value.trim() || '',
-    company_form:      document.getElementById('cf_companyForm')?.value.trim() || '',
-    address:           document.getElementById('cf_address')?.value.trim() || '',
-    post_code:         document.getElementById('cf_postCode')?.value.trim() || '',
-    city:              document.getElementById('cf_city')?.value.trim() || '',
-    contact_name:      document.getElementById('cf_contact')?.value.trim() || '',
-    contact_email:     document.getElementById('cf_email')?.value.trim() || '',
-    registration_date: document.getElementById('cf_regDate')?.value.trim() || '',
-    notes:             document.getElementById('cf_notes')?.value.trim() || '',
+    sector:            document.getElementById('cf_sector')?.value.trim()      || null,
+    company_form:      document.getElementById('cf_companyForm')?.value.trim() || null,
+    address:           document.getElementById('cf_address')?.value.trim()     || null,
+    post_code:         document.getElementById('cf_postCode')?.value.trim()    || null,
+    city:              document.getElementById('cf_city')?.value.trim()        || null,
+    contact_name:      document.getElementById('cf_contact')?.value.trim()     || null,
+    contact_email:     document.getElementById('cf_email')?.value.trim()       || null,
+    registration_date: document.getElementById('cf_regDate')?.value.trim()     || null,
+    notes:             document.getElementById('cf_notes')?.value.trim()       || null,
     etj_agreement_active: false,
     created_at: new Date().toISOString(),
   };
@@ -4534,9 +4534,11 @@ async function saveProfileSettings() {
 
   if (!DEMO_MODE && currentUser?.id) {
     try {
-      // display_name → etj_user_profiles (has the column)
+      // display_name → etj_user_profiles; use update (not upsert) to avoid
+      // hitting the NOT NULL role constraint when the row already exists.
       const { error: pErr } = await db.from('etj_user_profiles')
-        .upsert({ id: currentUser.id, display_name: name });
+        .update({ display_name: name })
+        .eq('id', currentUser.id);
       if (pErr) throw pErr;
       // phone → auth user_metadata (etj_user_profiles has no phone column)
       if (phone !== (currentUser.user_metadata?.phone ?? '')) {
