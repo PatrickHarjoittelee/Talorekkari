@@ -511,6 +511,43 @@
 
     /* ── Fixed chart containers ── */
     .chart-fixed { position:relative; }
+
+    /* ── Guided import wizard — ETJ-testi component styles ── */
+    .gw-ecomp {
+      display:flex;align-items:flex-start;gap:14px;padding:13px 16px;
+      background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius);
+      cursor:pointer;transition:border-color .2s,background .2s;user-select:none;margin-bottom:8px;
+    }
+    .gw-ecomp:hover { border-color:var(--border2,#234068); }
+    .gw-ecomp.on { border-color:var(--accent);background:rgba(44,232,121,.06); }
+    .gw-echk {
+      width:18px;height:18px;border-radius:4px;border:2px solid var(--border2,#234068);
+      flex-shrink:0;display:grid;place-items:center;font-size:11px;color:#000;
+      transition:all .2s;margin-top:2px;
+    }
+    .gw-ecomp.on .gw-echk { background:var(--accent);border-color:var(--accent); }
+    .gw-ebody { flex:1; }
+    .gw-elbl { font-size:14px;font-weight:600;color:var(--text); }
+    .gw-ehint { font-size:11px;color:var(--text2);margin-top:3px;line-height:1.4; }
+    .gw-einputs { margin-top:12px; }
+    .gw-unit-tabs { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px; }
+    .gw-unit-tab {
+      padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;
+      border:1.5px solid var(--border);cursor:pointer;background:transparent;
+      color:var(--text2);font-family:inherit;transition:all .15s;letter-spacing:.02em;
+    }
+    .gw-unit-tab.active { background:rgba(44,232,121,.1);border-color:var(--accent);color:var(--accent); }
+    .gw-input-row { display:flex;align-items:center;gap:8px; }
+    .gw-input-row input[type="number"] {
+      flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);
+      color:var(--text);border-radius:var(--radius);font-size:14px;font-family:inherit;
+      outline:none;-webkit-appearance:none;-moz-appearance:textfield;
+    }
+    .gw-input-row input[type="number"]::-webkit-outer-spin-button,
+    .gw-input-row input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; }
+    .gw-input-row input[type="number"]:focus { border-color:var(--accent); }
+    .gw-sfx { font-size:12px;color:var(--text2);white-space:nowrap;min-width:60px; }
+    .gw-prev { font-size:12px;color:var(--accent);font-weight:700;margin-top:6px;min-height:16px; }
   </style>
 </head>
 <body>
@@ -984,18 +1021,26 @@
       </div>
     </div>
 
-    <!-- YTJ fetch row -->
+    <!-- YTJ + ETJ-koodi fetch row -->
     <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:18px;position:relative">
-      <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Hae tiedot YTJ:stä (avoindata.prh.fi)</div>
-      <div class="ytj-row">
-        <input type="text" id="detail-ytj-input" placeholder="Y-tunnus tai yrityksen nimi" autocomplete="off"
+      <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Hae tiedot YTJ:stä tai ETJ-testikoodilla</div>
+      <div class="ytj-row" style="margin-bottom:8px">
+        <input type="text" id="detail-ytj-input" placeholder="Y-tunnus tai yrityksen nimi (PRH)" autocomplete="off"
           oninput="ytjInputChanged('detail')"
           onkeydown="if(event.key==='Enter'){fetchAndFillYTJ('detail');hideYtjDropdown('detail')}"
           onblur="setTimeout(()=>hideYtjDropdown('detail'),200)">
-        <button class="btn btn-secondary btn-sm" onclick="fetchAndFillYTJ('detail');hideYtjDropdown('detail')">Hae</button>
+        <button class="btn btn-secondary btn-sm" onclick="fetchAndFillYTJ('detail');hideYtjDropdown('detail')">Hae YTJ</button>
       </div>
       <div class="ytj-status" id="detail-ytj-status"></div>
       <div id="detail-ytj-dropdown" class="ytj-dropdown" style="display:none"></div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <input type="text" id="detail-lead-code" placeholder="ETJ-koodi (6 merkkiä)" maxlength="10"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')fetchByLeadCode('detail')"
+          style="flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;letter-spacing:.08em">
+        <button class="btn btn-secondary btn-sm" onclick="fetchByLeadCode('detail')" style="white-space:nowrap">Hae koodilla</button>
+      </div>
+      <div id="detail-lead-status" style="font-size:12px;min-height:12px;margin-top:4px"></div>
     </div>
 
     <div class="detail-grid" id="company-detail-fields">
@@ -1045,65 +1090,30 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
-<!-- Guided energy import wizard -->
+<!-- Guided energy import wizard (ETJ-testi flow) -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <div id="guided-import-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center">
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:min(640px,95vw);max-height:90vh;overflow-y:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:min(660px,95vw);max-height:92vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
       <h2 style="font-size:16px">Ohjattu kulutustietojen tuonti</h2>
       <button onclick="closeGuidedImport()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;line-height:1">✕</button>
     </div>
-    <div id="guided-company-label" style="font-size:12px;color:var(--text2);margin-bottom:18px"></div>
+    <div id="guided-company-label" style="font-size:12px;color:var(--text2);margin-bottom:14px"></div>
 
-    <!-- Step indicator -->
-    <div style="display:flex;gap:0;margin-bottom:24px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
-      <div class="guided-step-tab" id="gstep-1" style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;background:var(--accent);color:#080F1C">1. Energianlähteet</div>
-      <div class="guided-step-tab" id="gstep-2" style="flex:1;padding:8px;text-align:center;font-size:12px;color:var(--text2);border-left:1px solid var(--border)">2. Kulutusluvut</div>
-      <div class="guided-step-tab" id="gstep-3" style="flex:1;padding:8px;text-align:center;font-size:12px;color:var(--text2);border-left:1px solid var(--border)">3. Vahvistus</div>
+    <!-- Sub-step pills -->
+    <div style="display:flex;gap:0;margin-bottom:14px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)" id="guided-pills"></div>
+
+    <!-- Running total -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:rgba(44,232,121,.07);border:1px solid rgba(44,232,121,.2);border-radius:var(--radius);margin-bottom:16px">
+      <div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em">Kokonaiskulutus arvio</div>
+      <div id="guided-total-val" style="font-size:18px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums">—</div>
     </div>
 
-    <!-- Step 1: Energy type selection -->
-    <div id="guided-step-1">
-      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Valitse energiamuodot, joista yritykselle syntyy kulua tai kulutusta.</p>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px" id="guided-energy-types">
-        <label class="energy-check-label"><input type="checkbox" class="guided-main-cb" value="electricity"> ⚡ Sähkö</label>
-        <label class="energy-check-label"><input type="checkbox" class="guided-main-cb" value="heat"> 🌡️ Kaukolämpö</label>
-        <label class="energy-check-label"><input type="checkbox" class="guided-main-cb" value="gas"> 🔥 Kaasu</label>
-        <label class="energy-check-label"><input type="checkbox" class="guided-main-cb" value="oil"> ⛽ Öljy / Diesel / Polttoaineet</label>
-        <label class="energy-check-label"><input type="checkbox" class="guided-main-cb" value="other"> ♻️ Muu</label>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
-        <label style="font-size:13px;white-space:nowrap">Kohdevuosi:</label>
-        <select id="guided-year" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none">
-          <option>2025</option><option>2024</option><option>2023</option><option>2022</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" onclick="guidedNext1()" style="width:100%">Seuraava →</button>
-    </div>
+    <!-- Dynamic content -->
+    <div id="guided-content"></div>
 
-    <!-- Step 2: MWh input per type/category -->
-    <div id="guided-step-2" style="display:none">
-      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Syötä vuosikulutus (MWh/v) kullekin energiamuodolle. Voit lisätä useita kategorioita per energiamuoto.</p>
-      <div id="guided-rows-container" style="display:flex;flex-direction:column;gap:16px;margin-bottom:18px"></div>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <button class="btn btn-secondary" onclick="guidedBack1()" style="flex:0 0 auto">← Takaisin</button>
-        <button class="btn btn-primary" onclick="guidedNext2()" style="flex:1">Seuraava →</button>
-      </div>
-    </div>
-
-    <!-- Step 3: Confirmation -->
-    <div id="guided-step-3" style="display:none">
-      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Tarkista tiedot. Kulutus jaetaan kuukausille kausiprofiililla (talvi korkeampi, kesä matalampi).</p>
-      <div id="guided-summary-table" style="margin-bottom:18px"></div>
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:18px">
-        <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px">KAUSIJAKAUMA (tammikuu → joulukuu)</div>
-        <div id="guided-seasonal-preview" style="display:flex;gap:3px;align-items:flex-end;height:48px"></div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-secondary" onclick="guidedBack2()" style="flex:0 0 auto">← Takaisin</button>
-        <button class="btn btn-primary" onclick="commitGuidedImport()" style="flex:1">Tuo tiedot kulutustaulukkoon →</button>
-      </div>
-    </div>
+    <!-- Nav buttons -->
+    <div style="display:flex;gap:8px;margin-top:18px" id="guided-nav"></div>
   </div>
 </div>
 
@@ -1192,6 +1202,26 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 style="font-size:16px">Lisää yritys</h2>
       <button onclick="closeAddCompany()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer">✕</button>
+    </div>
+
+    <!-- Hae ETJ-koodilla tai yrityksen nimellä -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;position:relative">
+      <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Hae ETJ-testikoodilla tai yrityksen nimellä</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="addco-lead-code" placeholder="ETJ-koodi (esim. AB1C2D)" maxlength="10"
+          oninput="this.value=this.value.toUpperCase();leadCodeSearch('addco',this.value)"
+          onkeydown="if(event.key==='Enter')fetchByLeadCode('addco')"
+          style="flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;letter-spacing:.08em;font-variant-numeric:tabular-nums">
+        <button class="btn btn-secondary btn-sm" onclick="fetchByLeadCode('addco')" style="white-space:nowrap">Hae koodilla</button>
+      </div>
+      <div style="position:relative">
+        <input type="text" id="addco-lead-name" placeholder="tai hae yrityksen nimellä…" autocomplete="off"
+          oninput="leadNameSearch('addco',this.value)"
+          onblur="setTimeout(()=>hideleadDrop('addco'),200)"
+          style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none">
+        <div id="addco-lead-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:300;max-height:220px;overflow-y:auto;margin-top:2px"></div>
+      </div>
+      <div id="addco-lead-status" style="font-size:12px;min-height:14px;margin-top:6px"></div>
     </div>
 
     <div class="modal-tabs">
@@ -3560,24 +3590,302 @@ async function deleteCompany() {
   showToast(`"${c.name}" poistettu seurannasta.`);
 }
 
-// ─── Guided energy import wizard ─────────────────────────────────────────────
-let _guidedRows = []; // { energy_type, tag_name, mwh, details }
-let _guidedYear = 2025;
-let _guidedCompanyId = null;
+// ─── Guided energy import wizard (ETJ-testi flow) ────────────────────────────
+const GW_ECOMPS = {
+  sahko:[
+    { id:'val',        lbl:'Valaistus',
+      hint:'Toimisto n. 40 kWh/m²/v · teollisuushalli n. 60 kWh/m²/v',
+      units:[{u:'m²',f:40,s:'lattiapinta-ala (m²)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'lvias',      lbl:'Ilmanvaihto ja LVI-tekniikka',
+      hint:'n. 25 kWh/m²/v',
+      units:[{u:'m²',f:25,s:'lattiapinta-ala (m²)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'koneet',     lbl:'Tuotantokoneet ja prosessit',
+      hint:'n. 20 kWh/käyttötunti (vaihtelee: leikkuukone ~15, kompressori ~10, hitsauspiste ~25)',
+      units:[{u:'h',f:20,s:'käyttötunteja/vuosi'},{u:'kW',f:4000,s:'koneiden yhteiskapasiteetti (kW)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'konesali',   lbl:'Konesali tai palvelinhuone',
+      hint:'1 kW palvelinteho ≈ 7 500–8 000 kWh/v (PUE 1,5)',
+      units:[{u:'kW',f:7500,s:'palvelintehovaraus (kW)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'kylma',      lbl:'Kylmälaitteet ja kylmäketju',
+      hint:'Kauppakylmäkaluste n. 2 000 kWh/kW/v · kylmävarasto vaihtelee',
+      units:[{u:'kW',f:2000,s:'jäähdytyskapasiteetti (kW)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'ev',         lbl:'Sähköajoneuvojen lataus',
+      hint:'Henkilöauto n. 3 000 kWh/v · pakettiauto n. 5 000 kWh/v',
+      units:[{u:'kpl',f:3500,s:'sähköajoneuvojen lukumäärä'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'sahkolampo', lbl:'Sähkölämmitys (suora, lattia, patteri)',
+      hint:'n. 80–120 kWh/m²/v',
+      units:[{u:'m²',f:100,s:'lämmitettävä pinta-ala (m²)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+  ],
+  lampo:[
+    { id:'kaukolampo', lbl:'Kaukolämpö',
+      hint:'Luku löytyy suoraan kaukolämpölaskulta',
+      units:[{u:'m²',f:100,s:'lattiapinta-ala (m²) — n. 100 kWh/m²/v toimisto, 150 kWh/m²/v kauppa'},{u:'MWh',f:1000,s:'MWh/vuosi (katso lasku)'},{u:'€',f:16.7,s:'€/vuosi (÷ ~60 €/MWh)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'oljy',       lbl:'Kevyt polttoöljy (lämmitysöljy)',
+      hint:'1 000 l ≈ 10 MWh',
+      units:[{u:'l',f:10,s:'litraa/vuosi'},{u:'€',f:8.3,s:'€/vuosi (÷ ~1,2 €/l)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'maakaasu',   lbl:'Maakaasu',
+      hint:'1 m³ ≈ 10,5 kWh',
+      units:[{u:'m³',f:10.5,s:'m³/vuosi'},{u:'MWh',f:1000,s:'MWh/vuosi'},{u:'€',f:18.2,s:'€/vuosi (÷ ~55 €/MWh)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'pelletti',   lbl:'Pelletti tai hake',
+      hint:'1 t pelletti ≈ 4 800 kWh · 1 t hake ≈ 2 500 kWh (kostea)',
+      units:[{u:'t',f:4500,s:'tonnia/vuosi (pelletti)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'maalamppu',  lbl:'Maalämpö- tai ilmalämpöpumppu',
+      hint:'Sähkönkulutus ≈ lämpöteho × ~700 h / COP 3 ≈ 700 kWh/kW/v',
+      units:[{u:'kW',f:700,s:'pumpun nimellisteho (kW)'},{u:'kWh',f:1,s:'sähkönkulutus kWh/vuosi'}] },
+    { id:'kaukokylma', lbl:'Kaukoviilennys',
+      hint:'Luku löytyy laskusta',
+      units:[{u:'MWh',f:1000,s:'MWh/vuosi'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'raskas_oljy',lbl:'Raskas polttoöljy tai prosessiöljy',
+      hint:'1 l ≈ 11 kWh',
+      units:[{u:'l',f:11,s:'litraa/vuosi'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+  ],
+  liikenne:[
+    { id:'ha',         lbl:'Henkilöautot (polttomoottori)',
+      hint:'n. 7 l/100 km · 1 000 km ≈ 0,65 MWh',
+      units:[{u:'l',f:9,s:'polttoainetta yhteensä l/v'},{u:'km',f:0.65,s:'km/vuosi yhteensä'},{u:'€',f:7.5,s:'polttoainekulut €/v (÷ ~1,2 €/l)'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'pa',         lbl:'Pakettiautot ja jakeluautot',
+      hint:'n. 9 l/100 km · 1 000 km ≈ 0,9 MWh',
+      units:[{u:'l',f:10,s:'polttoainetta yhteensä l/v'},{u:'km',f:0.9,s:'km/vuosi yhteensä'},{u:'€',f:8.3,s:'polttoainekulut €/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'ka',         lbl:'Kuorma-autot ja bussit',
+      hint:'n. 35 l/100 km · 1 000 km ≈ 3,5 MWh',
+      units:[{u:'kpl',f:250000,s:'ajoneuvojen lukumäärä (n. 250 MWh/kpl/v)'},{u:'l',f:10,s:'diesel yhteensä l/v'},{u:'km',f:3.3,s:'km/vuosi yhteensä'},{u:'€',f:8.3,s:'polttoainekulut €/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'tyokone',    lbl:'Työkoneet (kaivukoneet, pyöräkuormaajat, trukit, mobiilityökoneet)',
+      hint:'Kaivinkone n. 15–25 l/h · trukki n. 2–5 l/h',
+      units:[{u:'l',f:10,s:'polttoainetta yhteensä l/v'},{u:'h',f:200,s:'käyttötunteja/v (×20 l/h)'},{u:'€',f:8.3,s:'polttoainekulut €/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+    { id:'laiva',      lbl:'Laivat, veneet tai muut vesialukset',
+      hint:'Pienveneet n. 20–50 l/h',
+      units:[{u:'l',f:10,s:'polttoainetta yhteensä l/v'},{u:'kWh',f:1,s:'kWh/vuosi'}] },
+  ],
+};
+const GW_ESUBS = [
+  { id:'sahko',    name:'Sähkö',    icon:'⚡' },
+  { id:'lampo',    name:'Lämpö',    icon:'🔥' },
+  { id:'liikenne', name:'Liikenne', icon:'🚛' },
+];
+const GW_TYPE_MAP = {
+  sahko_val:          { type:'electricity', season:'elec' },
+  sahko_lvias:        { type:'electricity', season:'elec' },
+  sahko_koneet:       { type:'electricity', season:'flat' },
+  sahko_konesali:     { type:'electricity', season:'flat' },
+  sahko_kylma:        { type:'electricity', season:'cool' },
+  sahko_ev:           { type:'electricity', season:'flat' },
+  sahko_sahkolampo:   { type:'electricity', season:'heat' },
+  sahko_muu:          { type:'electricity', season:'elec' },
+  lampo_kaukolampo:   { type:'heat',        season:'heat' },
+  lampo_oljy:         { type:'oil',         season:'heat' },
+  lampo_maakaasu:     { type:'gas',         season:'heat' },
+  lampo_pelletti:     { type:'other',       season:'heat' },
+  lampo_maalamppu:    { type:'electricity', season:'heat' },
+  lampo_kaukokylma:   { type:'heat',        season:'cool' },
+  lampo_raskas_oljy:  { type:'oil',         season:'heat' },
+  lampo_muu:          { type:'heat',        season:'heat' },
+  liikenne_ha:        { type:'oil',         season:'flat' },
+  liikenne_pa:        { type:'oil',         season:'flat' },
+  liikenne_ka:        { type:'oil',         season:'flat' },
+  liikenne_tyokone:   { type:'oil',         season:'flat' },
+  liikenne_laiva:     { type:'oil',         season:'flat' },
+  liikenne_muu:       { type:'oil',         season:'flat' },
+};
+const GW_SEASONAL_PROFILES = {
+  elec: _SEASONAL_PROFILE,
+  heat: [1.40,1.30,1.10,0.85,0.55,0.30,0.28,0.32,0.65,1.00,1.20,1.40],
+  cool: [0.40,0.45,0.60,0.80,1.10,1.30,1.35,1.30,1.00,0.70,0.55,0.45],
+  flat: [1,1,1,1,1,1,1,1,1,1,1,1],
+};
+const GW_DESCS = {
+  sahko:    'Sähkönkulutuksen kohteet — valaistus, LVI, tuotantokoneet, konesalit, kylmä, sähköautot.',
+  lampo:    'Kaukolämpö, öljy, maakaasu, biomassa ja lämpöpumput.',
+  liikenne: 'Polttomoottoriajoneuvot ja raskaat työkoneet.',
+};
+
+let GW_ED = {};
+let GW_sub = 0;
+let GW_companyId = null;
+
+function gwKey(tid, cid) { return tid + '_' + cid; }
+
+function gwFmtKwh(kwh) {
+  if (kwh >= 1e6) return (kwh/1e6).toFixed(1) + ' GWh/v';
+  if (kwh >= 1000) return Math.round(kwh/1000) + ' MWh/v';
+  return Math.round(kwh) + ' kWh/v';
+}
+
+function gwTotalKwh() {
+  return Object.values(GW_ED).reduce((s,d) => s + (d.on ? (parseFloat(d.kwh)||0) : 0), 0);
+}
+
+function gwUpdateTotal() {
+  const t = gwTotalKwh();
+  const el = document.getElementById('guided-total-val');
+  if (el) el.textContent = t > 0 ? gwFmtKwh(t) : '—';
+}
+
+function gwCompToggle(tid, cid) {
+  const k = gwKey(tid, cid);
+  const comp = GW_ECOMPS[tid].find(c => c.id === cid);
+  if (!GW_ED[k]) GW_ED[k] = { on:false, unit:comp.units[0].u, val:'', kwh:0 };
+  GW_ED[k].on = !GW_ED[k].on;
+  const row = document.getElementById('gw-ec_' + k);
+  const inp = document.getElementById('gw-ecinp_' + k);
+  if (!row) return;
+  if (GW_ED[k].on) {
+    row.classList.add('on');
+    row.querySelector('.gw-echk').textContent = '✓';
+    if (inp) inp.style.display = 'block';
+  } else {
+    row.classList.remove('on');
+    row.querySelector('.gw-echk').textContent = '';
+    if (inp) inp.style.display = 'none';
+    GW_ED[k].kwh = 0;
+    gwUpdateTotal();
+  }
+}
+
+function gwCompUnit(tid, cid, unit) {
+  const k = gwKey(tid, cid);
+  if (!GW_ED[k]) return;
+  GW_ED[k].unit = unit;
+  const comp = GW_ECOMPS[tid].find(c => c.id === cid);
+  comp.units.forEach(u => {
+    const tab = document.getElementById('gw-etab_' + k + '_' + u.u);
+    if (tab) tab.classList.toggle('active', u.u === unit);
+  });
+  const sfx = document.getElementById('gw-esfx_' + k);
+  const unitCfg = comp.units.find(u => u.u === unit);
+  if (sfx && unitCfg) sfx.textContent = unitCfg.s;
+  gwCalc(tid, cid);
+}
+
+function gwCompVal(tid, cid, val) {
+  const k = gwKey(tid, cid);
+  if (!GW_ED[k]) return;
+  GW_ED[k].val = val;
+  gwCalc(tid, cid);
+}
+
+function gwCalc(tid, cid) {
+  const k = gwKey(tid, cid);
+  const d = GW_ED[k];
+  if (!d) return;
+  const comp = GW_ECOMPS[tid].find(c => c.id === cid);
+  const unitCfg = comp.units.find(u => u.u === d.unit) || comp.units[0];
+  const raw = parseFloat(d.val) || 0;
+  d.kwh = raw * unitCfg.f;
+  const prev = document.getElementById('gw-eprev_' + k);
+  if (prev) prev.textContent = d.kwh > 0 ? '≈ ' + gwFmtKwh(d.kwh) : '';
+  gwUpdateTotal();
+}
+
+function gwMuuToggle(tid) {
+  const k = tid + '_muu';
+  if (!GW_ED[k]) GW_ED[k] = { on:false, label:'', kwh:0 };
+  GW_ED[k].on = !GW_ED[k].on;
+  const inp = document.getElementById('gw-muu-' + tid + '-i');
+  if (inp) inp.style.display = GW_ED[k].on ? 'block' : 'none';
+  const chk = document.querySelector('#gw-muu-' + tid + ' .gw-echk');
+  if (chk) {
+    chk.textContent = GW_ED[k].on ? '✓' : '';
+    chk.style.background = GW_ED[k].on ? 'var(--accent)' : '';
+    chk.style.borderColor = GW_ED[k].on ? 'var(--accent)' : '';
+    chk.style.color = GW_ED[k].on ? '#000' : '';
+  }
+  gwUpdateTotal();
+}
+
+function gwMuuKwh(tid, v) {
+  const k = tid + '_muu';
+  if (!GW_ED[k]) GW_ED[k] = { on:true, label:'', kwh:0 };
+  GW_ED[k].kwh = parseFloat(v) || 0;
+  gwUpdateTotal();
+}
+
+function gwMuuLabel(tid, v) {
+  const k = tid + '_muu';
+  if (GW_ED[k]) GW_ED[k].label = v;
+}
+
+function gwBuildComp(tid, comp) {
+  const k = gwKey(tid, comp.id);
+  const d = GW_ED[k] || { on:false, unit:comp.units[0].u, val:'', kwh:0 };
+  const activeU = d.unit || comp.units[0].u;
+  const activeCfg = comp.units.find(u => u.u === activeU) || comp.units[0];
+  return `<div class="gw-ecomp${d.on ? ' on' : ''}" id="gw-ec_${k}" onclick="gwCompToggle('${tid}','${comp.id}')">
+    <div class="gw-echk">${d.on ? '✓' : ''}</div>
+    <div class="gw-ebody">
+      <div class="gw-elbl">${comp.lbl}</div>
+      ${comp.hint ? `<div class="gw-ehint">${comp.hint}</div>` : ''}
+      <div id="gw-ecinp_${k}" style="display:${d.on ? 'block' : 'none'}">
+        <div class="gw-einputs" onclick="event.stopPropagation()">
+          ${comp.units.length > 1 ? `<div class="gw-unit-tabs">${comp.units.map(u => `<button class="gw-unit-tab${u.u === activeU ? ' active' : ''}" id="gw-etab_${k}_${u.u}" onclick="gwCompUnit('${tid}','${comp.id}','${u.u}')">${u.u}</button>`).join('')}</div>` : ''}
+          <div class="gw-input-row">
+            <input type="number" min="0" step="any" value="${d.val}" placeholder="0"
+              oninput="gwCompVal('${tid}','${comp.id}',this.value)"
+              onclick="event.stopPropagation()">
+            <span class="gw-sfx" id="gw-esfx_${k}">${activeCfg.s}</span>
+          </div>
+          <div class="gw-prev" id="gw-eprev_${k}">${d.kwh > 0 ? '≈ ' + gwFmtKwh(d.kwh) : ''}</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function gwBuildSubContent(subId) {
+  const comps = GW_ECOMPS[subId];
+  const mk = subId + '_muu';
+  const md = GW_ED[mk] || {};
+  const muuOn = !!md.on;
+  const muuLbl = (md.label || '').replace(/"/g, '&quot;');
+  const muuKwh = md.kwh > 0 ? md.kwh : '';
+  return `
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5">${GW_DESCS[subId]}</div>
+    ${comps.map(c => gwBuildComp(subId, c)).join('')}
+    <div style="margin-top:10px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius)" id="gw-muu-${subId}">
+      <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="gwMuuToggle('${subId}')">
+        <div class="gw-echk" style="${muuOn ? 'background:var(--accent);border-color:var(--accent);color:#000' : ''}">${muuOn ? '✓' : ''}</div>
+        <span style="font-size:13px;font-weight:600;color:var(--text)">Muu (kirjoita vapaasti)</span>
+      </div>
+      <div id="gw-muu-${subId}-i" style="display:${muuOn ? 'block' : 'none'};margin-top:10px" onclick="event.stopPropagation()">
+        <input type="text" value="${muuLbl}" placeholder="esim. Höyrynkehitin"
+          oninput="gwMuuLabel('${subId}',this.value)"
+          style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;margin-bottom:8px">
+        <div class="gw-input-row">
+          <input type="number" min="0" step="any" value="${muuKwh}" placeholder="0"
+            oninput="gwMuuKwh('${subId}',this.value)">
+          <span class="gw-sfx">kWh/vuosi</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function gwRenderPills() {
+  document.getElementById('guided-pills').innerHTML = GW_ESUBS.map((s, i) => {
+    const active = i === GW_sub;
+    return `<div onclick="gwNav(${i})" style="flex:1;padding:9px 12px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;
+      background:${active ? 'var(--accent)' : 'transparent'};
+      color:${active ? '#080F1C' : 'var(--text2)'};
+      border-right:${i < GW_ESUBS.length - 1 ? '1px solid var(--border)' : 'none'};
+      transition:all .15s">${s.icon} ${s.name}</div>`;
+  }).join('');
+}
+
+function gwRender() {
+  gwRenderPills();
+  document.getElementById('guided-content').innerHTML = gwBuildSubContent(GW_ESUBS[GW_sub].id);
+  const prev = GW_sub > 0 ? `<button class="btn btn-secondary" onclick="gwNav(${GW_sub - 1})">← Edellinen</button>` : '';
+  const next = GW_sub < GW_ESUBS.length - 1 ? `<button class="btn btn-secondary" onclick="gwNav(${GW_sub + 1})">Seuraava →</button>` : '';
+  document.getElementById('guided-nav').innerHTML = `${prev}${next}<button class="btn btn-primary" style="margin-left:auto" onclick="gwCommit()">✓ Tallenna kulutustiedot</button>`;
+}
+
+function gwNav(i) { GW_sub = i; gwRender(); }
 
 function openGuidedImport() {
-  _guidedCompanyId = _editingCompanyId || activeCompanyId || companies[0]?.id;
-  const c = companies.find(x => x.id === _guidedCompanyId);
+  GW_companyId = _editingCompanyId || activeCompanyId || companies[0]?.id;
+  const c = companies.find(x => x.id === GW_companyId);
   document.getElementById('guided-company-label').textContent = c ? c.name : '';
-  // Reset to step 1
-  document.querySelectorAll('.guided-main-cb').forEach(cb => { cb.checked = false; });
-  const yr = new Date().getFullYear();
-  const yrSel = document.getElementById('guided-year');
-  for (let i = 0; i < yrSel.options.length; i++) {
-    if (+yrSel.options[i].value === yr - 1) { yrSel.selectedIndex = i; break; }
-  }
-  _guidedRows = [];
-  _showGuidedStep(1);
+  GW_ED = {};
+  GW_sub = 0;
+  gwRender();
+  gwUpdateTotal();
   document.getElementById('guided-import-modal').style.display = 'flex';
 }
 
@@ -3585,174 +3893,132 @@ function closeGuidedImport() {
   document.getElementById('guided-import-modal').style.display = 'none';
 }
 
-function _showGuidedStep(n) {
-  [1,2,3].forEach(i => {
-    document.getElementById('guided-step-' + i).style.display = i === n ? '' : 'none';
-    const tab = document.getElementById('gstep-' + i);
-    tab.style.background = i === n ? 'var(--accent)' : 'transparent';
-    tab.style.color = i === n ? '#080F1C' : 'var(--text2)';
-    tab.style.fontWeight = i === n ? '600' : '400';
-  });
-}
-
-function guidedNext1() {
-  const checked = [...document.querySelectorAll('.guided-main-cb:checked')].map(cb => cb.value);
-  if (!checked.length) { showToast('Valitse vähintään yksi energiamuoto.'); return; }
-  _guidedYear = +document.getElementById('guided-year').value;
-
-  // Build initial rows from checked types with default subcats
-  _guidedRows = [];
-  checked.forEach(type => {
-    const cats = ENERGY_SUBCATS[type] || [''];
-    cats.forEach(cat => {
-      _guidedRows.push({ energy_type: type, tag_name: cat, mwh: '', details: '' });
-    });
+function gwCommit() {
+  const entries = [];
+  Object.entries(GW_ED).forEach(([k, d]) => {
+    if (!d.on || !(parseFloat(d.kwh) > 0)) return;
+    const ui = k.indexOf('_');
+    const tid = k.substring(0, ui);
+    const cid = k.substring(ui + 1);
+    const typeInfo = GW_TYPE_MAP[k] || { type: tid === 'liikenne' ? 'oil' : tid === 'lampo' ? 'heat' : 'electricity', season:'flat' };
+    let lbl;
+    if (cid === 'muu') {
+      lbl = d.label || ('Muu ' + (tid === 'sahko' ? 'sähkö' : tid === 'lampo' ? 'lämpö' : 'liikenne'));
+    } else {
+      const comp = (GW_ECOMPS[tid] || []).find(c => c.id === cid);
+      lbl = comp ? comp.lbl : cid;
+    }
+    entries.push({ energy_type: typeInfo.type, tag_name: lbl, kwh: parseFloat(d.kwh), season: typeInfo.season });
   });
 
-  _renderGuidedRows();
-  _showGuidedStep(2);
-}
+  if (!entries.length) { showToast('Valitse vähintään yksi kulutuskohde ja syötä arvo.'); return; }
 
-function guidedBack1() { _showGuidedStep(1); }
-
-function _renderGuidedRows() {
-  const container = document.getElementById('guided-rows-container');
-  const byType = {};
-  _guidedRows.forEach((r, i) => {
-    (byType[r.energy_type] = byType[r.energy_type] || []).push({ r, i });
-  });
-
-  container.innerHTML = Object.entries(byType).map(([type, items]) => {
-    const icon  = ENERGY_ICONS[type] || '';
-    const label = ENERGY_LABELS_UI[type] || type;
-    const needsDetails = type === 'oil';
-    const rows = items.map(({ r, i }) => `
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:6px">
-        <div>
-          <label style="font-size:11px;color:var(--text2)">Kategoria</label>
-          <input type="text" value="${r.tag_name.replace(/"/g,'&quot;')}" placeholder="Kategoria…"
-            oninput="_updateGuidedRow(${i},'tag_name',this.value)"
-            style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none">
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--text2)">Kulutus MWh/v</label>
-          <input type="number" min="0" step="0.1" value="${r.mwh}" placeholder="0"
-            oninput="_updateGuidedRow(${i},'mwh',this.value)"
-            style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none">
-        </div>
-        <button onclick="_removeGuidedRow(${i})" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:var(--radius);padding:9px 10px;cursor:pointer;line-height:1">✕</button>
-      </div>
-      ${needsDetails ? `<div style="margin-bottom:10px">
-        <label style="font-size:11px;color:var(--text2)">Ajoneuvot / koneet / tarkempi kuvaus</label>
-        <input type="text" value="${(r.details||'').replace(/"/g,'&quot;')}" placeholder="esim. 3 dieselkuorma-autoa, 1 pyöräkuormaaja"
-          oninput="_updateGuidedRow(${i},'details',this.value)"
-          style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none">
-      </div>` : ''}
-    `).join('');
-
-    return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">${icon} ${label}</div>
-        <button onclick="_addGuidedRow('${type}')" class="btn btn-secondary btn-sm">+ Lisää rivi</button>
-      </div>
-      ${rows}
-    </div>`;
-  }).join('');
-}
-
-function _updateGuidedRow(i, field, val) { if (_guidedRows[i]) _guidedRows[i][field] = val; }
-function _removeGuidedRow(i) { _guidedRows.splice(i, 1); _renderGuidedRows(); }
-function _addGuidedRow(type) { _guidedRows.push({ energy_type: type, tag_name: '', mwh: '', details: '' }); _renderGuidedRows(); }
-
-function guidedNext2() {
-  const valid = _guidedRows.filter(r => parseFloat(r.mwh) > 0);
-  if (!valid.length) { showToast('Syötä vähintään yksi kulutusarvo (MWh/v).'); return; }
-
-  // Build summary table
-  const totalMwh = valid.reduce((s, r) => s + parseFloat(r.mwh), 0);
-  const byType = {};
-  valid.forEach(r => { (byType[r.energy_type] = byType[r.energy_type] || []).push(r); });
-
-  const rows = Object.entries(byType).map(([type, items]) => {
-    const icon = ENERGY_ICONS[type] || '';
-    const label = ENERGY_LABELS_UI[type] || type;
-    return items.map(r => `
-      <tr>
-        <td style="padding:6px 8px;border-bottom:1px solid var(--border)">${icon} ${label}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text2)">${r.tag_name || '–'}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-variant-numeric:tabular-nums">${parseFloat(r.mwh).toLocaleString('fi-FI')} MWh/v</td>
-        ${r.details ? `<td style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text2)">${r.details}</td>` : '<td></td>'}
-      </tr>
-    `).join('');
-  }).join('');
-
-  document.getElementById('guided-summary-table').innerHTML = `
-    <table style="width:100%;border-collapse:collapse;font-size:13px">
-      <thead><tr style="font-size:11px;color:var(--text2);text-transform:uppercase">
-        <th style="padding:4px 8px;text-align:left">Tyyppi</th>
-        <th style="padding:4px 8px;text-align:left">Kategoria</th>
-        <th style="padding:4px 8px;text-align:right">MWh/v</th>
-        <th style="padding:4px 8px;text-align:left">Lisätiedot</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot><tr style="font-weight:600">
-        <td colspan="2" style="padding:8px;text-align:right">Yhteensä:</td>
-        <td style="padding:8px;text-align:right;color:var(--accent)">${totalMwh.toLocaleString('fi-FI')} MWh/v</td>
-        <td></td>
-      </tr></tfoot>
-    </table>`;
-
-  // Seasonal bar chart preview
-  const maxF = Math.max(..._SEASONAL_PROFILE);
-  const bars = _SEASONAL_PROFILE.map((f, i) => {
-    const mo = ['T','H','M','H','T','K','H','E','S','L','M','J'][i];
-    const h = Math.round((f / maxF) * 40);
-    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
-      <div style="width:100%;height:${h}px;background:var(--accent);border-radius:2px 2px 0 0;opacity:.85"></div>
-      <div style="font-size:9px;color:var(--text2)">${mo}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('guided-seasonal-preview').innerHTML = bars;
-
-  _showGuidedStep(3);
-}
-
-function guidedBack2() { _showGuidedStep(2); }
-
-function commitGuidedImport() {
-  const valid = _guidedRows.filter(r => parseFloat(r.mwh) > 0);
-  if (!valid.length) return;
-
-  // Select company in UI
   const sel = document.getElementById('company-selector');
-  if (_guidedCompanyId && sel.querySelector(`option[value="${_guidedCompanyId}"]`)) {
-    sel.value = _guidedCompanyId;
-    selectCompany(_guidedCompanyId);
+  if (GW_companyId && sel?.querySelector(`option[value="${GW_companyId}"]`)) {
+    sel.value = GW_companyId;
+    selectCompany(GW_companyId);
   }
 
-  // Open data entry modal
   openDataEntry();
 
-  // Remove default empty row if present
   if (_annualRows.length === 1 && _annualRows[0].months.every(v => v === 0) && !_annualRows[0].tag_name) {
     _annualRows = [];
   }
 
-  // Add rows with seasonal distribution
-  valid.forEach(r => {
-    const total = parseFloat(r.mwh);
-    const months = _SEASONAL_PROFILE.map(f => parseFloat((total * f / _SEASONAL_SUM).toFixed(2)));
-    const tag = r.tag_name + (r.details ? ' – ' + r.details : '');
-    _annualRows.push({ id: ++_annualRowId, energy_type: r.energy_type, tag_name: tag, months });
+  entries.forEach(e => {
+    const profile = GW_SEASONAL_PROFILES[e.season];
+    const psum = profile.reduce((a, b) => a + b, 0);
+    const months = profile.map(f => parseFloat((e.kwh * f / psum).toFixed(2)));
+    _annualRows.push({ id: ++_annualRowId, energy_type: e.energy_type, tag_name: e.tag_name, months });
   });
-
-  // Set year
-  const yrEl = document.getElementById('entry-year');
-  if (yrEl) yrEl.value = _guidedYear;
 
   renderAnnualTable();
   closeGuidedImport();
-  showToast('Kulutustiedot lisätty taulukkoon. Tarkista ja tallenna.');
+  showToast(`${entries.length} kulutuskohde${entries.length > 1 ? 'tta' : ''} lisätty taulukkoon. Tarkista ja tallenna.`);
+}
+
+// ─── ETJ-leads lookup (fetchByLeadCode / company name search) ─────────────────
+async function fetchByLeadCode(context) {
+  const codeEl   = document.getElementById(context + '-lead-code');
+  const statusEl = document.getElementById(context + '-lead-status');
+  const code = (codeEl?.value || '').trim().toUpperCase();
+  if (code.length < 4) { if (statusEl) statusEl.textContent = 'Syötä vähintään 4 merkkiä.'; return; }
+  if (statusEl) statusEl.textContent = 'Haetaan…';
+  try {
+    const { data, error } = await db
+      .from('etj_leads')
+      .select('company_name,y_tunnus,sector,city,contact_name,contact_email,total_kwh,energy_detail')
+      .eq('lead_code', code)
+      .maybeSingle();
+    if (error || !data) { if (statusEl) statusEl.textContent = 'ETJ-koodia ei löydy.'; return; }
+    _fillLeadData(context, data);
+    if (statusEl) statusEl.innerHTML = `<span style="color:var(--accent)">✓ Tiedot haettu: ${data.company_name}</span>`;
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Virhe: ' + e.message;
+  }
+}
+
+function _fillLeadData(context, data) {
+  const formId = context === 'detail' ? 'company-detail-fields' : 'addco-fields';
+  if (context === 'detail' && !_companyEditMode) {
+    _companyEditMode = true;
+    document.getElementById('company-edit-btn').textContent = 'Peruuta muokkaus';
+    document.getElementById('company-save-row').style.display = 'flex';
+    const c = companies.find(x => x.id === _editingCompanyId);
+    buildCompanyForm(formId, companyToFormData(c || {}), false);
+  }
+  const fd = {
+    cf_name:    data.company_name  || '',
+    cf_ytunnus: data.y_tunnus      || '',
+    cf_sector:  data.sector        || '',
+    cf_city:    data.city          || '',
+    cf_contact: data.contact_name  || '',
+    cf_email:   data.contact_email || '',
+  };
+  Object.entries(fd).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el && val) el.value = val;
+  });
+}
+
+let _leadNameTimeout = null;
+async function leadNameSearch(context, query) {
+  const dropEl = document.getElementById(context + '-lead-drop');
+  if (!dropEl) return;
+  if (query.length < 2) { dropEl.style.display = 'none'; return; }
+  clearTimeout(_leadNameTimeout);
+  _leadNameTimeout = setTimeout(async () => {
+    try {
+      const { data } = await db
+        .from('etj_leads')
+        .select('lead_code,company_name,city')
+        .ilike('company_name', `%${query}%`)
+        .limit(8);
+      if (!data?.length) { dropEl.style.display = 'none'; return; }
+      dropEl.innerHTML = data.map(r => `
+        <div onclick="_selectLeadResult('${context}','${r.lead_code}')"
+          style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s"
+          onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${r.company_name}</div>
+          <div style="font-size:11px;color:var(--text2)">${r.city || ''} · ${r.lead_code}</div>
+        </div>`).join('');
+      dropEl.style.display = 'block';
+    } catch(e) { dropEl.style.display = 'none'; }
+  }, 250);
+}
+
+function hideleadDrop(context) {
+  const el = document.getElementById(context + '-lead-drop');
+  if (el) el.style.display = 'none';
+}
+
+async function _selectLeadResult(context, code) {
+  hideleadDrop(context);
+  const codeEl = document.getElementById(context + '-lead-code');
+  if (codeEl) codeEl.value = code;
+  const nameEl = document.getElementById(context + '-lead-name');
+  if (nameEl) nameEl.value = '';
+  await fetchByLeadCode(context);
 }
 
 // ─── YTJ / PRH open data v3 ──────────────────────────────────────────────────
