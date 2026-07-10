@@ -279,6 +279,42 @@
     .faq-icon.open { transform: rotate(45deg); color: var(--navy); }
 
     /* ── Responsive ── */
+    /* ── Mobile burger ── */
+    #hj-burger {
+      display:none;background:none;border:1.5px solid rgba(255,255,255,.35);
+      border-radius:8px;width:38px;height:38px;cursor:pointer;
+      font-size:22px;line-height:1;color:#fff;
+      align-items:center;justify-content:center;flex-shrink:0;
+      margin-left:auto;padding:0;transition:border-color .2s;
+    }
+    #hj-burger:hover { border-color:var(--accent); color:var(--accent); }
+    #hj-drawer {
+      display:none;position:fixed;top:60px;left:0;right:0;bottom:0;
+      background:var(--navy);border-top:2px solid var(--accent);
+      z-index:190;overflow-y:auto;overflow-x:hidden;max-width:100vw;
+    }
+    #hj-drawer.open { display:block; }
+    .hjd-label {
+      font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+      color:rgba(255,255,255,.35);padding:16px 22px 6px;
+    }
+    .hjd-link {
+      display:flex;align-items:center;padding:13px 22px;
+      font-size:15px;font-weight:500;color:rgba(255,255,255,.7);
+      text-decoration:none;transition:color .15s,background .15s;
+      border-left:3px solid transparent;
+    }
+    .hjd-link:hover { color:#fff;background:rgba(255,255,255,.05);border-left-color:var(--accent);text-decoration:none; }
+    .hjd-link.sm { font-size:13px;color:rgba(255,255,255,.5);padding:10px 22px; }
+    .hjd-link.sm:hover { color:rgba(255,255,255,.85); }
+    .hjd-div { height:1px;background:rgba(255,255,255,.1);margin:6px 22px; }
+    .hjd-cta {
+      display:block;margin:16px 22px 28px;background:var(--accent);color:#080F1C;
+      border-radius:8px;padding:13px 22px;font-size:15px;font-weight:800;
+      text-align:center;text-decoration:none;transition:background .2s;
+    }
+    .hjd-cta:hover { background:#1fd468;text-decoration:none; }
+
     @media (max-width: 768px) {
       .sidebar { display: none; }
       .mobile-nav { display: flex; position: fixed; top: 60px; left: 0; right: 0; z-index: 150; }
@@ -286,6 +322,8 @@
       .main-content { margin-left: 0; padding: 24px 20px 60px; }
       .site-footer { margin-left: 0; padding: 16px 20px; }
       .doc-section { scroll-margin-top: 120px; }
+      #hj-burger { display:flex; }
+      .header-right { display:none; }
     }
 
     /* ── Print ── */
@@ -318,7 +356,29 @@
     <a href="etj-tilaussopimus.html">Sopimus</a>
     <a href="etj-plus.html" class="btn-sm" style="background:#2CE879;color:#1B2D4E;border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;">Kirjaudu palveluun</a>
   </div>
+  <button id="hj-burger" type="button" onclick="toggleHjMenu()" aria-label="Valikko" aria-expanded="false">☰</button>
 </header>
+
+<!-- Mobile burger drawer -->
+<div id="hj-drawer" role="navigation">
+  <div class="hjd-label">Käyttöohjeen osiot</div>
+  <a href="#johdanto"     class="hjd-link sm" onclick="closeHjMenu()">Johdanto &amp; kirjautuminen</a>
+  <a href="#roolit"       class="hjd-link sm" onclick="closeHjMenu()">Käyttäjäroolit</a>
+  <a href="#yhteenveto"   class="hjd-link sm" onclick="closeHjMenu()">Yhteenveto-välilehti</a>
+  <a href="#kulutus"      class="hjd-link sm" onclick="closeHjMenu()">Kulutus-välilehti</a>
+  <a href="#tunnusluvut"  class="hjd-link sm" onclick="closeHjMenu()">Tunnusluvut</a>
+  <a href="#toimenpiteet" class="hjd-link sm" onclick="closeHjMenu()">Toimenpiteet</a>
+  <a href="#raportit"     class="hjd-link sm" onclick="closeHjMenu()">Raportit</a>
+  <a href="#hallinta"     class="hjd-link sm" onclick="closeHjMenu()">Hallinta</a>
+  <a href="#integraatiot" class="hjd-link sm" onclick="closeHjMenu()">Integraatiot</a>
+  <a href="#ukk"          class="hjd-link sm" onclick="closeHjMenu()">UKK</a>
+  <div class="hjd-div"></div>
+  <div class="hjd-label">Palvelu</div>
+  <a href="etj-palvelukuvaus.html"  class="hjd-link">Palvelukuvaus</a>
+  <a href="etj-tilaussopimus.html"  class="hjd-link">Tilaussopimus</a>
+  <a href="etj-testi.html"          class="hjd-link">⚡ ETJ-testi</a>
+  <a href="etj-plus.html" class="hjd-cta">Kirjaudu palveluun →</a>
+</div>
 
 <!-- ── Mobile nav ── -->
 <nav class="mobile-nav">
@@ -899,5 +959,23 @@
   sections.forEach(s => observer.observe(s));
 </script>
 
+<script>
+function toggleHjMenu() {
+  document.getElementById('hj-drawer').classList.contains('open') ? closeHjMenu() : openHjMenu();
+}
+function openHjMenu() {
+  document.getElementById('hj-drawer').classList.add('open');
+  const btn = document.getElementById('hj-burger');
+  btn.textContent='✕'; btn.setAttribute('aria-expanded','true');
+  document.body.style.overflow='hidden';
+}
+function closeHjMenu() {
+  document.getElementById('hj-drawer').classList.remove('open');
+  const btn = document.getElementById('hj-burger');
+  btn.textContent='☰'; btn.setAttribute('aria-expanded','false');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeHjMenu(); });
+</script>
 </body>
 </html>
