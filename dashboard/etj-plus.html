@@ -1914,24 +1914,31 @@ function showUserInfo() {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Data loading (Supabase → fallback demo)
-// Only leaves demo mode when BOTH company rows AND consumption data exist;
-// otherwise stays entirely in demo mode so DEMO_MONTHLY ids always match.
+// Real authenticated users (non-demo-* id) never fall to demo mode —
+// they see empty state instead. Demo personas always use demo data.
 // ═══════════════════════════════════════════════════════════════════════════
 async function loadData() {
-  try {
-    const { data: cos, error: ce } = await db.from('etj_companies').select('*').limit(100);
-    if (ce || !cos || cos.length === 0) throw new Error('no companies');
+  const isRealUser = currentUser && !String(currentUser.id).startsWith('demo-');
 
-    const { data: ac, error: ae } = await db
-      .from('etj_annual_consumption')
-      .select('company_id,year,total_mwh,floor_area_m2,employees')
-      .limit(500);
-    if (ae || !ac || ac.length === 0) throw new Error('no consumption data');
-
-    companies = cos;
+  if (isRealUser) {
+    // Real user: exit demo mode regardless of how much data exists.
+    // Empty companies/consumption = empty UI, not fake data.
     DEMO_MODE = false;
-    _buildMonthlyFromAnnuals(cos, ac);
-  } catch {
+    try {
+      const { data: cos } = await db.from('etj_companies').select('*').limit(100);
+      companies = cos || [];
+      if (companies.length > 0) {
+        const { data: ac } = await db
+          .from('etj_annual_consumption')
+          .select('company_id,year,total_mwh,floor_area_m2,employees')
+          .limit(500);
+        if (ac && ac.length > 0) _buildMonthlyFromAnnuals(companies, ac);
+      }
+    } catch {
+      companies = [];
+    }
+  } else {
+    // Demo persona — always use demo data
     companies = [...DEMO_COMPANIES, ...DEMO_CHILD_COMPANIES];
     DEMO_MODE = true;
   }
