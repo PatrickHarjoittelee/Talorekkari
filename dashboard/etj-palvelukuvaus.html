@@ -256,9 +256,49 @@
     .footer-links a { color:rgba(255,255,255,.5); text-decoration:none; transition:color .2s; }
     .footer-links a:hover { color:var(--green); }
 
+    /* ── Mobile burger ── */
+    #site-burger {
+      display:none; background:none; border:1.5px solid rgba(255,255,255,.35);
+      border-radius:8px; width:40px; height:40px; cursor:pointer;
+      font-size:22px; line-height:1; color:#fff;
+      align-items:center; justify-content:center; flex-shrink:0;
+      margin-left:auto; padding:0; transition:border-color .2s;
+    }
+    #site-burger:hover { border-color:var(--green); color:var(--green); }
+    #site-drawer {
+      display:none; position:fixed; top:68px; left:0; right:0; bottom:0;
+      background:var(--navy); z-index:99; overflow-y:auto;
+      border-top:2px solid var(--green);
+    }
+    #site-drawer.open { display:block; }
+    .sd-section { padding:10px 0; }
+    .sd-label {
+      font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
+      color:rgba(255,255,255,.35); padding:16px 24px 6px;
+    }
+    .sd-link {
+      display:flex; align-items:center; padding:14px 24px;
+      font-size:16px; font-weight:500; color:rgba(255,255,255,.75);
+      text-decoration:none; transition:color .15s,background .15s;
+      border-left:3px solid transparent;
+    }
+    .sd-link:hover { color:#fff; background:rgba(255,255,255,.05); text-decoration:none; border-left-color:var(--green); }
+    .sd-link.sd-anchor { color:rgba(255,255,255,.55); font-size:14px; }
+    .sd-link.sd-anchor:hover { color:rgba(255,255,255,.9); }
+    .sd-divider { height:1px; background:rgba(255,255,255,.1); margin:8px 24px; }
+    .sd-cta {
+      display:block; margin:20px 24px 28px;
+      background:var(--green); color:var(--navy);
+      border-radius:8px; padding:14px 24px;
+      font-size:15px; font-weight:800; text-align:center;
+      text-decoration:none; transition:background .2s;
+    }
+    .sd-cta:hover { background:var(--green2); color:#fff; text-decoration:none; }
+
     /* Responsive */
     @media(max-width:768px) {
       .site-header { padding:0 16px; }
+      #site-burger { display:flex; }
       .header-nav { display:none; }
       .container { padding:0 20px; }
       section { padding:48px 0; }
@@ -307,7 +347,27 @@
     <a href="etj-kayttohje.html">Käyttöohje</a>
     <a href="etj-plus.html" class="btn-nav">Kirjaudu palveluun</a>
   </nav>
+  <button id="site-burger" type="button" onclick="toggleSiteMenu()" aria-label="Valikko" aria-expanded="false">☰</button>
 </header>
+
+<!-- Mobile nav drawer -->
+<div id="site-drawer" role="navigation" aria-label="Sivuvalikko">
+  <div class="sd-section">
+    <div class="sd-label">Sivun sisältö</div>
+    <a href="#kenelle"  class="sd-link sd-anchor" onclick="closeSiteMenu()">Kenelle ETJ+ on tarkoitettu</a>
+    <a href="#velvoite" class="sd-link sd-anchor" onclick="closeSiteMenu()">Lain velvoitteet &amp; deadlinet</a>
+    <a href="#palvelu"  class="sd-link sd-anchor" onclick="closeSiteMenu()">Palvelun osat</a>
+    <a href="#alkuun"   class="sd-link sd-anchor" onclick="closeSiteMenu()">Miten pääsen alkuun</a>
+  </div>
+  <div class="sd-divider"></div>
+  <div class="sd-section">
+    <div class="sd-label">Palvelu</div>
+    <a href="etj-kayttohje.html"    class="sd-link">Käyttöohje</a>
+    <a href="etj-tilaussopimus.html" class="sd-link">Tilaussopimus</a>
+    <a href="etj-testi.html"         class="sd-link">⚡ ETJ-testi — selvitä velvollisuutesi</a>
+  </div>
+  <a href="etj-plus.html" class="sd-cta">Kirjaudu palveluun →</a>
+</div>
 
 <!-- Hero -->
 <section class="hero">
@@ -579,5 +639,23 @@
   </nav>
 </footer>
 
+<script>
+function toggleSiteMenu() {
+  document.getElementById('site-drawer').classList.contains('open') ? closeSiteMenu() : openSiteMenu();
+}
+function openSiteMenu() {
+  document.getElementById('site-drawer').classList.add('open');
+  const btn = document.getElementById('site-burger');
+  btn.textContent = '✕'; btn.setAttribute('aria-expanded','true');
+  document.body.style.overflow = 'hidden';
+}
+function closeSiteMenu() {
+  document.getElementById('site-drawer').classList.remove('open');
+  const btn = document.getElementById('site-burger');
+  btn.textContent = '☰'; btn.setAttribute('aria-expanded','false');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeSiteMenu(); });
+</script>
 </body>
 </html>
