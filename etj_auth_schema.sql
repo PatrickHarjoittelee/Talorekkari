@@ -61,17 +61,26 @@ ALTER TABLE etj_sites               ENABLE ROW LEVEL SECURITY;
 -- Apufunktio: voiko kirjautunut käyttäjä nähdä yrityksen cid?
 -- Security Definer → funktio näkee kaiken vaikka kutsuva context ei saisi
 -- =============================================================================
+-- Apufunktio admin-tarkistukseen — SECURITY DEFINER katkaisee
+-- etj_user_profiles-rekursion kun sitä käytetään saman taulun policyssa.
+CREATE OR REPLACE FUNCTION etj_is_admin()
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM etj_user_profiles
+    WHERE id = auth.uid() AND role = 'spara_admin'
+  );
+$$;
+
 CREATE OR REPLACE FUNCTION etj_can_access_company(cid uuid)
 RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = public
 AS $$
   SELECT
-    -- Spara-Admin näkee kaiken
-    EXISTS (
-      SELECT 1 FROM etj_user_profiles
-      WHERE id = auth.uid() AND role = 'spara_admin'
-    )
+    etj_is_admin()
     OR
     -- Kunta näkee kaupunkiinsa sidotut yritykset
     EXISTS (
@@ -182,25 +191,20 @@ CREATE POLICY "admin_hierarchy_write" ON etj_company_hierarchy
 
 -- etj_user_company_access (admin hallinnoi, käyttäjä lukee omansa)
 CREATE POLICY "own_access_select" ON etj_user_company_access
-  FOR SELECT USING (
-    user_id = auth.uid()
-    OR EXISTS (SELECT 1 FROM etj_user_profiles WHERE id = auth.uid() AND role = 'spara_admin')
-  );
+  FOR SELECT USING (user_id = auth.uid() OR etj_is_admin());
 CREATE POLICY "admin_access_write" ON etj_user_company_access
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM etj_user_profiles WHERE id = auth.uid() AND role = 'spara_admin')
-  );
+  FOR ALL USING (etj_is_admin());
 
--- etj_user_profiles (käyttäjä lukee omansa, admin kaiken)
+-- etj_user_profiles — käyttää etj_is_admin() rekursion välttämiseksi
 CREATE POLICY "own_profile_select" ON etj_user_profiles
-  FOR SELECT USING (
-    id = auth.uid()
-    OR EXISTS (SELECT 1 FROM etj_user_profiles WHERE id = auth.uid() AND role = 'spara_admin')
-  );
-CREATE POLICY "admin_profile_all" ON etj_user_profiles
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM etj_user_profiles WHERE id = auth.uid() AND role = 'spara_admin')
-  );
+  FOR SELECT USING (id = auth.uid() OR etj_is_admin());
+CREATE POLICY "own_profile_update" ON etj_user_profiles
+  FOR UPDATE USING (id = auth.uid() OR etj_is_admin())
+  WITH CHECK (id = auth.uid() OR etj_is_admin());
+CREATE POLICY "admin_profile_insert" ON etj_user_profiles
+  FOR INSERT WITH CHECK (etj_is_admin() OR id = auth.uid());
+CREATE POLICY "admin_profile_delete" ON etj_user_profiles
+  FOR DELETE USING (etj_is_admin());
 
 -- =============================================================================
 -- View: yritysrakenne hierarkialla
