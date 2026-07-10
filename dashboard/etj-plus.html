@@ -1036,7 +1036,7 @@
       <div id="detail-ytj-dropdown" class="ytj-dropdown" style="display:none"></div>
       <div style="display:flex;gap:8px;margin-top:6px">
         <input type="text" id="detail-lead-code" placeholder="ETJ-koodi (6 merkkiä)" maxlength="10"
-          oninput="this.value=this.value.toUpperCase()"
+          oninput="this.value=this.value.toUpperCase();leadCodeSearch('detail',this.value)"
           onkeydown="if(event.key==='Enter')fetchByLeadCode('detail')"
           style="flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;letter-spacing:.08em">
         <button class="btn btn-secondary btn-sm" onclick="fetchByLeadCode('detail')" style="white-space:nowrap">Hae koodilla</button>
@@ -1947,6 +1947,28 @@ async function handleAuthUser(user) {
   // Authenticated customer with no company data → prompt onboarding
   if (DEMO_MODE && !user.id.startsWith('demo-') && currentProfile.role !== 'spara_admin') {
     showOnboardingBanner();
+  }
+  // Handle ?code= URL parameter — auto-open add-company modal with lead code prefilled
+  handleCodeParam();
+}
+
+function handleCodeParam() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (!code) return;
+  // Remove the parameter from URL so refresh doesn't re-trigger
+  const clean = window.location.pathname + window.location.hash;
+  window.history.replaceState({}, '', clean);
+  // Only admins can add companies; others see a toast with the code
+  if (currentProfile?.role !== 'spara_admin') {
+    showToast(`ETJ-aktivointikoodi: ${code.toUpperCase()} — ota yhteyttä ylläpitoon tunnusten aktivoimiseksi.`);
+    return;
+  }
+  openAddCompany();
+  const codeEl = document.getElementById('addco-lead-code');
+  if (codeEl) {
+    codeEl.value = code.toUpperCase();
+    fetchByLeadCode('addco');
   }
 }
 
@@ -3954,6 +3976,12 @@ function gwCommit() {
 }
 
 // ─── ETJ-leads lookup (fetchByLeadCode / company name search) ─────────────────
+// Uses direct REST fetch with anon key to bypass RLS that blocks authenticated-user reads
+function leadCodeSearch(context, val) {
+  // Auto-trigger lookup when full 6-char code is typed
+  if (val.length >= 6) fetchByLeadCode(context);
+}
+
 async function fetchByLeadCode(context) {
   const codeEl   = document.getElementById(context + '-lead-code');
   const statusEl = document.getElementById(context + '-lead-status');
@@ -3961,12 +3989,13 @@ async function fetchByLeadCode(context) {
   if (code.length < 4) { if (statusEl) statusEl.textContent = 'Syötä vähintään 4 merkkiä.'; return; }
   if (statusEl) statusEl.textContent = 'Haetaan…';
   try {
-    const { data, error } = await db
-      .from('etj_leads')
-      .select('company_name,y_tunnus,sector,city,contact_name,contact_email,total_kwh,energy_detail')
-      .eq('lead_code', code)
-      .maybeSingle();
-    if (error || !data) { if (statusEl) statusEl.textContent = 'ETJ-koodia ei löydy.'; return; }
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/etj_leads?lead_code=eq.${encodeURIComponent(code)}&select=company_name,y_tunnus,sector,city,contact_name,contact_email,total_kwh,energy_detail&limit=1`,
+      { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } }
+    );
+    const rows = await res.json();
+    const data = Array.isArray(rows) ? rows[0] : null;
+    if (!data) { if (statusEl) statusEl.textContent = 'ETJ-koodia ei löydy.'; return; }
     _fillLeadData(context, data);
     if (statusEl) statusEl.innerHTML = `<span style="color:var(--accent)">✓ Tiedot haettu: ${data.company_name}</span>`;
   } catch(e) {
@@ -4005,18 +4034,18 @@ async function leadNameSearch(context, query) {
   clearTimeout(_leadNameTimeout);
   _leadNameTimeout = setTimeout(async () => {
     try {
-      const { data } = await db
-        .from('etj_leads')
-        .select('lead_code,company_name,city')
-        .ilike('company_name', `%${query}%`)
-        .limit(8);
-      if (!data?.length) { dropEl.style.display = 'none'; return; }
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/etj_leads?company_name=ilike.%25${encodeURIComponent(query)}%25&select=lead_code,company_name,city&limit=8`,
+        { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } }
+      );
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) { dropEl.style.display = 'none'; return; }
       dropEl.innerHTML = data.map(r => `
-        <div onclick="_selectLeadResult('${context}','${r.lead_code}')"
+        <div onclick="_selectLeadResult('${context}','${r.lead_code || ''}')"
           style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s"
           onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
           <div style="font-size:13px;font-weight:600;color:var(--text)">${r.company_name}</div>
-          <div style="font-size:11px;color:var(--text2)">${r.city || ''} · ${r.lead_code}</div>
+          <div style="font-size:11px;color:var(--text2)">${r.city || ''}${r.lead_code ? ' · ' + r.lead_code : ''}</div>
         </div>`).join('');
       dropEl.style.display = 'block';
     } catch(e) { dropEl.style.display = 'none'; }
