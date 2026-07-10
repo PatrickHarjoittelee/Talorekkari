@@ -197,7 +197,8 @@
     }
     #nav-drawer {
       display:none;position:fixed;top:56px;left:0;right:0;bottom:0;
-      background:var(--bg2);border-top:1px solid var(--border);z-index:190;overflow-y:auto;
+      background:var(--bg2);border-top:1px solid var(--border);z-index:190;
+      overflow-y:auto;overflow-x:hidden;max-width:100vw;
     }
     #nav-drawer.open { display:block; }
     .drawer-tab {
@@ -694,12 +695,12 @@
     <button class="drawer-tab"        type="button" data-tab="hallinta"     id="drawer-hallinta-btn" style="display:none" onclick="goToTab('hallinta');closeBurger()">Hallinta</button>
     <button class="drawer-tab"        type="button" data-tab="asetukset"    id="drawer-asetukset-btn" style="display:none" onclick="goToTab('asetukset');closeBurger()">Asetukset</button>
   </div>
-  <div id="drawer-user" style="display:none;padding:14px 18px;border-top:1px solid var(--border);margin-top:4px;gap:12px;align-items:center;justify-content:space-between">
+  <div id="drawer-user" style="display:none;padding:14px 18px;border-top:1px solid var(--border);margin-top:4px;flex-direction:column;gap:10px">
     <div>
-      <div id="drawer-user-name" style="font-size:14px;font-weight:600;color:var(--text)"></div>
-      <span id="drawer-user-role" class="role-badge" style="display:inline-block;margin-top:6px"></span>
+      <div id="drawer-user-name" style="font-size:13px;font-weight:600;color:var(--text)"></div>
+      <span id="drawer-user-role" class="role-badge" style="display:inline-block;margin-top:4px"></span>
     </div>
-    <button class="btn btn-secondary btn-sm" type="button" onclick="doLogout()">Kirjaudu ulos</button>
+    <button class="btn btn-secondary btn-sm" type="button" onclick="doLogout()" style="align-self:flex-start">Kirjaudu ulos</button>
   </div>
 </div>
 
