@@ -977,8 +977,9 @@
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:min(640px,95vw);max-height:90vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <h2 style="font-size:16px" id="company-modal-title">Yrityksen tiedot</h2>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
         <button id="company-edit-btn" class="btn btn-secondary btn-sm" onclick="toggleCompanyEdit()">Muokkaa</button>
+        <button id="company-delete-btn" class="btn btn-sm" onclick="deleteCompany()" style="background:#b91c1c;border:1px solid #b91c1c;color:#fff;display:none">Poista seurannasta</button>
         <button onclick="closeCompanyDetail()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer">✕</button>
       </div>
     </div>
@@ -1000,9 +1001,108 @@
     <div class="detail-grid" id="company-detail-fields">
       <!-- populated by JS -->
     </div>
-    <div style="display:flex;gap:10px;margin-top:4px" id="company-save-row" style="display:none">
+    <!-- User assignment section — shown in edit mode for spara_admin -->
+    <div id="detail-user-section" style="display:none;margin-top:16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+      <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:12px">Käyttäjätunnus yhteyshenkilölle</div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label>Käyttöoikeustaso</label>
+        <select id="detail-user-level" onchange="toggleDetailUserFields()"
+          style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius);font-size:14px;font-family:inherit;outline:none">
+          <option value="">1. Ei käyttöoikeuksia</option>
+          <option value="customer">2. Yrityskäyttäjä</option>
+          <option value="municipality">3. Kaupunki / Kunta</option>
+          <option value="spara_admin">4. Spara-admin</option>
+        </select>
+      </div>
+      <div id="detail-user-pass-wrap" style="display:none">
+        <p style="font-size:12px;color:var(--text2);margin:0 0 10px;line-height:1.5">
+          Jätä salasana tyhjäksi lähettääksesi kutsulinkin sähköpostilla. Aseta salasana jos haluat luoda tunnuksen suoraan.
+        </p>
+        <div class="form-group" style="margin-bottom:8px">
+          <label>Sähköposti (jos eri kuin yllä)</label>
+          <input type="email" id="detail-user-email" placeholder="kayttaja@yritys.fi">
+        </div>
+        <div class="form-group" style="margin-bottom:8px">
+          <label>Salasana (valinnainen)</label>
+          <input type="password" id="detail-user-pass" placeholder="Vähintään 8 merkkiä tai jätä tyhjäksi">
+        </div>
+        <div id="detail-user-status" style="font-size:12px;min-height:16px;margin-top:4px"></div>
+      </div>
+    </div>
+
+    <!-- Guided energy import button — always visible -->
+    <div style="margin-top:16px">
+      <button class="btn btn-secondary" onclick="openGuidedImport()" style="width:100%;justify-content:center;gap:8px">
+        <span style="font-size:14px">⚡</span> Ohjattu kulutustietojen tuonti
+      </button>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:12px" id="company-save-row">
       <button class="btn btn-primary" onclick="saveCompanyDetail()" style="flex:1">Tallenna muutokset</button>
       <button class="btn btn-secondary" onclick="closeCompanyDetail()">Sulje</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- Guided energy import wizard -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="guided-import-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:min(640px,95vw);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h2 style="font-size:16px">Ohjattu kulutustietojen tuonti</h2>
+      <button onclick="closeGuidedImport()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div id="guided-company-label" style="font-size:12px;color:var(--text2);margin-bottom:18px"></div>
+
+    <!-- Step indicator -->
+    <div style="display:flex;gap:0;margin-bottom:24px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
+      <div class="guided-step-tab" id="gstep-1" style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;background:var(--accent);color:#080F1C">1. Energianlähteet</div>
+      <div class="guided-step-tab" id="gstep-2" style="flex:1;padding:8px;text-align:center;font-size:12px;color:var(--text2);border-left:1px solid var(--border)">2. Kulutusluvut</div>
+      <div class="guided-step-tab" id="gstep-3" style="flex:1;padding:8px;text-align:center;font-size:12px;color:var(--text2);border-left:1px solid var(--border)">3. Vahvistus</div>
+    </div>
+
+    <!-- Step 1: Energy type selection -->
+    <div id="guided-step-1">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Valitse energiamuodot, joista yritykselle syntyy kulua tai kulutusta.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px" id="guided-energy-types">
+        <label class="energy-check-label"><input type="checkbox" class="guided-main-cb" value="electricity"> ⚡ Sähkö</label>
+        <label class="energy-check-label"><input type="checkbox" class="guided-main-cb" value="heat"> 🌡️ Kaukolämpö</label>
+        <label class="energy-check-label"><input type="checkbox" class="guided-main-cb" value="gas"> 🔥 Kaasu</label>
+        <label class="energy-check-label"><input type="checkbox" class="guided-main-cb" value="oil"> ⛽ Öljy / Diesel / Polttoaineet</label>
+        <label class="energy-check-label"><input type="checkbox" class="guided-main-cb" value="other"> ♻️ Muu</label>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+        <label style="font-size:13px;white-space:nowrap">Kohdevuosi:</label>
+        <select id="guided-year" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none">
+          <option>2025</option><option>2024</option><option>2023</option><option>2022</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="guidedNext1()" style="width:100%">Seuraava →</button>
+    </div>
+
+    <!-- Step 2: MWh input per type/category -->
+    <div id="guided-step-2" style="display:none">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Syötä vuosikulutus (MWh/v) kullekin energiamuodolle. Voit lisätä useita kategorioita per energiamuoto.</p>
+      <div id="guided-rows-container" style="display:flex;flex-direction:column;gap:16px;margin-bottom:18px"></div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-secondary" onclick="guidedBack1()" style="flex:0 0 auto">← Takaisin</button>
+        <button class="btn btn-primary" onclick="guidedNext2()" style="flex:1">Seuraava →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirmation -->
+    <div id="guided-step-3" style="display:none">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Tarkista tiedot. Kulutus jaetaan kuukausille kausiprofiililla (talvi korkeampi, kesä matalampi).</p>
+      <div id="guided-summary-table" style="margin-bottom:18px"></div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:18px">
+        <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px">KAUSIJAKAUMA (tammikuu → joulukuu)</div>
+        <div id="guided-seasonal-preview" style="display:flex;gap:3px;align-items:flex-end;height:48px"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="guidedBack2()" style="flex:0 0 auto">← Takaisin</button>
+        <button class="btn btn-primary" onclick="commitGuidedImport()" style="flex:1">Tuo tiedot kulutustaulukkoon →</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3363,8 +3463,11 @@ function openCompanyDetail(cId) {
   document.getElementById('detail-ytj-input').value = c.y_tunnus || '';
   document.getElementById('detail-ytj-status').textContent = '';
   document.getElementById('company-edit-btn').textContent = 'Muokkaa';
+  document.getElementById('company-delete-btn').style.display = 'none';
   buildCompanyForm('company-detail-fields', companyToFormData(c), true);
   document.getElementById('company-save-row').style.display = 'none';
+  document.getElementById('detail-user-section').style.display = 'none';
+  document.getElementById('guided-company-label').textContent = c.name;
   document.getElementById('company-modal').style.display = 'flex';
 }
 
@@ -3378,6 +3481,21 @@ function toggleCompanyEdit() {
   buildCompanyForm('company-detail-fields', companyToFormData(c), !_companyEditMode);
   document.getElementById('company-edit-btn').textContent = _companyEditMode ? 'Peruuta muokkaus' : 'Muokkaa';
   document.getElementById('company-save-row').style.display = _companyEditMode ? 'flex' : 'none';
+  document.getElementById('company-delete-btn').style.display = _companyEditMode ? '' : 'none';
+  const isAdmin = currentProfile?.role === 'spara_admin';
+  const userSec = document.getElementById('detail-user-section');
+  userSec.style.display = (_companyEditMode && isAdmin) ? '' : 'none';
+  if (!_companyEditMode) {
+    document.getElementById('detail-user-level').value = '';
+    document.getElementById('detail-user-pass-wrap').style.display = 'none';
+    document.getElementById('detail-user-status').textContent = '';
+  }
+}
+
+function toggleDetailUserFields() {
+  const level = document.getElementById('detail-user-level').value;
+  document.getElementById('detail-user-pass-wrap').style.display = level ? '' : 'none';
+  if (!level) document.getElementById('detail-user-status').textContent = '';
 }
 
 function saveCompanyDetail() {
@@ -3401,13 +3519,240 @@ function saveCompanyDetail() {
       if (error) showToast('Tallennus epäonnistui: ' + error.message);
     });
   }
+
+  // Create/invite user if level was chosen
+  const userLevel = document.getElementById('detail-user-level')?.value || '';
+  const userPass  = document.getElementById('detail-user-pass')?.value  || '';
+  const userEmail = (document.getElementById('detail-user-email')?.value || c.contact_email || '').trim();
+  if (userLevel && userEmail) {
+    createUserAndLink(c.id, userEmail, c.contact_name || userEmail, userLevel, userPass);
+  }
+
   _companyEditMode = false;
   document.getElementById('company-modal-title').textContent = c.name;
   document.getElementById('company-edit-btn').textContent = 'Muokkaa';
+  document.getElementById('company-delete-btn').style.display = 'none';
+  document.getElementById('detail-user-section').style.display = 'none';
   buildCompanyForm('company-detail-fields', companyToFormData(c), true);
   document.getElementById('company-save-row').style.display = 'none';
   renderComplianceTab(); updateSummaryBar();
   showToast('Yrityksen tiedot tallennettu.');
+}
+
+async function deleteCompany() {
+  const c = companies.find(x => x.id === _editingCompanyId);
+  if (!c) return;
+  if (!confirm(`Poistetaanko "${c.name}" seurannasta?\n\nKaikki yrityksen kulutusdata ja tiedot poistetaan pysyvästi.`)) return;
+
+  if (!DEMO_MODE) {
+    const { error } = await db.from('etj_companies').delete().eq('id', c.id);
+    if (error) { showToast('Poisto epäonnistui: ' + error.message); return; }
+  }
+
+  companies = companies.filter(x => x.id !== c.id);
+  delete DEMO_MONTHLY[c.id];
+  if (activeCompanyId === c.id) selectCompany(null);
+  closeCompanyDetail();
+  const sel = document.getElementById('company-selector');
+  sel.innerHTML = '<option value="">Kaikki yritykset</option>';
+  initCompanySelector();
+  renderComplianceTab(); updateSummaryBar(); renderKpiSummary();
+  showToast(`"${c.name}" poistettu seurannasta.`);
+}
+
+// ─── Guided energy import wizard ─────────────────────────────────────────────
+let _guidedRows = []; // { energy_type, tag_name, mwh, details }
+let _guidedYear = 2025;
+let _guidedCompanyId = null;
+
+function openGuidedImport() {
+  _guidedCompanyId = _editingCompanyId || activeCompanyId || companies[0]?.id;
+  const c = companies.find(x => x.id === _guidedCompanyId);
+  document.getElementById('guided-company-label').textContent = c ? c.name : '';
+  // Reset to step 1
+  document.querySelectorAll('.guided-main-cb').forEach(cb => { cb.checked = false; });
+  const yr = new Date().getFullYear();
+  const yrSel = document.getElementById('guided-year');
+  for (let i = 0; i < yrSel.options.length; i++) {
+    if (+yrSel.options[i].value === yr - 1) { yrSel.selectedIndex = i; break; }
+  }
+  _guidedRows = [];
+  _showGuidedStep(1);
+  document.getElementById('guided-import-modal').style.display = 'flex';
+}
+
+function closeGuidedImport() {
+  document.getElementById('guided-import-modal').style.display = 'none';
+}
+
+function _showGuidedStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('guided-step-' + i).style.display = i === n ? '' : 'none';
+    const tab = document.getElementById('gstep-' + i);
+    tab.style.background = i === n ? 'var(--accent)' : 'transparent';
+    tab.style.color = i === n ? '#080F1C' : 'var(--text2)';
+    tab.style.fontWeight = i === n ? '600' : '400';
+  });
+}
+
+function guidedNext1() {
+  const checked = [...document.querySelectorAll('.guided-main-cb:checked')].map(cb => cb.value);
+  if (!checked.length) { showToast('Valitse vähintään yksi energiamuoto.'); return; }
+  _guidedYear = +document.getElementById('guided-year').value;
+
+  // Build initial rows from checked types with default subcats
+  _guidedRows = [];
+  checked.forEach(type => {
+    const cats = ENERGY_SUBCATS[type] || [''];
+    cats.forEach(cat => {
+      _guidedRows.push({ energy_type: type, tag_name: cat, mwh: '', details: '' });
+    });
+  });
+
+  _renderGuidedRows();
+  _showGuidedStep(2);
+}
+
+function guidedBack1() { _showGuidedStep(1); }
+
+function _renderGuidedRows() {
+  const container = document.getElementById('guided-rows-container');
+  const byType = {};
+  _guidedRows.forEach((r, i) => {
+    (byType[r.energy_type] = byType[r.energy_type] || []).push({ r, i });
+  });
+
+  container.innerHTML = Object.entries(byType).map(([type, items]) => {
+    const icon  = ENERGY_ICONS[type] || '';
+    const label = ENERGY_LABELS_UI[type] || type;
+    const needsDetails = type === 'oil';
+    const rows = items.map(({ r, i }) => `
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:6px">
+        <div>
+          <label style="font-size:11px;color:var(--text2)">Kategoria</label>
+          <input type="text" value="${r.tag_name.replace(/"/g,'&quot;')}" placeholder="Kategoria…"
+            oninput="_updateGuidedRow(${i},'tag_name',this.value)"
+            style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text2)">Kulutus MWh/v</label>
+          <input type="number" min="0" step="0.1" value="${r.mwh}" placeholder="0"
+            oninput="_updateGuidedRow(${i},'mwh',this.value)"
+            style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none">
+        </div>
+        <button onclick="_removeGuidedRow(${i})" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:var(--radius);padding:9px 10px;cursor:pointer;line-height:1">✕</button>
+      </div>
+      ${needsDetails ? `<div style="margin-bottom:10px">
+        <label style="font-size:11px;color:var(--text2)">Ajoneuvot / koneet / tarkempi kuvaus</label>
+        <input type="text" value="${(r.details||'').replace(/"/g,'&quot;')}" placeholder="esim. 3 dieselkuorma-autoa, 1 pyöräkuormaaja"
+          oninput="_updateGuidedRow(${i},'details',this.value)"
+          style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none">
+      </div>` : ''}
+    `).join('');
+
+    return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">${icon} ${label}</div>
+        <button onclick="_addGuidedRow('${type}')" class="btn btn-secondary btn-sm">+ Lisää rivi</button>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+function _updateGuidedRow(i, field, val) { if (_guidedRows[i]) _guidedRows[i][field] = val; }
+function _removeGuidedRow(i) { _guidedRows.splice(i, 1); _renderGuidedRows(); }
+function _addGuidedRow(type) { _guidedRows.push({ energy_type: type, tag_name: '', mwh: '', details: '' }); _renderGuidedRows(); }
+
+function guidedNext2() {
+  const valid = _guidedRows.filter(r => parseFloat(r.mwh) > 0);
+  if (!valid.length) { showToast('Syötä vähintään yksi kulutusarvo (MWh/v).'); return; }
+
+  // Build summary table
+  const totalMwh = valid.reduce((s, r) => s + parseFloat(r.mwh), 0);
+  const byType = {};
+  valid.forEach(r => { (byType[r.energy_type] = byType[r.energy_type] || []).push(r); });
+
+  const rows = Object.entries(byType).map(([type, items]) => {
+    const icon = ENERGY_ICONS[type] || '';
+    const label = ENERGY_LABELS_UI[type] || type;
+    return items.map(r => `
+      <tr>
+        <td style="padding:6px 8px;border-bottom:1px solid var(--border)">${icon} ${label}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text2)">${r.tag_name || '–'}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-variant-numeric:tabular-nums">${parseFloat(r.mwh).toLocaleString('fi-FI')} MWh/v</td>
+        ${r.details ? `<td style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text2)">${r.details}</td>` : '<td></td>'}
+      </tr>
+    `).join('');
+  }).join('');
+
+  document.getElementById('guided-summary-table').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="font-size:11px;color:var(--text2);text-transform:uppercase">
+        <th style="padding:4px 8px;text-align:left">Tyyppi</th>
+        <th style="padding:4px 8px;text-align:left">Kategoria</th>
+        <th style="padding:4px 8px;text-align:right">MWh/v</th>
+        <th style="padding:4px 8px;text-align:left">Lisätiedot</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr style="font-weight:600">
+        <td colspan="2" style="padding:8px;text-align:right">Yhteensä:</td>
+        <td style="padding:8px;text-align:right;color:var(--accent)">${totalMwh.toLocaleString('fi-FI')} MWh/v</td>
+        <td></td>
+      </tr></tfoot>
+    </table>`;
+
+  // Seasonal bar chart preview
+  const maxF = Math.max(..._SEASONAL_PROFILE);
+  const bars = _SEASONAL_PROFILE.map((f, i) => {
+    const mo = ['T','H','M','H','T','K','H','E','S','L','M','J'][i];
+    const h = Math.round((f / maxF) * 40);
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div style="width:100%;height:${h}px;background:var(--accent);border-radius:2px 2px 0 0;opacity:.85"></div>
+      <div style="font-size:9px;color:var(--text2)">${mo}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('guided-seasonal-preview').innerHTML = bars;
+
+  _showGuidedStep(3);
+}
+
+function guidedBack2() { _showGuidedStep(2); }
+
+function commitGuidedImport() {
+  const valid = _guidedRows.filter(r => parseFloat(r.mwh) > 0);
+  if (!valid.length) return;
+
+  // Select company in UI
+  const sel = document.getElementById('company-selector');
+  if (_guidedCompanyId && sel.querySelector(`option[value="${_guidedCompanyId}"]`)) {
+    sel.value = _guidedCompanyId;
+    selectCompany(_guidedCompanyId);
+  }
+
+  // Open data entry modal
+  openDataEntry();
+
+  // Remove default empty row if present
+  if (_annualRows.length === 1 && _annualRows[0].months.every(v => v === 0) && !_annualRows[0].tag_name) {
+    _annualRows = [];
+  }
+
+  // Add rows with seasonal distribution
+  valid.forEach(r => {
+    const total = parseFloat(r.mwh);
+    const months = _SEASONAL_PROFILE.map(f => parseFloat((total * f / _SEASONAL_SUM).toFixed(2)));
+    const tag = r.tag_name + (r.details ? ' – ' + r.details : '');
+    _annualRows.push({ id: ++_annualRowId, energy_type: r.energy_type, tag_name: tag, months });
+  });
+
+  // Set year
+  const yrEl = document.getElementById('entry-year');
+  if (yrEl) yrEl.value = _guidedYear;
+
+  renderAnnualTable();
+  closeGuidedImport();
+  showToast('Kulutustiedot lisätty taulukkoon. Tarkista ja tallenna.');
 }
 
 // ─── YTJ / PRH open data v3 ──────────────────────────────────────────────────
@@ -3686,15 +4031,15 @@ async function saveNewCompany() {
     id:               'c_' + Date.now(),
     name,
     y_tunnus:          ytunnus || null,
-    sector:            document.getElementById('cf_sector')?.value.trim() || '',
-    company_form:      document.getElementById('cf_companyForm')?.value.trim() || '',
-    address:           document.getElementById('cf_address')?.value.trim() || '',
-    post_code:         document.getElementById('cf_postCode')?.value.trim() || '',
-    city:              document.getElementById('cf_city')?.value.trim() || '',
-    contact_name:      document.getElementById('cf_contact')?.value.trim() || '',
-    contact_email:     document.getElementById('cf_email')?.value.trim() || '',
-    registration_date: document.getElementById('cf_regDate')?.value.trim() || '',
-    notes:             document.getElementById('cf_notes')?.value.trim() || '',
+    sector:            document.getElementById('cf_sector')?.value.trim()      || null,
+    company_form:      document.getElementById('cf_companyForm')?.value.trim() || null,
+    address:           document.getElementById('cf_address')?.value.trim()     || null,
+    post_code:         document.getElementById('cf_postCode')?.value.trim()    || null,
+    city:              document.getElementById('cf_city')?.value.trim()        || null,
+    contact_name:      document.getElementById('cf_contact')?.value.trim()     || null,
+    contact_email:     document.getElementById('cf_email')?.value.trim()       || null,
+    registration_date: document.getElementById('cf_regDate')?.value.trim()     || null,
+    notes:             document.getElementById('cf_notes')?.value.trim()       || null,
     etj_agreement_active: false,
     created_at: new Date().toISOString(),
   };
@@ -4534,9 +4879,11 @@ async function saveProfileSettings() {
 
   if (!DEMO_MODE && currentUser?.id) {
     try {
-      // display_name → etj_user_profiles (has the column)
+      // display_name → etj_user_profiles; use update (not upsert) to avoid
+      // hitting the NOT NULL role constraint when the row already exists.
       const { error: pErr } = await db.from('etj_user_profiles')
-        .upsert({ id: currentUser.id, display_name: name });
+        .update({ display_name: name })
+        .eq('id', currentUser.id);
       if (pErr) throw pErr;
       // phone → auth user_metadata (etj_user_profiles has no phone column)
       if (phone !== (currentUser.user_metadata?.phone ?? '')) {
