@@ -224,11 +224,14 @@
     .mobile-nav {
       display: none;
       overflow-x: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
       gap: 0;
       background: var(--bg2);
       border-bottom: 1px solid var(--border);
       padding: 0 8px;
     }
+    .mobile-nav::-webkit-scrollbar { display: none; }
     .mobile-nav a {
       display: inline-block;
       padding: 10px 14px;
@@ -236,7 +239,7 @@
       text-decoration: none; white-space: nowrap;
       border-bottom: 2px solid transparent;
     }
-    .mobile-nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .mobile-nav a.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
 
     /* ── Footer ── */
     .site-footer {
@@ -1070,17 +1073,27 @@
     icon.classList.toggle('open', open);
   }
 
-  // Highlight active sidebar link on scroll
-  const sections = document.querySelectorAll('.doc-section[id], section[id]');
+  // Highlight active sidebar + mobile nav on scroll; centre active mobile tab
+  const sections  = document.querySelectorAll('.doc-section[id], section[id]');
   const sideLinks = document.querySelectorAll('.sidebar a');
+  const mobileNav = document.querySelector('.mobile-nav');
+  const mobLinks  = document.querySelectorAll('.mobile-nav a');
+
+  function setActive(id) {
+    sideLinks.forEach(l => l.classList.remove('active'));
+    const sl = document.querySelector(`.sidebar a[href="#${id}"]`);
+    if (sl) sl.classList.add('active');
+
+    mobLinks.forEach(l => l.classList.remove('active'));
+    const ml = document.querySelector(`.mobile-nav a[href="#${id}"]`);
+    if (ml && mobileNav) {
+      ml.classList.add('active');
+      mobileNav.scrollLeft = ml.offsetLeft - mobileNav.offsetWidth / 2 + ml.offsetWidth / 2;
+    }
+  }
+
   const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        sideLinks.forEach(l => l.classList.remove('active'));
-        const active = document.querySelector(`.sidebar a[href="#${e.target.id}"]`);
-        if (active) active.classList.add('active');
-      }
-    });
+    entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id); });
   }, { rootMargin: '-20% 0px -70% 0px' });
   sections.forEach(s => observer.observe(s));
 </script>
