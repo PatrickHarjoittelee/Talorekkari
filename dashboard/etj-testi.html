@@ -1399,7 +1399,7 @@ function showResult(r) {
       ${codeBox}
       <div class="cta-stack">
         ${showOrderBtn ? `<a href="${orderUrl}" class="btn-cta btn-cta-ok">Tilaa Spara ETJ+ -palvelu →</a>` : ''}
-        <a href="mailto:etj@sparaenergia.com?subject=ETJ-testi: ${encodeURIComponent(A.company_name)}&body=Yritys: ${encodeURIComponent(A.company_name)}%0ASähköposti: ${encodeURIComponent(A.contact_email)}%0ATulos: ${encodeURIComponent(r.badge)}%0AKulutus: ${encodeURIComponent(cLabel[A.consumption]||'')}${code?`%0AETJ-testikoodi: ${code}`:''}%0A%0AHaluaisin lisätietoja ETJ-palveluistanne."
+        <a href="mailto:myynti@sparaenergia.com?subject=ETJ-testi: ${encodeURIComponent(A.company_name)}&body=Yritys: ${encodeURIComponent(A.company_name)}%0ASähköposti: ${encodeURIComponent(A.contact_email)}%0ATulos: ${encodeURIComponent(r.badge)}%0AKulutus: ${encodeURIComponent(cLabel[A.consumption]||'')}${code?`%0AETJ-testikoodi: ${code}`:''}%0A%0AHaluaisin lisätietoja ETJ-palveluistanne."
            class="btn-cta ${r.ctaCls}">${r.cta}</a>
         <a href="etj-plus.html" class="btn-cta btn-cta-outline">Kirjaudu ETJ+ -palveluun</a>
         <button onclick="restart()" class="btn-cta btn-cta-outline">Tee testi uudelleen</button>
