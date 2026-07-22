@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spara Energia – CRM Prospektit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #1B2A4A;
+      --bg2:     #243558;
+      --bg3:     #2d4068;
+      --bg4:     #364a7a;
+      --accent:  #4CAF50;
+      --accent2: #66BB6A;
+      --text:    #E8EDF5;
+      --text2:   #9BAAC5;
+      --border:  #354d7a;
+      --red:     #ef5350;
+      --orange:  #FFA726;
+      --green:   #4CAF50;
+      --blue:    #42A5F5;
+      --purple:  #AB47BC;
+      --radius:  8px;
+    }
+
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Header ── */
+    header {
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      padding: 0 24px; display: flex; align-items: center; gap: 12px; height: 60px; flex-wrap: wrap;
+    }
+    .logo { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #fff; flex-shrink: 0; }
+    header h1 { font-size: 17px; font-weight: 600; }
+    header h1 span { color: var(--accent); }
+    .back-link { font-size: 12px; color: var(--text2); text-decoration: none; transition: color .2s; }
+    .back-link:hover { color: var(--accent); }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      cursor: pointer; border: none; transition: opacity .15s, background .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost   { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+    .btn-danger  { background: rgba(239,83,80,.2); color: var(--red); border: 1px solid rgba(239,83,80,.35); }
+
+    /* ── Summary bar ── */
+    .summary-bar { display: flex; gap: 12px; flex-wrap: wrap; padding: 16px 24px; background: var(--bg2); border-bottom: 1px solid var(--border); }
+    .card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 20px; flex: 1; min-width: 130px; }
+    .card-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .card-value { font-size: 22px; font-weight: 700; }
+    .card-value.green  { color: var(--green); }
+    .card-value.orange { color: var(--orange); }
+    .card-value.blue   { color: var(--blue); }
+    .card-value.red    { color: var(--red); }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; padding: 0 24px; border-bottom: 1px solid var(--border); background: var(--bg2); overflow-x: auto; }
+    .tab { padding: 14px 20px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text2); border-bottom: 2px solid transparent; transition: color .2s, border-color .2s; white-space: nowrap; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── Main ── */
+    main { padding: 24px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Filters ── */
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+    .toolbar input, .toolbar select {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--text);
+      padding: 8px 12px; font-size: 13px; font-family: inherit; outline: none;
+      transition: border-color .2s;
+    }
+    .toolbar input:focus, .toolbar select:focus { border-color: var(--accent); }
+    .toolbar input { width: 200px; }
+    .toolbar select { min-width: 150px; }
+    .toolbar .spacer { flex: 1; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead tr { background: var(--bg3); border-bottom: 1px solid var(--border); }
+    th {
+      padding: 10px 12px; text-align: left; font-weight: 600; font-size: 11px;
+      color: var(--text2); text-transform: uppercase; letter-spacing: .4px;
+      white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    th:hover { color: var(--text); }
+    th .sa { margin-left: 4px; opacity: .35; }
+    th.sorted .sa { opacity: 1; color: var(--accent); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,.03); cursor: pointer; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block; padding: 2px 9px; border-radius: 12px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .v-Uusi       { background: rgba(66,165,245,.15); color: #64B5F6; }
+    .v-Yhteytetty { background: rgba(255,167,38,.15); color: #FFB74D; }
+    .v-Tapaaminen { background: rgba(171,71,188,.15); color: #CE93D8; }
+    .v-Tarjous    { background: rgba(255,238,88,.15); color: #FFF176; }
+    .v-Sopimus    { background: rgba(76,175,80,.2);  color: #81C784; }
+    .v-Hylätty    { background: rgba(239,83,80,.15); color: #EF9A9A; }
+    .p-Korkea     { background: rgba(239,83,80,.15); color: var(--red); }
+    .p-Normaali   { background: rgba(255,167,38,.1); color: var(--orange); }
+    .p-Matala     { background: rgba(76,175,80,.1);  color: var(--green); }
+
+    /* ── Pagination ── */
+    .pagination { display: flex; align-items: center; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+    .pagination button { background: var(--bg2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius); padding: 6px 14px; cursor: pointer; font-size: 13px; transition: background .2s, border-color .2s; }
+    .pagination button:hover:not(:disabled) { background: var(--bg3); border-color: var(--accent); }
+    .pagination button:disabled { opacity: .35; cursor: default; }
+    .pagination span { font-size: 13px; color: var(--text2); min-width: 120px; text-align: center; }
+
+    /* ── Kanban ── */
+    .kanban { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; }
+    .kanban-col {
+      flex: 0 0 240px; background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); display: flex; flex-direction: column; max-height: calc(100vh - 280px);
+    }
+    .kanban-header {
+      padding: 12px 14px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .kanban-title { font-size: 13px; font-weight: 600; }
+    .kanban-count { font-size: 12px; color: var(--text2); background: var(--bg3); padding: 1px 8px; border-radius: 10px; }
+    .kanban-body { overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .kanban-card {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 10px 12px; cursor: pointer;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .kanban-card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(76,175,80,.1); }
+    .kc-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .kc-meta { font-size: 11px; color: var(--text2); line-height: 1.5; }
+    .kc-prio { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+    .prio-dot-Korkea   { background: var(--red); }
+    .prio-dot-Normaali { background: var(--orange); }
+    .prio-dot-Matala   { background: var(--green); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.65);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; width: 100%; max-width: 640px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header {
+      padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--bg2); z-index: 1;
+    }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .modal-close { background: none; border: none; color: var(--text2); font-size: 20px; cursor: pointer; line-height: 1; padding: 2px 6px; border-radius: 4px; }
+    .modal-close:hover { color: var(--text); background: var(--bg3); }
+    .modal-body { padding: 20px 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── Form ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 12px; color: var(--text2); font-weight: 500; }
+    .form-control {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--text);
+      padding: 8px 12px; font-size: 13px; font-family: inherit;
+      outline: none; transition: border-color .2s; width: 100%;
+    }
+    .form-control:focus { border-color: var(--accent); }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+    .section-divider { grid-column: 1/-1; border-top: 1px solid var(--border); margin: 4px 0; }
+
+    /* ── Activity log ── */
+    .activity-log { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+    .activity-item { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; }
+    .act-meta { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+    .act-text { font-size: 13px; }
+    .add-activity { display: flex; gap: 8px; margin-top: 8px; }
+    .add-activity input { flex: 1; }
+
+    /* ── Import ── */
+    .import-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px; text-align: center; color: var(--text2); font-size: 14px; cursor: pointer; transition: border-color .2s; }
+    .import-area:hover { border-color: var(--accent); color: var(--text); }
+    .import-hint { font-size: 12px; color: var(--text2); margin-top: 8px; }
+    #csv-file { display: none; }
+
+    /* ── Loading / empty ── */
+    .loading { text-align: center; padding: 48px; color: var(--text2); font-size: 14px; }
+    .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty { text-align: center; padding: 40px; color: var(--text2); font-size: 14px; }
+
+    /* ── Toast ── */
+    .toast-wrap { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 2000; pointer-events: none; }
+    .toast { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 18px; font-size: 13px; animation: toastIn .2s ease; pointer-events: auto; }
+    .toast.success { border-color: rgba(76,175,80,.5); color: #81C784; }
+    .toast.error   { border-color: rgba(239,83,80,.5); color: #EF9A9A; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .kanban { flex-direction: column; }
+      .kanban-col { flex: none; max-height: 320px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">S</div>
+  <h1>Spara Energia – <span>CRM Prospektit</span></h1>
+  <a class="back-link" href="index.html">← Kiinteistörekisteri</a>
+  <div class="header-right">
+    <button class="btn btn-primary" onclick="openModal()">+ Uusi prospekti</button>
+  </div>
+</header>
+
+<!-- Summary bar -->
+<div class="summary-bar" id="summary-bar">
+  <div class="card"><div class="card-label">Kaikki prospektit</div><div class="card-value blue" id="s-total">–</div></div>
+  <div class="card"><div class="card-label">Aktiiviset</div><div class="card-value orange" id="s-active">–</div></div>
+  <div class="card"><div class="card-label">Sopimukset</div><div class="card-value green" id="s-sopimus">–</div></div>
+  <div class="card"><div class="card-label">Tämän kk toimenpiteet</div><div class="card-value orange" id="s-toimenpide">–</div></div>
+  <div class="card"><div class="card-label">Konversio %</div><div class="card-value" id="s-konversio">–</div></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-tab="lista">Listanäkymä</div>
+  <div class="tab" data-tab="kanban">Kanban</div>
+  <div class="tab" data-tab="tuo">Tuo CSV</div>
+</div>
+
+<main>
+
+  <!-- ── Tab 1: Lista ── -->
+  <div class="tab-content active" id="tab-lista">
+    <div class="toolbar">
+      <input type="text" id="f-haku" placeholder="Hae nimellä, puhelimella…">
+      <select id="f-vaihe">
+        <option value="">Kaikki vaiheet</option>
+        <option>Uusi</option>
+        <option>Yhteytetty</option>
+        <option>Tapaaminen</option>
+        <option>Tarjous</option>
+        <option>Sopimus</option>
+        <option>Hylätty</option>
+      </select>
+      <select id="f-prioriteetti">
+        <option value="">Kaikki prioriteetit</option>
+        <option>Korkea</option>
+        <option>Normaali</option>
+        <option>Matala</option>
+      </select>
+      <select id="f-lampotapa">
+        <option value="">Kaikki lämmitykset</option>
+        <option>Öljy</option>
+        <option>Sähkö</option>
+        <option>Kaukolämpö</option>
+        <option>Maalämpö</option>
+        <option>Puu</option>
+        <option>Muu</option>
+      </select>
+      <div class="spacer"></div>
+      <span id="result-count" style="font-size:12px;color:var(--text2);"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table id="tbl-lista">
+        <thead>
+          <tr>
+            <th data-col="nimi">Nimi <span class="sa">↕</span></th>
+            <th data-col="puhelin">Puhelin</th>
+            <th data-col="kaupunki">Kaupunki <span class="sa">↕</span></th>
+            <th data-col="lampotapa">Lämmitys <span class="sa">↕</span></th>
+            <th data-col="talo_m2">m² <span class="sa">↕</span></th>
+            <th data-col="vaihe">Vaihe <span class="sa">↕</span></th>
+            <th data-col="prioriteetti">Prioriteetti <span class="sa">↕</span></th>
+            <th data-col="seuraava_pvm">Seuraava <span class="sa">↕</span></th>
+            <th data-col="omistaja">Omistaja</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody-lista">
+          <tr><td colspan="10" class="loading"><div class="spinner"></div><br>Ladataan…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button id="btn-prev" onclick="changePage(-1)">← Edellinen</button>
+      <span id="page-info">Sivu 1</span>
+      <button id="btn-next" onclick="changePage(1)">Seuraava →</button>
+    </div>
+  </div>
+
+  <!-- ── Tab 2: Kanban ── -->
+  <div class="tab-content" id="tab-kanban">
+    <div class="kanban" id="kanban-board">
+      <div class="loading"><div class="spinner"></div><br>Ladataan…</div>
+    </div>
+  </div>
+
+  <!-- ── Tab 3: CSV Import ── -->
+  <div class="tab-content" id="tab-tuo">
+    <div style="max-width:600px;">
+      <h2 style="font-size:16px;font-weight:600;margin-bottom:8px;">Tuo prospekteja CSV-tiedostosta</h2>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:20px;">
+        Vie Google Sheets -taulukko CSV-muodossa (<em>Tiedosto → Lataa → CSV</em>) ja lataa tiedosto tähän.
+      </p>
+
+      <div class="import-area" id="drop-area" onclick="document.getElementById('csv-file').click()" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+        <div style="font-size:28px;margin-bottom:10px;">📄</div>
+        Vedä CSV tähän tai <strong>klikkaa valitaksesi</strong>
+        <input type="file" id="csv-file" accept=".csv" onchange="handleFileSelect(event)">
+      </div>
+
+      <p class="import-hint" style="margin-top:12px;">Tuetut sarakkeet (otsikot tapauskohtaisesti):</p>
+      <div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.8;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <code>nimi</code> · <code>puhelin</code> · <code>sahkoposti</code> · <code>osoite</code> · <code>postinumero</code> · <code>kaupunki</code> ·
+        <code>lampotapa</code> · <code>talo_m2</code> · <code>rakennusvuosi</code> · <code>vaihe</code> · <code>prioriteetti</code> · <code>lahde</code> · <code>omistaja</code> · <code>muistiinpanot</code>
+      </div>
+
+      <div id="import-preview" style="margin-top:20px;display:none;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:10px;">Esikatselu (<span id="preview-count">0</span> riviä)</h3>
+        <div class="table-wrap" style="max-height:280px;overflow-y:auto;">
+          <table id="tbl-preview" style="font-size:12px;">
+            <thead><tr id="preview-head"></tr></thead>
+            <tbody id="preview-body"></tbody>
+          </table>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button class="btn btn-primary" onclick="importCSV()">Tuo <span id="preview-count2">0</span> prospektia</button>
+          <button class="btn btn-ghost" onclick="resetImport()">Peruuta</button>
+        </div>
+        <div id="import-progress" style="display:none;margin-top:10px;font-size:13px;color:var(--text2);"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Modal: Lisää / muokkaa prospekti ── -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModalIfBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Uusi prospekti</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="prospect-form">
+        <div class="form-grid">
+          <!-- Yhteystiedot -->
+          <div class="form-group full"><label>Nimi *</label><input class="form-control" id="f-nimi" required placeholder="Etunimi Sukunimi"></div>
+          <div class="form-group"><label>Puhelin</label><input class="form-control" id="f-puhelin" placeholder="+358 40 123 4567"></div>
+          <div class="form-group"><label>Sähköposti</label><input class="form-control" id="f-sahkoposti" type="email" placeholder="nimi@esimerkki.fi"></div>
+
+          <div class="section-divider"></div>
+
+          <!-- Sijainti -->
+          <div class="form-group full"><label>Osoite</label><input class="form-control" id="f-osoite" placeholder="Kotikatu 1"></div>
+          <div class="form-group"><label>Postinumero</label><input class="form-control" id="f-postinumero" placeholder="00100"></div>
+          <div class="form-group"><label>Kaupunki</label><input class="form-control" id="f-kaupunki" placeholder="Helsinki"></div>
+
+          <div class="section-divider"></div>
+
+          <!-- Talo -->
+          <div class="form-group">
+            <label>Lämmitystapa</label>
+            <select class="form-control" id="f-lampotapa">
+              <option value="">– valitse –</option>
+              <option>Öljy</option>
+              <option>Sähkö</option>
+              <option>Kaukolämpö</option>
+              <option>Maalämpö</option>
+              <option>Puu</option>
+              <option>Muu</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Talon koko (m²)</label><input class="form-control" id="f-talo-m2" type="number" min="1" max="9999" placeholder="120"></div>
+          <div class="form-group"><label>Rakennusvuosi</label><input class="form-control" id="f-rakennusvuosi" type="number" min="1900" max="2024" placeholder="1985"></div>
+
+          <div class="section-divider"></div>
+
+          <!-- Myyntisuppilo -->
+          <div class="form-group">
+            <label>Vaihe</label>
+            <select class="form-control" id="f-vaihe-form">
+              <option>Uusi</option>
+              <option>Yhteytetty</option>
+              <option>Tapaaminen</option>
+              <option>Tarjous</option>
+              <option>Sopimus</option>
+              <option>Hylätty</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Prioriteetti</label>
+            <select class="form-control" id="f-prioriteetti-form">
+              <option>Normaali</option>
+              <option>Korkea</option>
+              <option>Matala</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Lähde</label><input class="form-control" id="f-lahde" placeholder="Kylmä soitto, suosittelu…"></div>
+          <div class="form-group"><label>Omistaja</label><input class="form-control" id="f-omistaja" placeholder="Patrick"></div>
+
+          <div class="section-divider"></div>
+
+          <!-- Toimenpide -->
+          <div class="form-group full"><label>Seuraava toimenpide</label><input class="form-control" id="f-toimenpide" placeholder="Soita ja sovi tapaaminen"></div>
+          <div class="form-group"><label>Seuraava päivämäärä</label><input class="form-control" id="f-seuraava-pvm" type="date"></div>
+
+          <div class="section-divider"></div>
+
+          <!-- Muistiinpanot -->
+          <div class="form-group full"><label>Muistiinpanot</label><textarea class="form-control" id="f-muistiinpanot" placeholder="Lisätietoja…"></textarea></div>
+        </div>
+
+        <!-- Aktiviteettilog (muokkausnäkymässä) -->
+        <div id="activity-section" style="display:none;margin-top:20px;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text2);">Historia</div>
+          <div class="activity-log" id="activity-log"></div>
+          <div class="add-activity" style="margin-top:10px;">
+            <input class="form-control" id="new-activity-text" placeholder="Lisää kommentti tai muistiinpano…">
+            <button type="button" class="btn btn-ghost" onclick="addActivity()">Lisää</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-danger" id="btn-delete" style="display:none;margin-right:auto;" onclick="deleteProspect()">Poista</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal()">Peruuta</button>
+      <button type="button" class="btn btn-primary" onclick="saveProspect()">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ── Supabase ──────────────────────────────────────────────────────────────────
+const SUPABASE_URL  = 'https://ggkuodyaddngzskpgvlt.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3VvZHlhZGRuZ3pza3Bndmx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4OTAzMTksImV4cCI6MjA5ODQ2NjMxOX0.Zq_33WUts-Io07HLeHuktACTxKenyuRY--ZHOXZoVlw';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const PAGE_SIZE = 50;
+let page        = 0;
+let sortCol     = 'created_at';
+let sortAsc     = false;
+let editId      = null;
+let allProspects = [];
+let filteredRows = [];
+let csvRows      = [];
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('tab-' + t.dataset.tab).classList.add('active');
+    if (t.dataset.tab === 'kanban') renderKanban();
+  });
+});
+
+// ── Load data ─────────────────────────────────────────────────────────────────
+async function loadAll() {
+  const { data, error } = await db
+    .from('crm_prospects')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) { showToast('Virhe ladattaessa: ' + error.message, 'error'); return; }
+  allProspects = data || [];
+  updateSummary();
+  applyFilters();
+}
+
+function updateSummary() {
+  const total    = allProspects.length;
+  const active   = allProspects.filter(p => !['Sopimus','Hylätty'].includes(p.vaihe)).length;
+  const sopimus  = allProspects.filter(p => p.vaihe === 'Sopimus').length;
+  const konversio = total ? Math.round(sopimus / total * 100) : 0;
+  const now = new Date();
+  const eom = new Date(now.getFullYear(), now.getMonth()+1, 0);
+  const toimenpide = allProspects.filter(p => {
+    if (!p.seuraava_pvm) return false;
+    const d = new Date(p.seuraava_pvm);
+    return d >= now && d <= eom;
+  }).length;
+
+  document.getElementById('s-total').textContent    = total;
+  document.getElementById('s-active').textContent   = active;
+  document.getElementById('s-sopimus').textContent  = sopimus;
+  document.getElementById('s-toimenpide').textContent = toimenpide;
+  document.getElementById('s-konversio').textContent = konversio + ' %';
+}
+
+// ── Filters ──────────────────────────────────────────────────────────────────
+['f-haku','f-vaihe','f-prioriteetti','f-lampotapa'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { page = 0; applyFilters(); });
+});
+
+function applyFilters() {
+  const haku  = document.getElementById('f-haku').value.toLowerCase();
+  const vaihe = document.getElementById('f-vaihe').value;
+  const prio  = document.getElementById('f-prioriteetti').value;
+  const lamp  = document.getElementById('f-lampotapa').value;
+
+  filteredRows = allProspects.filter(p => {
+    if (haku && !['nimi','puhelin','sahkoposti','kaupunki','osoite'].some(k => (p[k]||'').toLowerCase().includes(haku))) return false;
+    if (vaihe && p.vaihe !== vaihe) return false;
+    if (prio  && p.prioriteetti !== prio) return false;
+    if (lamp  && (p.lampotapa||'').toLowerCase() !== lamp.toLowerCase()) return false;
+    return true;
+  });
+
+  // Sort
+  filteredRows.sort((a, b) => {
+    let va = a[sortCol] ?? ''; let vb = b[sortCol] ?? '';
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  document.getElementById('result-count').textContent = filteredRows.length + ' löytyi';
+  renderTable();
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('#tbl-lista th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    if (sortCol === th.dataset.col) sortAsc = !sortAsc;
+    else { sortCol = th.dataset.col; sortAsc = true; }
+    document.querySelectorAll('#tbl-lista th').forEach(t => t.classList.remove('sorted'));
+    th.classList.add('sorted');
+    th.querySelector('.sa').textContent = sortAsc ? '↑' : '↓';
+    applyFilters();
+  });
+});
+
+function renderTable() {
+  const tbody = document.getElementById('tbody-lista');
+  const start = page * PAGE_SIZE;
+  const rows  = filteredRows.slice(start, start + PAGE_SIZE);
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">Ei tuloksia</td></tr>';
+    document.getElementById('page-info').textContent = '';
+    document.getElementById('btn-prev').disabled = true;
+    document.getElementById('btn-next').disabled = true;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(p => `
+    <tr onclick="openModal('${p.id}')">
+      <td><strong>${esc(p.nimi)}</strong></td>
+      <td>${esc(p.puhelin)}</td>
+      <td>${esc(p.kaupunki)}</td>
+      <td>${esc(p.lampotapa)}</td>
+      <td>${p.talo_m2 ? p.talo_m2 + ' m²' : '–'}</td>
+      <td><span class="badge v-${p.vaihe}">${esc(p.vaihe)}</span></td>
+      <td><span class="badge p-${p.prioriteetti}">${esc(p.prioriteetti)}</span></td>
+      <td>${fmtDate(p.seuraava_pvm)}</td>
+      <td style="color:var(--text2);font-size:12px;">${esc(p.omistaja)}</td>
+      <td style="text-align:right;padding-right:16px;">
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="event.stopPropagation();openModal('${p.id}')">Muokkaa</button>
+      </td>
+    </tr>`).join('');
+
+  const total = filteredRows.length;
+  const pages = Math.ceil(total / PAGE_SIZE);
+  document.getElementById('page-info').textContent = `Sivu ${page+1} / ${pages} (${total})`;
+  document.getElementById('btn-prev').disabled = page === 0;
+  document.getElementById('btn-next').disabled = page >= pages - 1;
+}
+
+function changePage(d) { page += d; renderTable(); }
+
+// ── Kanban ────────────────────────────────────────────────────────────────────
+const VAIHEET = ['Uusi','Yhteytetty','Tapaaminen','Tarjous','Sopimus','Hylätty'];
+const COL_COLORS = { Uusi:'var(--blue)', Yhteytetty:'var(--orange)', Tapaaminen:'var(--purple)', Tarjous:'#FFF176', Sopimus:'var(--green)', Hylätty:'var(--red)' };
+
+function renderKanban() {
+  const board = document.getElementById('kanban-board');
+  board.innerHTML = '';
+  VAIHEET.forEach(vaihe => {
+    const cards = allProspects.filter(p => p.vaihe === vaihe);
+    const col = document.createElement('div');
+    col.className = 'kanban-col';
+    col.innerHTML = `
+      <div class="kanban-header">
+        <span class="kanban-title" style="color:${COL_COLORS[vaihe]}">${vaihe}</span>
+        <span class="kanban-count">${cards.length}</span>
+      </div>
+      <div class="kanban-body">
+        ${cards.length ? cards.map(p => `
+          <div class="kanban-card" onclick="openModal('${p.id}')">
+            <div class="kc-name">
+              <span class="kc-prio prio-dot-${p.prioriteetti}"></span>${esc(p.nimi)}
+            </div>
+            <div class="kc-meta">
+              ${p.kaupunki ? esc(p.kaupunki) + ' · ' : ''}${p.lampotapa ? esc(p.lampotapa) : ''}
+              ${p.seuraava_pvm ? '<br>📅 ' + fmtDate(p.seuraava_pvm) : ''}
+              ${p.omistaja ? '<br>' + esc(p.omistaja) : ''}
+            </div>
+          </div>`).join('') : '<div style="font-size:12px;color:var(--text2);text-align:center;padding:16px;">–</div>'}
+      </div>`;
+    board.appendChild(col);
+  });
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal(id) {
+  editId = id || null;
+  document.getElementById('modal-title').textContent = id ? 'Muokkaa prospektia' : 'Uusi prospekti';
+  document.getElementById('btn-delete').style.display = id ? '' : 'none';
+  document.getElementById('activity-section').style.display = id ? '' : 'none';
+  clearForm();
+
+  if (id) {
+    const p = allProspects.find(x => x.id === id);
+    if (p) fillForm(p);
+    loadActivities(id);
+  }
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); editId = null; }
+function closeModalIfBg(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+function clearForm() {
+  ['f-nimi','f-puhelin','f-sahkoposti','f-osoite','f-postinumero','f-kaupunki',
+   'f-talo-m2','f-rakennusvuosi','f-lahde','f-omistaja','f-toimenpide','f-muistiinpanot','f-seuraava-pvm']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-lampotapa').value = '';
+  document.getElementById('f-vaihe-form').value = 'Uusi';
+  document.getElementById('f-prioriteetti-form').value = 'Normaali';
+  document.getElementById('activity-log').innerHTML = '';
+}
+
+function fillForm(p) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+  set('f-nimi', p.nimi); set('f-puhelin', p.puhelin); set('f-sahkoposti', p.sahkoposti);
+  set('f-osoite', p.osoite); set('f-postinumero', p.postinumero); set('f-kaupunki', p.kaupunki);
+  set('f-lampotapa', p.lampotapa); set('f-talo-m2', p.talo_m2); set('f-rakennusvuosi', p.rakennusvuosi);
+  set('f-vaihe-form', p.vaihe); set('f-prioriteetti-form', p.prioriteetti);
+  set('f-lahde', p.lahde); set('f-omistaja', p.omistaja);
+  set('f-toimenpide', p.seuraava_toimenpide); set('f-seuraava-pvm', p.seuraava_pvm);
+  set('f-muistiinpanot', p.muistiinpanot);
+}
+
+function getFormData() {
+  return {
+    nimi:                 document.getElementById('f-nimi').value.trim(),
+    puhelin:              document.getElementById('f-puhelin').value.trim() || null,
+    sahkoposti:           document.getElementById('f-sahkoposti').value.trim() || null,
+    osoite:               document.getElementById('f-osoite').value.trim() || null,
+    postinumero:          document.getElementById('f-postinumero').value.trim() || null,
+    kaupunki:             document.getElementById('f-kaupunki').value.trim() || null,
+    lampotapa:            document.getElementById('f-lampotapa').value || null,
+    talo_m2:              parseFloat(document.getElementById('f-talo-m2').value) || null,
+    rakennusvuosi:        parseInt(document.getElementById('f-rakennusvuosi').value) || null,
+    vaihe:                document.getElementById('f-vaihe-form').value,
+    prioriteetti:         document.getElementById('f-prioriteetti-form').value,
+    lahde:                document.getElementById('f-lahde').value.trim() || null,
+    omistaja:             document.getElementById('f-omistaja').value.trim() || null,
+    seuraava_toimenpide:  document.getElementById('f-toimenpide').value.trim() || null,
+    seuraava_pvm:         document.getElementById('f-seuraava-pvm').value || null,
+    muistiinpanot:        document.getElementById('f-muistiinpanot').value.trim() || null,
+  };
+}
+
+async function saveProspect() {
+  const data = getFormData();
+  if (!data.nimi) { showToast('Nimi on pakollinen', 'error'); return; }
+
+  let error;
+  if (editId) {
+    const prevVaihe = allProspects.find(p => p.id === editId)?.vaihe;
+    ({ error } = await db.from('crm_prospects').update(data).eq('id', editId));
+    if (!error && prevVaihe !== data.vaihe) {
+      await db.from('crm_activities').insert({ prospect_id: editId, tyyppi: 'vaihe_muutos', teksti: `Vaihe: ${prevVaihe} → ${data.vaihe}`, tekija: data.omistaja });
+    }
+  } else {
+    ({ error } = await db.from('crm_prospects').insert(data));
+  }
+
+  if (error) { showToast('Virhe: ' + error.message, 'error'); return; }
+  showToast(editId ? 'Tallennettu' : 'Prospekti lisätty', 'success');
+  closeModal();
+  await loadAll();
+  if (document.getElementById('tab-kanban').classList.contains('active')) renderKanban();
+}
+
+async function deleteProspect() {
+  if (!editId) return;
+  if (!confirm('Poistetaanko prospekti pysyvästi?')) return;
+  const { error } = await db.from('crm_prospects').delete().eq('id', editId);
+  if (error) { showToast('Virhe: ' + error.message, 'error'); return; }
+  showToast('Poistettu', 'success');
+  closeModal();
+  await loadAll();
+}
+
+// ── Activities ────────────────────────────────────────────────────────────────
+async function loadActivities(prospectId) {
+  const { data } = await db.from('crm_activities').select('*').eq('prospect_id', prospectId).order('created_at', { ascending: false });
+  const log = document.getElementById('activity-log');
+  if (!data || !data.length) { log.innerHTML = '<div style="font-size:12px;color:var(--text2);">Ei merkintöjä</div>'; return; }
+  log.innerHTML = data.map(a => `
+    <div class="activity-item">
+      <div class="act-meta">${actIcon(a.tyyppi)} ${a.tyyppi} · ${fmtDateTime(a.created_at)}${a.tekija ? ' · ' + esc(a.tekija) : ''}</div>
+      <div class="act-text">${esc(a.teksti)}</div>
+    </div>`).join('');
+}
+
+function actIcon(t) { return {kommentti:'💬',puhelu:'📞',sahkoposti:'✉️',tapaaminen:'🤝',vaihe_muutos:'🔄'}[t] || '📝'; }
+
+async function addActivity() {
+  if (!editId) return;
+  const input = document.getElementById('new-activity-text');
+  const teksti = input.value.trim();
+  if (!teksti) return;
+  const tekija = document.getElementById('f-omistaja').value.trim() || null;
+  await db.from('crm_activities').insert({ prospect_id: editId, tyyppi: 'kommentti', teksti, tekija });
+  input.value = '';
+  loadActivities(editId);
+}
+
+// ── CSV Import ────────────────────────────────────────────────────────────────
+const COL_MAP = {
+  nimi:['nimi','name','etunimi sukunimi','asiakas'],
+  puhelin:['puhelin','phone','gsm','matkapuhelin','puh'],
+  sahkoposti:['sahkoposti','sähköposti','email','mail','s-posti'],
+  osoite:['osoite','address','katuosoite'],
+  postinumero:['postinumero','zip','postnummer'],
+  kaupunki:['kaupunki','city','paikkakunta','kunta'],
+  lampotapa:['lampotapa','lämmitystapa','lämmitys','heating','lampotapa'],
+  talo_m2:['talo_m2','m2','pinta-ala','pintaala','koko','asuinpinta-ala'],
+  rakennusvuosi:['rakennusvuosi','vuosi','year','built'],
+  vaihe:['vaihe','status','tila','stage'],
+  prioriteetti:['prioriteetti','priority'],
+  lahde:['lahde','lähde','source'],
+  omistaja:['omistaja','owner','myyjä','salesperson'],
+  muistiinpanot:['muistiinpanot','notes','kommentti','lisatiedot'],
+};
+
+function normalizeHeader(h) { return h.toLowerCase().replace(/[^a-zäöå0-9]/g, ''); }
+
+function mapHeaders(headers) {
+  const norm = headers.map(normalizeHeader);
+  const map = {};
+  for (const [field, variants] of Object.entries(COL_MAP)) {
+    for (const v of variants) {
+      const idx = norm.indexOf(normalizeHeader(v));
+      if (idx >= 0) { map[field] = idx; break; }
+    }
+  }
+  return map;
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return { headers: [], rows: [] };
+  const sep = lines[0].includes(';') ? ';' : ',';
+  const split = l => l.split(sep).map(c => c.replace(/^"(.*)"$/, '$1').trim());
+  return { headers: split(lines[0]), rows: lines.slice(1).map(split) };
+}
+
+function handleDragOver(e) { e.preventDefault(); document.getElementById('drop-area').style.borderColor = 'var(--accent)'; }
+function handleDrop(e) { e.preventDefault(); document.getElementById('drop-area').style.borderColor = ''; processFile(e.dataTransfer.files[0]); }
+function handleFileSelect(e) { processFile(e.target.files[0]); }
+
+function processFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const { headers, rows } = parseCSV(e.target.result);
+    const hmap = mapHeaders(headers);
+    csvRows = rows.filter(r => r.some(c => c)).map(r => {
+      const obj = {};
+      for (const [field, idx] of Object.entries(hmap)) {
+        obj[field] = r[idx]?.trim() || null;
+      }
+      if (!obj.vaihe) obj.vaihe = 'Uusi';
+      if (!obj.prioriteetti) obj.prioriteetti = 'Normaali';
+      return obj;
+    }).filter(o => o.nimi);
+
+    document.getElementById('preview-count').textContent  = csvRows.length;
+    document.getElementById('preview-count2').textContent = csvRows.length;
+
+    const head = document.getElementById('preview-head');
+    head.innerHTML = ['Nimi','Puhelin','Kaupunki','Lämmitys','Vaihe'].map(h => `<th>${h}</th>`).join('');
+    const body = document.getElementById('preview-body');
+    body.innerHTML = csvRows.slice(0, 20).map(r => `
+      <tr>
+        <td>${esc(r.nimi)}</td><td>${esc(r.puhelin)}</td><td>${esc(r.kaupunki)}</td>
+        <td>${esc(r.lampotapa)}</td><td><span class="badge v-${r.vaihe||'Uusi'}">${r.vaihe||'Uusi'}</span></td>
+      </tr>`).join('');
+    document.getElementById('import-preview').style.display = '';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+async function importCSV() {
+  if (!csvRows.length) return;
+  const progress = document.getElementById('import-progress');
+  progress.style.display = '';
+  const BATCH = 50;
+  let done = 0;
+  for (let i = 0; i < csvRows.length; i += BATCH) {
+    const batch = csvRows.slice(i, i + BATCH);
+    const { error } = await db.from('crm_prospects').upsert(batch, { onConflict: 'id' });
+    if (error) { showToast('Virhe tuonnissa: ' + error.message, 'error'); break; }
+    done += batch.length;
+    progress.textContent = `Tuotu ${done} / ${csvRows.length}…`;
+  }
+  showToast(`${done} prospektia tuotu`, 'success');
+  resetImport();
+  await loadAll();
+}
+
+function resetImport() {
+  csvRows = [];
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('csv-file').value = '';
+  document.getElementById('import-progress').style.display = 'none';
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const wrap = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '–';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fmtDate(d) {
+  if (!d) return '–';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('fi-FI');
+}
+function fmtDateTime(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('fi-FI') + ' ' + dt.toLocaleTimeString('fi-FI', { hour:'2-digit', minute:'2-digit' });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>
