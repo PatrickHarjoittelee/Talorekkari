@@ -2418,6 +2418,7 @@ function renderKpiSummary() {
 // ═══════════════════════════════════════════════════════════════════════════
 function initYearButtons() {
   const wrap = document.getElementById('year-btns');
+  wrap.innerHTML = '';
   [2023,2024,2025].forEach(y => {
     const btn = document.createElement('button');
     btn.className = 'year-btn' + (y === activeYear ? ' active' : '');
