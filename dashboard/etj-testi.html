@@ -1373,8 +1373,6 @@ function showResult(r) {
   }).toString();
   const orderUrl = `etj-tilaussopimus.html?${orderParams}`;
 
-  const showOrderBtn = r.level === 'velvoite_kevyt' || r.level === 'velvoite_ems';
-
   const codeBox = code ? `
     <div style="background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius);padding:16px 20px;margin:20px 0;text-align:center">
       <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">ETJ-testikoodi</div>
@@ -1382,30 +1380,73 @@ function showResult(r) {
       <div style="font-size:12px;color:var(--text2);margin-top:6px">Käytä tätä koodia tilaussopimuksessa — tietosi täytetään automaattisesti</div>
     </div>` : '';
 
-  document.getElementById('formWrap').innerHTML = `
-    <div class="result-card ${r.cls}">
-      <div class="result-badge ${r.cls}"><span class="badge-dot"></span>${r.badge}</div>
-      <h2>${r.title}</h2>
-      <p class="result-sub">${r.sub}</p>
-      <ul class="action-list">
-        ${r.actions.map(a=>`<li><span class="action-icon">${a.i}</span><span>${a.t}</span></li>`).join('')}
-      </ul>
-      <div class="result-summary">
-        <strong>${A.company_name}</strong> · ${A.city}${A.sector?` · ${secLabel[A.sector]||A.sector}`:''}<br>
-        Kulutusarvio: ${cLabel[A.consumption]||A.consumption} ·
-        Katselmus: ${A.has_audit==='yes'?'tehty':A.has_audit==='planned'?'suunnitteilla':A.has_audit==='no'?'ei tehty':'ei tiedossa'} ·
-        EMS: ${A.has_ems==='yes'?'kyllä':'ei / ei tiedossa'}
-      </div>
-      ${codeBox}
-      <div class="cta-stack">
-        ${showOrderBtn ? `<a href="${orderUrl}" class="btn-cta btn-cta-ok">Tilaa Spara ETJ+ -palvelu →</a>` : ''}
-        <a href="mailto:myynti@sparaenergia.com?subject=ETJ-testi: ${encodeURIComponent(A.company_name)}&body=Yritys: ${encodeURIComponent(A.company_name)}%0ASähköposti: ${encodeURIComponent(A.contact_email)}%0ATulos: ${encodeURIComponent(r.badge)}%0AKulutus: ${encodeURIComponent(cLabel[A.consumption]||'')}${code?`%0AETJ-testikoodi: ${code}`:''}%0A%0AHaluaisin lisätietoja ETJ-palveluistanne."
-           class="btn-cta ${r.ctaCls}">${r.cta}</a>
-        <a href="etj-plus.html" class="btn-cta btn-cta-outline">Kirjaudu ETJ+ -palveluun</a>
-        <button onclick="restart()" class="btn-cta btn-cta-outline">Tee testi uudelleen</button>
-      </div>
-      <p class="disclaimer">Tulos on suuntaa-antava arvio perustuen annettuihin tietoihin. Se ei ole oikeudellinen neuvo.<br>Sparan asiantuntija auttaa varmistamaan tilanteen ja seuraavat toimenpiteet.</p>
-    </div>`;
+  const disclaimer = `<p class="disclaimer">Tulos on suuntaa-antava arvio perustuen annettuihin tietoihin. Se ei ole oikeudellinen neuvo.</p>`;
+  const restartBtn = `<button onclick="restart()" class="btn-cta btn-cta-outline">Tee testi uudelleen</button>`;
+
+  let html = '';
+
+  if (r.level === 'no_obligation' || r.level === 'lahella_rajaa') {
+    html = `
+      <div class="result-card ok">
+        <div class="result-badge ok"><span class="badge-dot"></span>Ei raportointivelvollisuutta</div>
+        <h2>Ei raportointivelvollisuutta.</h2>
+        <p class="result-sub">ETJ+-järjestelmän käyttö ei ole lakisääteistä, sillä yrityksenne kokonaisenergianmäärä ei ylitä 2 700 MWh/v. Mikäli energiankäytön seuranta ja tehostus kiinnostaa, Sparan ETJ+-järjestelmä pyrkii optimoimaan energiankäyttöä ja neuvomaan, mitä tekemällä kulutusta voidaan pienentää.</p>
+        <div class="cta-stack">
+          <a href="mailto:myynti@sparaenergia.com?subject=ETJ-testi: ${encodeURIComponent(A.company_name)}&body=Yritys: ${encodeURIComponent(A.company_name)}%0ASähköposti: ${encodeURIComponent(A.contact_email)}%0ATulos: Ei velvoitetta%0A%0AHaluaisin lisätietoja energiansäästömahdollisuuksista."
+             class="btn-cta btn-cta-ok">Kysy energianeuvontaa</a>
+          ${restartBtn}
+        </div>
+        ${disclaimer}
+      </div>`;
+
+  } else if (r.level === 'velvoite_kevyt' || r.level === 'velvoite_ems') {
+    html = `
+      <div class="result-card warn">
+        <div class="result-badge warn"><span class="badge-dot"></span>Raportointivelvollisuus</div>
+        <h2>Yrityksellänne on raportointivelvollisuus!</h2>
+        <p class="result-sub">Teidän tulee raportoida vuosittain Energiaviraston ohjeistuksen mukaisesti ja tehdä suunnitelmia jatkuvaan kehittämiseen. Energiakatselmus tulee toimittaa <strong>11.10.2026 mennessä</strong>.</p>
+        <p class="result-sub" style="margin-top:12px">Sparan ETJ+ on tätä seurantaa ja raportointia varten kehitetty palvelu, ja sen saa helposti käyttöön alla olevasta linkistä.</p>
+        ${codeBox}
+        <div class="cta-stack">
+          <a href="${orderUrl}" class="btn-cta btn-cta-ok">Tilaa Spara ETJ+ -palvelu →</a>
+          <a href="mailto:myynti@sparaenergia.com?subject=ETJ-testi: ${encodeURIComponent(A.company_name)}&body=Yritys: ${encodeURIComponent(A.company_name)}%0ASähköposti: ${encodeURIComponent(A.contact_email)}%0ATulos: Raportointivelvollisuus%0AKulutus: ${encodeURIComponent(cLabel[A.consumption]||'')}${code?`%0AETJ-testikoodi: ${code}`:''}%0A%0AHaluaisin lisätietoja ETJ+-palvelusta."
+             class="btn-cta btn-cta-warn">Ota yhteyttä</a>
+          ${restartBtn}
+        </div>
+        ${disclaimer}
+      </div>`;
+
+  } else if (r.level === 'velvoite_raskas') {
+    html = `
+      <div class="result-card danger">
+        <div class="result-badge danger"><span class="badge-dot"></span>ISO 50001 -velvoite</div>
+        <h2>Yrityksenne kokonaisenergia ylittää 23 600 MWh/v.</h2>
+        <p class="result-sub">Tämä tarkoittaa sitä, että tarvitsette järeämmän ISO 50001 -standardoidun ratkaisun. Tutustukaa toimijoihin Energiaviraston sivustolla.</p>
+        <div class="cta-stack">
+          <a href="https://energiavirasto.fi/energianhallintajarjestelmat" target="_blank" rel="noopener" class="btn-cta btn-cta-danger">Energiaviraston sivusto →</a>
+          <a href="mailto:myynti@sparaenergia.com?subject=ETJ-testi: ${encodeURIComponent(A.company_name)}&body=Yritys: ${encodeURIComponent(A.company_name)}%0ASähköposti: ${encodeURIComponent(A.contact_email)}%0ATulos: ISO 50001 velvoite%0AKulutus: ${encodeURIComponent(cLabel[A.consumption]||'')}"
+             class="btn-cta btn-cta-outline">Kysy lisätietoja</a>
+          ${restartBtn}
+        </div>
+        ${disclaimer}
+      </div>`;
+
+  } else {
+    html = `
+      <div class="result-card warn">
+        <div class="result-badge warn"><span class="badge-dot"></span>Lisäselvitys tarpeen</div>
+        <h2>Velvoitetta ei voida arvioida annetuilla tiedoilla.</h2>
+        <p class="result-sub">Autamme selvittämään tilanteen nopeasti laskujen ja mittaritietojen pohjalta. Ota yhteyttä.</p>
+        <div class="cta-stack">
+          <a href="mailto:myynti@sparaenergia.com?subject=ETJ-testi: ${encodeURIComponent(A.company_name)}&body=Yritys: ${encodeURIComponent(A.company_name)}%0ASähköposti: ${encodeURIComponent(A.contact_email)}%0ATulos: Lisäselvitys tarpeen"
+             class="btn-cta btn-cta-warn">Ota yhteyttä</a>
+          ${restartBtn}
+        </div>
+        ${disclaimer}
+      </div>`;
+  }
+
+  document.getElementById('formWrap').innerHTML = html;
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
